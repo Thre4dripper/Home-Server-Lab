@@ -1,0 +1,64 @@
+# n8n Data Directories
+n8n_data/
+postgres_data/
+
+# Environment files (keep .env.example)
+.env
+
+# Database backup files
+*.sql
+backup_*.gz
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.backup
+*.bak
+n8n-backup*.tar.gz
+
+# n8n specific runtime files
+.n8n/
+workflows/*.json
+credentials/*.json
+
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Node.js (if running locally)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Docker override files
+docker-compose.override.yml
+
+# Local development files
+.env.local
+.env.development
+.env.production
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
