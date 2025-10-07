@@ -1,3 +1,6 @@
 **/*.env
 n8n/n8n_data
 n8n/postgres_data
+pihole/dnsmasq-data
+pihole/pihole-data
+pihole/dns-entries.conf
