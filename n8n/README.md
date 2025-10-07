@@ -4,13 +4,23 @@ This Docker Compose setup provides n8n with PostgreSQL database backend.
 
 ## Quick Start
 
+### Using the Setup Script (Recommended)
+
+1. **Run the setup script:**
+   ```bash
+   ./setup.sh
+   ```
+   This will automatically configure and start n8n with health checks and status verification.
+
+### Manual Setup
+
 1. **Start the services:**
    ```bash
    docker-compose up -d
    ```
 
 2. **Access n8n:**
-   - URL: http://localhost:5678
+   - URL: http://YOUR_HOST_IP:5678 (setup script will show the exact URL)
    - Username: admin
    - Password: admin123
 
