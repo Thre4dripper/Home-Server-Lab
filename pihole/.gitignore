@@ -1,0 +1,51 @@
+# Pi-hole Data Directories
+pihole-data/
+dnsmasq-data/
+
+# Environment files (keep .env.example)
+.env
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.backup
+*.bak
+pihole-backup*.tar.gz
+
+# Local DNS configuration (uncomment if you want to keep this private)
+# dns-entries.conf
+
+# Pi-hole specific files
+custom.list
+pihole-FTL.db*
+gravity.db*
+macvendor.db
+
+# Docker override files
+docker-compose.override.yml
+
+# Local development files
+.env.local
+.env.development
+.env.production
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
