@@ -1,0 +1,53 @@
+# Pydio Data Directories
+cellsdir/
+mysqldir/
+
+# Environment files (keep .env.example)
+.env
+
+# Generated configuration files
+install.yml
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.backup
+*.bak
+pydio-backup*.tar.gz
+
+# Database backup files
+*.sql
+backup_*.gz
+
+# Pydio specific files
+.cells/
+cells.log*
+
+# Docker override files
+docker-compose.override.yml
+
+# Local development files
+.env.local
+.env.development
+.env.production
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

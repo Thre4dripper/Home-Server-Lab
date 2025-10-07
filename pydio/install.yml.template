@@ -1,0 +1,29 @@
+# Pydio Cells automatic installation configuration
+# This file enables automatic setup without manual configuration
+
+# Frontend admin definition
+frontendlogin: ${FRONTEND_LOGIN}
+frontendpassword: ${FRONTEND_PASSWORD}
+
+# Database connection
+dbconnectiontype: ${DB_CONNECTION_TYPE}
+dbtcphostname: ${DB_TCP_HOSTNAME}
+dbtcpport: ${DB_TCP_PORT}
+dbtcpname: ${DB_TCP_NAME}
+dbtcpuser: ${DB_TCP_USER}
+dbtcppassword: ${DB_TCP_PASSWORD}
+
+# Default datasource configuration
+datasources:
+  - name: "pydiods1"
+    driver: "mysql"
+    dsn: "${DB_TCP_USER}:${DB_TCP_PASSWORD}@tcp(${DB_TCP_HOSTNAME}:${DB_TCP_PORT})/${DB_TCP_NAME}"
+
+# Default workspace configuration  
+workspaces:
+  - name: "Common Files"
+    label: "Common Files"
+    description: "Default workspace for file sharing"
+    slug: "common-files"
+    rootNodes:
+      - "pydiods1"

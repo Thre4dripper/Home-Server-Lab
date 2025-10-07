@@ -1,0 +1,64 @@
+services:
+
+  cells:
+    image: pydio/cells:latest
+    restart: unless-stopped
+    container_name: pydio-cells
+    env_file: .env
+    environment:
+      # Pydio Cells configuration via environment variables
+      - CELLS_MINIO_ALLOW_CROSSMOUNT=${CELLS_MINIO_ALLOW_CROSSMOUNT}
+      
+      # Install configuration - enables automatic setup
+      - CELLS_INSTALL_YAML=/pydio/config/install.yml
+      
+      # Database configuration
+      - CELLS_DATABASE_DSN=${DB_TCP_USER}:${DB_TCP_PASSWORD}@tcp(${DB_TCP_HOSTNAME}:${DB_TCP_PORT})/${DB_TCP_NAME}
+      
+      # Server configuration  
+      - CELLS_BIND=0.0.0.0:8080
+      - CELLS_EXTERNAL=http://${PYDIO_HOST}:${PYDIO_PORT}
+      - CELLS_NO_TLS=1
+      
+      # Admin user (will be created on first run)
+      - CELLS_ADMIN_LOGIN=${FRONTEND_LOGIN}
+      - CELLS_ADMIN_PASSWORD=${FRONTEND_PASSWORD}
+      
+      # Storage configuration
+      - CELLS_DATA_ROOT=/var/cells/data
+    volumes: 
+      - ./cellsdir:/var/cells
+      - ./install.yml:/pydio/config/install.yml:ro
+      - ${EXTERNAL_STORAGE_PATH}:/var/cells/data/external-storage
+    ports:
+      - "${PYDIO_PORT}:8080"
+    networks:
+      - default
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    container_name: pydio-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./mysqldir:/var/lib/mysql
+    command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+networks:
+  default:
+    external: true
+    name: pi-services
