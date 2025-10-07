@@ -1,0 +1,21 @@
+# Pi-hole Initial DNS Entries Configuration Example
+# Format: domain=ip_address
+# Lines starting with # are comments and will be ignored
+# Copy this file to dns-entries.conf and modify as needed
+
+# Pi-hole administration interfaces
+pihole.lan=<PIHOLE_IP>
+pihole.internal=<PIHOLE_IP>
+
+# Home server services (modify IPs as needed)
+home.lan=<PIHOLE_IP>
+n8n.lan=<PIHOLE_IP>
+grafana.lan=<PIHOLE_IP>
+homeassistant.lan=<PIHOLE_IP>
+portainer.lan=<PIHOLE_IP>
+
+# Example of services on different IPs
+# jellyfin.lan=192.168.0.109
+# nas.lan=192.168.0.110
+# printer.lan=192.168.0.111
+# router.lan=192.168.0.1

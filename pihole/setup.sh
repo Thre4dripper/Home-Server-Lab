@@ -4,6 +4,13 @@ set -e
 
 echo "🏠 Pi-hole Local DNS Setup"
 echo "=========================="
+echo ""
+echo "📝 DNS Configuration:"
+echo "   • Edit 'dns-entries.conf' to customize local DNS entries"
+echo "   • Format: domain=ip_address (one per line)"
+echo "   • Comments start with # and are ignored"
+echo "   • Example: n8n.lan=192.168.0.108"
+echo ""
 
 # Auto-detect network configuration
 PI_IP=$(hostname -I | awk '{print $1}')
@@ -31,24 +38,37 @@ sudo docker compose up -d
 echo "⏳ Waiting 30 seconds for Pi-hole to start..."
 sleep 30
 
-# Configure local DNS entries from existing custom.list
+# Set password using Pi-hole's built-in command
+echo "🔑 Setting admin password..."
+sudo docker exec pihole pihole setpassword ${WEBPASSWORD:-admin123}
+
+# Configure local DNS entries from dns-entries.conf
 echo "🌐 Adding local DNS entries..."
 
-# Read domains from existing custom.list if it exists
-if [ -f "./pihole-data/hosts/custom.list" ]; then
-    echo "📋 Using domains from existing custom.list..."
-    DOMAINS=$(grep -E "^[0-9]+\." ./pihole-data/hosts/custom.list | awk '{print $2}' | tr '\n' ' ')
+# Read DNS entries from dns-entries.conf file
+if [ -f "./dns-entries.conf" ]; then
+    echo "📋 Using domains from dns-entries.conf..."
     LOCAL_DNS_ARRAY=""
-    for domain in $DOMAINS; do
-        if [ ! -z "$domain" ]; then
-            LOCAL_DNS_ARRAY="$LOCAL_DNS_ARRAY\"$PI_IP $domain\", "
+    while IFS='=' read -r domain ip || [ -n "$domain" ]; do
+        # Skip empty lines and comments
+        if [[ -z "$domain" || "$domain" =~ ^[[:space:]]*# ]]; then
+            continue
         fi
-    done
+        # Trim whitespace
+        domain=$(echo "$domain" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        ip=$(echo "$ip" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        
+        if [ ! -z "$domain" ] && [ ! -z "$ip" ]; then
+            LOCAL_DNS_ARRAY="$LOCAL_DNS_ARRAY\"$ip $domain\", "
+        fi
+    done < "./dns-entries.conf"
+    
     # Remove trailing comma and space
     LOCAL_DNS_ARRAY=$(echo "$LOCAL_DNS_ARRAY" | sed 's/, $//')
     LOCAL_DNS="[$LOCAL_DNS_ARRAY]"
 else
-    # Default domains if no custom.list exists
+    # Fallback to default domains if dns-entries.conf doesn't exist
+    echo "📋 dns-entries.conf not found, using default domains..."
     LOCAL_DNS='["'$PI_IP' pihole.lan", "'$PI_IP' pihole.internal", "'$PI_IP' home.lan", "'$PI_IP' n8n.lan", "'$PI_IP' grafana.lan", "'$PI_IP' homeassistant.lan", "'$PI_IP' portainer.lan"]'
 fi
 
@@ -61,13 +81,47 @@ sleep 20
 
 # Test setup
 echo ""
-echo "🧪 Testing..."
-echo -n "External DNS: "
-nslookup google.com $PI_IP > /dev/null 2>&1 && echo "✅" || echo "❌"
-echo -n "Local DNS:    "
-nslookup pihole.lan $PI_IP > /dev/null 2>&1 && echo "✅" || echo "❌"
+echo "🧪 Testing Pi-hole Configuration..."
+
+# Test external DNS resolution
+echo -n "External DNS (google.com): "
+if dig @$PI_IP -p 5300 google.com +short > /dev/null 2>&1; then
+    echo "✅ Working"
+else
+    echo "❌ Failed"
+    echo "   Note: Pi-hole DNS is running on port 5300"
+fi
+
+# Test local DNS resolution
+echo -n "Local DNS (pihole.lan):    "
+if dig @$PI_IP -p 5300 pihole.lan +short | grep -q "$PI_IP"; then
+    echo "✅ Working"
+else
+    echo "❌ Failed"
+    echo "   Try: dig @$PI_IP -p 5300 pihole.lan"
+fi
+
+# Test web interface
+echo -n "Web Interface:             "
+if curl -s -o /dev/null -w "%{http_code}" http://$PI_IP:8080/admin/ | grep -q "200\|302"; then
+    echo "✅ Accessible"
+else
+    echo "❌ Not accessible"
+fi
 
 echo ""
 echo "🎉 Setup Complete!"
-echo "Web Interface: http://$PI_IP/admin (Password: admin123)"
-echo "Set device DNS to: $PI_IP"
+echo ""
+echo "📋 Configuration Details:"
+echo "   • Web Interface: http://$PI_IP:8080/admin/"
+echo "   • Admin Password: ${WEBPASSWORD:-admin123}"
+echo "   • DNS Server: $PI_IP:5300"
+echo ""
+echo "📱 Next Steps:"
+echo "   1. Set device DNS to: $PI_IP"
+echo "   2. Test with: dig @$PI_IP -p 5300 google.com"
+echo "   3. Edit 'dns-entries.conf' to add more local domains"
+echo "   4. Re-run './setup.sh' to apply DNS changes"
+echo ""
+echo "⚠️  Note: Pi-hole DNS runs on port 5300 (not standard port 53)"
+echo "   This avoids conflicts with system DNS on port 53"
