@@ -1,0 +1,12 @@
+# Ignore sensitive configuration
+.env
+
+# Ignore data directories (contains user data and databases)
+gitea_data/
+postgres/
+
+# Ignore Docker volumes and temporary files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
