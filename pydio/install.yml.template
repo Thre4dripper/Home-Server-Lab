@@ -1,5 +1,10 @@
 # Pydio Cells automatic installation configuration
-# This file enables automatic setup without manual configuration
+
+# ⚠️  WARNING: DO NOT EDIT/DELETE THIS TEMPLATE FILE ⚠️
+# This is a template file that gets processed automatically.
+# To configure Pydio Cells, edit the .env file instead.
+# ./setup.sh will copy the values from .env into this file.
+# --- IGNORE ---
 
 # Frontend admin definition
 frontendlogin: ${FRONTEND_LOGIN}
