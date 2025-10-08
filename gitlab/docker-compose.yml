@@ -1,19 +1,44 @@
 services:
   gitlab:
-    image: gitlab/gitlab-ce:18.2.7-ce.0
-    container_name: gitlab
-    restart: always
-    hostname: 'localhost'
+    image: gitlab/gitlab-ce:18.2.8-ce.0
+    container_name: gitlab-server
+    restart: unless-stopped
+    env_file: .env
+    hostname: '${GITLAB_HOSTNAME}'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://localhost:8929'
-        gitlab_rails['gitlab_shell_ssh_port'] = 2424
+        external_url 'http://${GITLAB_DOMAIN}:${GITLAB_PORT}'
+        gitlab_rails['gitlab_shell_ssh_port'] = ${GITLAB_SSH_PORT}
+        gitlab_rails['initial_root_password'] = '${GITLAB_ROOT_PASSWORD}'
+        gitlab_rails['gitlab_signup_enabled'] = false
+        gitlab_rails['gitlab_default_can_create_group'] = false
+        gitlab_rails['gitlab_username_changing_enabled'] = false
+        nginx['listen_port'] = ${GITLAB_HTTP_PORT}
+        nginx['listen_https'] = false
+        gitlab_rails['gitlab_email_enabled'] = false
+        gitlab_rails['backup_keep_time'] = 604800
+        # Use built-in PostgreSQL instead of external
+        postgresql['enable'] = true
+        postgresql['shared_buffers'] = "128MB"
+        postgresql['effective_cache_size'] = "512MB"
     ports:
-      - '8929:80'
-      - '443:443'
-      - '2424:22'
+      - '${GITLAB_PORT}:${GITLAB_HTTP_PORT}'
+      - '${GITLAB_SSH_PORT}:22'
     volumes:
       - './config:/etc/gitlab'
       - './logs:/var/log/gitlab'
       - './data:/var/opt/gitlab'
+      - './backups:/var/opt/gitlab/backups'
     shm_size: '256m'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${GITLAB_HTTP_PORT}/-/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 300s
+    networks:
+      - gitlab
+
+networks:
+  gitlab:
+    driver: bridge
