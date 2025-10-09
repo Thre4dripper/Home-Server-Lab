@@ -1,0 +1,28 @@
+# LocalStack .gitignore
+
+# Environment configuration
+.env
+
+# LocalStack data directory
+volume/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+.tmp/
+.cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+.dockerignore
