@@ -1,6 +1,13 @@
-# Homarr - Modern Dashboard for Self-Hosted Services
+# Homarr - Modern Dashboard with PostgreSQL & Redis
 
-Homarr is a sleek, modern dashboard that brings all of your self-hosted services together in one place. With extensive customization options, integrations, and a user-friendly interface, it's the perfect homepage for your homelab.
+Homarr is a sleek, modern dashboard that brings all of your self-hosted services together in one place. This setup uses **PostgreSQL 16** for robust data storage and **Redis 7** for high-performance caching, providing a production-ready configuration.
+
+## Architecture
+
+This deployment consists of three containers:
+- **🗄️ PostgreSQL 16**: Robust database backend with ACID compliance
+- **🚀 Redis 7**: High-performance caching and session storage  
+- **🎛️ Homarr**: Modern dashboard frontend with extensive integrations
 
 ## Features
 

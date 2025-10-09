@@ -83,13 +83,24 @@ check_encryption_key() {
     else
         print_success "Valid encryption key found"
     fi
+    
+    # Check database passwords
+    if [[ "$POSTGRES_PASSWORD" == "secure_postgres_password_change_this" ]] || [[ "$POSTGRES_PASSWORD" == "your-secure-postgres-password-change-this" ]]; then
+        print_warning "Default PostgreSQL password detected. Please update POSTGRES_PASSWORD in .env file"
+    fi
+    
+    if [[ "$REDIS_PASSWORD" == "secure_redis_password_change_this" ]] || [[ "$REDIS_PASSWORD" == "your-secure-redis-password-change-this" ]]; then
+        print_warning "Default Redis password detected. Please update REDIS_PASSWORD in .env file"
+    fi
 }
 
 # Create necessary directories
 create_directories() {
     print_status "Creating data directories..."
     mkdir -p homarr_data
-    print_success "Data directories created"
+    mkdir -p postgres_data
+    mkdir -p redis_data
+    print_success "Data directories created (homarr_data, postgres_data, redis_data)"
 }
 
 # Check system requirements
@@ -98,8 +109,8 @@ check_system() {
     
     # Check available memory
     TOTAL_MEM=$(free -m | awk 'NR==2{printf "%.0f", $2}')
-    if [ "$TOTAL_MEM" -lt 512 ]; then
-        print_warning "Low memory detected (${TOTAL_MEM}MB). Consider reducing memory limits."
+    if [ "$TOTAL_MEM" -lt 1024 ]; then
+        print_warning "Low memory detected (${TOTAL_MEM}MB). Consider reducing memory limits for containers."
     else
         print_success "Memory check passed (${TOTAL_MEM}MB available)"
     fi
@@ -114,33 +125,70 @@ check_system() {
     else
         print_warning "Docker socket not found - container integration will be limited"
     fi
+    
+    # Check if required ports are available
+    check_port_availability
+}
+
+# Check port availability
+check_port_availability() {
+    source .env
+    
+    if netstat -tuln | grep -q ":${HOMARR_PORT:-7575} "; then
+        print_warning "Port ${HOMARR_PORT:-7575} is already in use - Homarr may not start properly"
+    else
+        print_success "Port ${HOMARR_PORT:-7575} is available for Homarr"
+    fi
 }
 
 # Stop existing container if running
 stop_existing() {
     print_status "Checking for existing Homarr containers..."
-    if docker ps -q -f name=homarr > /dev/null 2>&1; then
-        print_warning "Stopping existing Homarr container..."
+    if docker compose ps | grep -q "Up"; then
+        print_warning "Stopping existing containers..."
         docker compose down
-        print_success "Existing container stopped"
+        print_success "Existing containers stopped"
     fi
 }
 
-# Start Homarr
+# Start Homarr stack
 start_homarr() {
-    print_status "Starting Homarr Dashboard..."
+    print_status "Starting Homarr stack (PostgreSQL + Redis + Homarr)..."
     docker compose up -d
-    print_success "Homarr started successfully"
+    print_success "Homarr stack started successfully"
 }
 
-# Wait for Homarr to be ready
+# Wait for all services to be ready
 wait_for_ready() {
-    print_status "Waiting for Homarr to be ready..."
+    print_status "Waiting for all services to be ready..."
     
     # Load environment variables
     source .env
     
-    # Wait up to 60 seconds for Homarr to be ready
+    # Wait for PostgreSQL
+    print_status "Waiting for PostgreSQL to be ready..."
+    for i in {1..30}; do
+        if docker compose exec postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
+            print_success "PostgreSQL is ready!"
+            break
+        fi
+        echo -n "."
+        sleep 2
+    done
+    
+    # Wait for Redis
+    print_status "Waiting for Redis to be ready..."
+    for i in {1..30}; do
+        if docker compose exec redis redis-cli --no-auth-warning -a "$REDIS_PASSWORD" ping > /dev/null 2>&1; then
+            print_success "Redis is ready!"
+            break
+        fi
+        echo -n "."
+        sleep 1
+    done
+    
+    # Wait for Homarr
+    print_status "Waiting for Homarr to be ready..."
     for i in {1..60}; do
         if curl -s -f "http://localhost:${HOMARR_PORT:-7575}" > /dev/null 2>&1; then
             print_success "Homarr is ready!"
@@ -170,11 +218,16 @@ show_access_info() {
     SERVER_IP=$(hostname -I | awk '{print $1}')
     
     echo
-    print_success "🚀 Homarr Dashboard is now running!"
+    print_success "🚀 Homarr Dashboard Stack is now running!"
     echo
     echo -e "${BLUE}Access URLs:${NC}"
     echo -e "  Local:   ${GREEN}http://localhost:${HOMARR_PORT:-7575}${NC}"
     echo -e "  Network: ${GREEN}http://${SERVER_IP}:${HOMARR_PORT:-7575}${NC}"
+    echo
+    echo -e "${BLUE}Stack Components:${NC}"
+    echo -e "  🗄️  PostgreSQL 16: Database backend"
+    echo -e "  🚀 Redis 7: Caching and session storage"
+    echo -e "  🎛️  Homarr: Dashboard frontend"
     echo
     echo -e "${BLUE}First Time Setup:${NC}"
     echo "  1. Visit the URL above in your browser"
@@ -191,15 +244,25 @@ show_access_info() {
     echo "  • Explore 30+ service integrations"
     echo
     echo -e "${BLUE}Useful Commands:${NC}"
-    echo "  View logs:     docker compose logs -f homarr"
-    echo "  Stop:          docker compose down"
-    echo "  Restart:       docker compose restart homarr"
-    echo "  Update:        docker compose pull && docker compose up -d"
-    echo "  Shell access:  docker compose exec homarr /bin/bash"
+    echo "  View all logs:     docker compose logs -f"
+    echo "  View Homarr logs:  docker compose logs -f homarr"
+    echo "  View DB logs:      docker compose logs -f postgres"
+    echo "  View Redis logs:   docker compose logs -f redis"
+    echo "  Stop all:          docker compose down"
+    echo "  Restart all:       docker compose restart"
+    echo "  Update all:        docker compose pull && docker compose up -d"
+    echo "  Shell access:      docker compose exec homarr /bin/bash"
+    echo
+    echo -e "${BLUE}Database Information:${NC}"
+    echo "  • PostgreSQL 16 running on internal network"
+    echo "  • Redis 7 with password authentication"
+    echo "  • All data persisted in local volumes"
+    echo "  • Production-ready configuration"
     echo
     echo -e "${BLUE}Security Reminder:${NC}"
     echo "  • Your encryption key is stored in .env file"
-    echo "  • Backup this key - it's needed to decrypt your data"
+    echo "  • Database passwords are in .env file"
+    echo "  • Backup this configuration regularly"
     echo "  • Consider using HTTPS in production"
     echo "  • Set up strong passwords for user accounts"
     echo
@@ -223,6 +286,12 @@ show_integration_tips() {
     echo "  3. Enable API integration if supported"
     echo "  4. Add API keys for enhanced features"
     echo
+    echo -e "${BLUE}Performance Benefits:${NC}"
+    echo "  • PostgreSQL: Robust database with ACID compliance"
+    echo "  • Redis: Fast caching reduces page load times"
+    echo "  • Separate containers: Easy scaling and maintenance"
+    echo "  • Health checks: Automatic recovery from failures"
+    echo
     echo "See README.md for detailed integration guides!"
     echo
 }
@@ -230,8 +299,8 @@ show_integration_tips() {
 # Main execution
 main() {
     echo -e "${PURPLE}================================${NC}"
-    echo -e "${PURPLE}   Homarr Dashboard Setup       ${NC}"
-    echo -e "${PURPLE}   Modern Self-Hosted Dashboard ${NC}"
+    echo -e "${PURPLE}   Homarr Stack Setup           ${NC}"
+    echo -e "${PURPLE}   PostgreSQL + Redis + Homarr  ${NC}"
     echo -e "${PURPLE}================================${NC}"
     echo
     
