@@ -1,11 +1,11 @@
 services:
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
-    image: localstack/localstack-pro  # required for Pro
+    image: localstack/localstack-pro
     ports:
-      - "127.0.0.1:4566:4566"            # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
-      - "127.0.0.1:443:443"              # LocalStack HTTPS Gateway (Pro)
+      - "${LOCALSTACK_HOSTNAME:-127.0.0.1}:${LOCALSTACK_PORT:-4566}:4566"            # LocalStack Gateway
+      - "${LOCALSTACK_HOSTNAME:-127.0.0.1}:4510-4559:4510-4559"  # external services port range
+      - "${LOCALSTACK_HOSTNAME:-127.0.0.1}:443:443"              # LocalStack HTTPS Gateway (Pro)
     environment:
       # Activate LocalStack Pro: https://docs.localstack.cloud/getting-started/auth-token/
       - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN:?}  # required for Pro
@@ -14,7 +14,34 @@ services:
       - PERSISTENCE=${PERSISTENCE:-1}  # Enable persistence (Pro feature)
       # Enable Web UI / Cloud Dashboard connectivity
       - LOCALSTACK_WEB_UI=${LOCALSTACK_WEB_UI:-1}
-      - LS_LOG=trace-internal
+      - LS_LOG=${LS_LOG:-trace-internal}
+      # AWS Configuration for easier client setup
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      # Performance optimizations
+      - LOCALSTACK_HOST=localhost
+      - EDGE_PORT=${LOCALSTACK_PORT:-4566}
     volumes:
       - "./volume:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+networks:
+  default:
+    name: localstack-network
+    driver: bridge
