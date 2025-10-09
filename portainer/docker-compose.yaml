@@ -1,14 +1,22 @@
 services:
   portainer:
-    container_name: portainer
-    image: portainer/portainer-ce:lts
-    restart: unless-stopped
+    image: portainer/portainer-ce:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-portainer}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    security_opt:
+      - no-new-privileges:true
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./portainer_data:/data
     ports:
-      - "9000:9000"   # HTTP access
-      - "9443:9443"   # HTTPS access (optional, can remove if you only want HTTP)
+      - "${PORTAINER_PORT:-9000}:9000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
       # - 8000:8000  # Remove if you do not intend to use Edge Agents
 
 networks:
