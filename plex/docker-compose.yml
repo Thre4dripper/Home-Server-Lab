@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  plex:
+    image: plexinc/pms-docker:${PLEX_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-plex}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    network_mode: host
+    environment:
+      - TZ=${TIMEZONE:-UTC}
+      - PLEX_CLAIM=${PLEX_CLAIM_TOKEN:-}
+      - PLEX_UID=${PLEX_UID:-1000}
+      - PLEX_GID=${PLEX_GID:-1003}
+      - ADVERTISE_IP=${ADVERTISE_IP:-}
+      - ALLOWED_NETWORKS=${ALLOWED_NETWORKS:-}
+      - CHANGE_CONFIG_DIR_OWNERSHIP=${CHANGE_CONFIG_DIR_OWNERSHIP:-true}
+    volumes:
+      - ./config:/config
+      - ./transcode:/transcode
+      - ${MEDIA_PATH:-./media}:/data
+      - /etc/localtime:/etc/localtime:ro
+    devices:
+      # Hardware transcoding for Raspberry Pi (if supported)
+      - /dev/dri:/dev/dri
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/identity"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-2G}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-512M}

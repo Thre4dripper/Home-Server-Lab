@@ -1,0 +1,26 @@
+# Data directories
+config/
+transcode/
+media/
+
+# Environment files
+.env
+
+# Logs
+*.log
+logs/
+
+# Plex database backups
+*.backup
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
