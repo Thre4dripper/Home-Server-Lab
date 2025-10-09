@@ -1,0 +1,129 @@
+---
+# Dashy Dashboard Configuration
+# This is the MAIN configuration file - edit this file to make changes
+# After editing, run: ./setup.sh sync to apply changes to the running service
+# The user-data/conf.yml file is automatically managed and should not be edited directly
+
+# Page meta info, like heading, footer text and nav links
+pageInfo:
+  title: 'Home Server Lab Dashboard'
+  description: 'Self-hosted services dashboard for Raspberry Pi homelab'
+  navLinks:
+    - title: GitHub
+      path: https://github.com/Thre4dripper/Home-Server-Lab
+    - title: Homarr
+      path: http://192.168.0.108:7575
+    - title: Portainer
+      path: http://192.168.0.108:9000
+
+# Optional app settings and configuration
+appConfig:
+  theme: colorful
+  layout: auto
+  iconSize: medium
+  language: en
+  startingView: default
+  defaultOpeningMethod: newtab
+  statusCheck: true
+  statusCheckInterval: 300
+  faviconApi: local
+  routingMode: history
+  enableMultiTasking: false
+  widgetsAlwaysUseProxy: false
+  webSearch:
+    disableWebSearch: false
+    searchEngine: duckduckgo
+    openingMethod: newtab
+    searchBangs:
+      /r: reddit
+      /g: google
+      /d: duckduckgo
+      /gh: github
+      /so: stackoverflow
+
+# Main content - An array of sections, each containing an array of items
+sections:
+  - name: Core Services
+    icon: fas fa-server
+    items:
+      - title: Portainer
+        description: Docker container management
+        icon: si-portainer
+        url: http://192.168.0.108:9000
+        target: newtab
+        statusCheck: true
+        
+      - title: Homarr
+        description: Modern dashboard with integrations
+        icon: hl-homarr
+        url: http://192.168.0.108:7575
+        target: newtab
+        statusCheck: true
+
+  - name: Media Services
+    icon: fas fa-play-circle
+    items:
+      - title: Plex Media Server
+        description: Personal media streaming
+        icon: si-plex
+        url: http://192.168.0.108:32400/web
+        target: newtab
+        statusCheck: true
+
+  - name: Development Tools
+    icon: fas fa-code
+    items:
+      - title: LocalStack
+        description: AWS cloud stack emulator
+        icon: hl-localstack
+        url: http://192.168.0.108:4566
+        target: newtab
+        statusCheck: true
+        
+      - title: n8n
+        description: Workflow automation
+        icon: si-n8n
+        url: http://192.168.0.108:5678
+        target: newtab
+        statusCheck: true
+
+  - name: System Monitoring
+    icon: fas fa-chart-line
+    items:
+      - title: Pi System Stats
+        description: Raspberry Pi system monitoring
+        icon: fas fa-microchip
+        url: http://192.168.0.108:8080
+        target: newtab
+        statusCheck: false
+        
+      - title: Router Admin
+        description: Network router configuration
+        icon: fas fa-wifi
+        url: http://192.168.0.1
+        target: newtab
+        statusCheck: false
+
+  - name: External Links
+    icon: fas fa-external-link-alt
+    items:
+      - title: GitHub Repository
+        description: Home Server Lab source code
+        icon: fab fa-github
+        url: https://github.com/Thre4dripper/Home-Server-Lab
+        target: newtab
+        statusCheck: false
+        
+      - title: Raspberry Pi Foundation
+        description: Official Raspberry Pi website
+        icon: fab fa-raspberry-pi
+        url: https://www.raspberrypi.org/
+        target: newtab
+        statusCheck: false
+        
+      - title: Docker Hub
+        description: Container image registry
+        icon: fab fa-docker
+        url: https://hub.docker.com/
+        target: newtab
+        statusCheck: false

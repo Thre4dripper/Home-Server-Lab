@@ -1,0 +1,39 @@
+# Runtime data directory (auto-generated from conf.yml)
+user-data/
+
+# Environment files
+.env
+
+# Backup files
+backups/
+*.backup.*
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker volumes (if using local volumes)
+data/
+config/
