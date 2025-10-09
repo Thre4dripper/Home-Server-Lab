@@ -1,5 +1,7 @@
 # Data directories
 homarr_data/
+postgres_data/
+redis_data/
 
 # Environment files
 .env
@@ -10,6 +12,8 @@ logs/
 
 # Backups
 *.backup
+*.sql
+*.dump
 
 # OS generated files
 .DS_Store
