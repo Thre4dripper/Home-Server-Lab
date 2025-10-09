@@ -1,15 +1,44 @@
-#---------------------------------------------------------------------#
-#     Homarr - A simple, yet powerful dashboard for your server.      #
-#---------------------------------------------------------------------#
+version: '3.8'
+
 services:
   homarr:
-    container_name: homarr
-    image: ghcr.io/homarr-labs/homarr:latest
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
-      - ./homarr_data:/appdata
+    image: ghcr.io/homarr-labs/homarr:${HOMARR_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-homarr}
+    restart: ${RESTART_POLICY:-unless-stopped}
     environment:
-      - SECRET_ENCRYPTION_KEY=0680e12d43227804359a0ed1b10d6d54b13dd4fb704ae53b62fa02a4655bc79b
+      - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
+      - NODE_ENV=${NODE_ENV:-production}
+      - TZ=${TIMEZONE:-UTC}
+      - DB_URL=${DB_URL:-/appdata/db/db.sqlite}
+      - DB_DIALECT=${DB_DIALECT:-sqlite}
+      - DB_DRIVER=${DB_DRIVER:-better-sqlite3}
+      - AUTH_PROVIDERS=${AUTH_PROVIDERS:-credentials}
+      - REDIS_IS_EXTERNAL=${REDIS_IS_EXTERNAL:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - DOCKER_HOSTNAMES=${DOCKER_HOSTNAMES:-}
+      - DOCKER_PORTS=${DOCKER_PORTS:-}
+      - ENABLE_DOCKER=${ENABLE_DOCKER:-true}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./homarr_data:/appdata
+      - /etc/localtime:/etc/localtime:ro
     ports:
-      - '7575:7575'
+      - "${HOMARR_PORT:-7575}:7575"
+    networks:
+      - homarr
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7575"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-1G}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-256M}
+
+networks:
+  homarr:
+    driver: bridge
