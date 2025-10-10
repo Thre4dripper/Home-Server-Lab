@@ -1,0 +1,70 @@
+name: netdata
+
+services:
+  netdata:
+    image: netdata/netdata:${NETDATA_TAG:-stable}
+    container_name: ${CONTAINER_NAME:-netdata}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    
+    # Network configuration
+    ports:
+      - "${NETDATA_PORT:-19999}:19999"
+    
+    # Security context
+    pid: host
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    
+    # Environment variables
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TIMEZONE:-UTC}
+      - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN:-}
+      - NETDATA_CLAIM_URL=${NETDATA_CLAIM_URL:-https://app.netdata.cloud}
+      - NETDATA_CLAIM_ROOMS=${NETDATA_CLAIM_ROOMS:-}
+    
+    # Optimized volume mounts - only essential system monitoring
+    volumes:
+      # Netdata configuration and data (local directories)
+      - ./config:/etc/netdata
+      - ./data:/var/lib/netdata
+      - ./cache:/var/cache/netdata
+      
+      # Essential read-only system mounts for monitoring
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      
+      # Minimal system info (read-only)
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/localtime:/etc/localtime:ro
+      
+      # Optional: Log monitoring (can be removed if not needed)
+      - /var/log:/host/var/log:ro
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-256M}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-64M}
+
+networks:
+  default:
+    name: netdata
+    driver: bridge

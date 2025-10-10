@@ -1,0 +1,26 @@
+# Netdata data directories (auto-generated)
+config/
+data/
+cache/
+
+# Environment files
+.env
+
+# Logs
+*.log
+logs/
+
+# Backups
+*.backup
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
