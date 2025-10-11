@@ -163,6 +163,7 @@ graph TB
         
         # Generate new services content
         new_services_content = "\n## 🚀 **Available Services**\n\n"
+        new_services_content += "> **📝 Note**: This section is automatically generated from individual service README files. To add or update services, modify the service's README.md file with proper metadata frontmatter. See [Contributing Guidelines](./CONTRIBUTING.md#automated-readme-system) for details.\n\n"
         
         # Group services by category
         categories = {}
