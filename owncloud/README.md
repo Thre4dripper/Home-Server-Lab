@@ -1,3 +1,16 @@
+---
+name: "ownCloud"
+category: "📁 File Management & Collaboration"
+purpose: "File Synchronization & Sharing"
+description: "Open-source file synchronization and sharing platform with enterprise features"
+icon: "☁️"
+features:
+  - "Self-hosted file sync and share"
+  - "Web interface and mobile apps"
+  - "User management and permissions"
+resource_usage: "~800MB RAM"
+---
+
 # ownCloud
 
 Open-source file synchronization and sharing platform with enterprise features.

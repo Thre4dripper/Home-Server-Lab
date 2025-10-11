@@ -1,3 +1,16 @@
+---
+name: "Dashby"
+category: "🏡 Dashboard & Network Services"
+purpose: "Service Dashboard"
+description: "Highly customizable, self-hosted dashboard for organizing your homelab services"
+icon: "🎯"
+features:
+  - "Customizable dashboard interface"
+  - "Service status monitoring"
+  - "Advanced search functionality"
+resource_usage: "~150MB RAM"
+---
+
 # Dashy - Self-Hosted Dashboard
 
 Dashy is a highly customizable, self-hosted dashboard for organizing your homelab services and applications. It provides a clean, modern interface with extensive theming options and powerful features like status monitoring, search functionality, and multi-page support.

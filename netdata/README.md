@@ -1,3 +1,16 @@
+---
+name: "Netdata"
+category: "📊 Infrastructure & Monitoring"
+purpose: "Real-time System Monitoring"
+description: "Real-time performance and health monitoring system for systems and applications"
+icon: "📈"
+features:
+  - "Real-time metrics with 1-second granularity"
+  - "Interactive web dashboards"
+  - "Smart alerting and notifications"
+resource_usage: "~250MB RAM"
+---
+
 # Netdata - Real-time System Monitoring
 
 Netdata is a real-time performance and health monitoring system for systems and applications. It provides unparalleled insights, in real-time, of everything happening on your system and applications with stunning, interactive web dashboards and powerful performance and health alarms.

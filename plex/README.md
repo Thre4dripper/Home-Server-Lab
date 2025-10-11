@@ -1,3 +1,16 @@
+---
+name: "Plex"
+category: "🎬 Media & Entertainment"
+purpose: "Media Server"
+description: "Organizes your video, music, and photo collections and streams them to all devices"
+icon: "🎬"
+features:
+  - "Stream personal media anywhere"
+  - "Cross-platform device support"
+  - "Hardware transcoding support"
+resource_usage: "~1GB RAM"
+---
+
 # Plex Media Server - Raspberry Pi Docker Setup
 
 Plex Media Server organizes your video, music, and photo collections and streams them to all of your devices. This setup is optimized for Raspberry Pi with Docker.

@@ -1,3 +1,16 @@
+---
+name: "LocalStack"
+category: "🛠️ Development & DevOps"
+purpose: "AWS Cloud Emulation"
+description: "Easy-to-use test/mocking framework for developing Cloud applications locally"
+icon: "☁️"
+features:
+  - "Local AWS services emulation"
+  - "Development and testing platform"
+  - "Cloud dashboard integration"
+resource_usage: "~500MB RAM"
+---
+
 # LocalStack - AWS Cloud Emulation Platform
 
 ![LocalStack](https://localstack.cloud/images/localstack-readme-banner.svg)
