@@ -403,6 +403,89 @@ Closes #123
 - Keep line length reasonable (80-120 characters)
 - Use relative links for internal references
 
+## 🤖 Automated README System
+
+### Overview
+
+This repository uses an automated system to keep the main README.md synchronized with individual service documentation. **You don't need to manually edit the main README** - it updates automatically based on service metadata.
+
+### Service Metadata Format
+
+Each service README **must** include YAML frontmatter at the top:
+
+```yaml
+---
+name: "Service Name"
+category: "📊 Infrastructure & Monitoring"
+purpose: "Brief Purpose Description" 
+description: "Longer description for main README"
+icon: "🔧"
+features:
+  - "Key feature 1"
+  - "Key feature 2"
+  - "Key feature 3"
+resource_usage: "~200MB RAM"
+---
+```
+
+### Required Fields
+
+- **name**: Display name for the service
+- **category**: One of the predefined categories (see below)
+- **purpose**: Brief one-line description
+- **description**: Detailed description for main README
+- **icon**: Emoji icon for diagrams
+- **features**: List of 2-3 key features
+- **resource_usage**: Typical memory/resource consumption
+
+### Categories
+
+Use **exactly** one of these categories:
+
+- `📊 Infrastructure & Monitoring`
+- `🛠️ Development & DevOps`
+- `📁 File Management & Collaboration`
+- `🎬 Media & Entertainment`
+- `🏡 Dashboard & Network Services`
+
+### Validation
+
+Before submitting your PR, validate your service metadata:
+
+```bash
+python3 .github/scripts/validate-service.py your-service-directory
+```
+
+Otherwise the validation workflow in GitHub Actions will comment on your PR if there are issues.
+
+### How It Works
+
+1. **Automatic Scanning**: GitHub Actions scans all directories for README files with metadata
+2. **Table Generation**: Creates categorized service tables in main README
+3. **Diagram Updates**: Updates the mermaid architecture diagram
+4. **PR Validation**: Checks metadata on pull requests
+5. **Auto-Commit**: Commits changes to main branch after merge
+
+### Benefits
+
+- ✅ **Always Current**: Main README reflects repository state
+- ✅ **No Manual Editing**: Focus on service documentation only
+- ✅ **Consistent Format**: Enforced standards across all services
+- ✅ **Validation**: Catch errors before merge
+
+### Troubleshooting
+
+**Service not appearing in main README?**
+- Check YAML frontmatter syntax
+- Verify all required fields are present
+- Run validation script locally
+- Check GitHub Actions logs
+
+**Metadata validation failing?**
+- Ensure category matches exactly (copy from list above)
+- Check that features is a list with at least 2 items
+- Verify YAML syntax is correct
+
 ## 🌟 Recognition
 
 Contributors will be recognized in several ways:
