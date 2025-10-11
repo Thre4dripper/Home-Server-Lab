@@ -1,0 +1,93 @@
+# Global .gitignore for Home Server Lab
+
+# Environment files with sensitive data
+**/.env
+**/.env.local
+**/.env.production
+**/.env.staging
+
+# Database data directories
+**/mysql_data/
+**/postgres_data/
+**/mariadb_data/
+**/mongodb_data/
+
+# Application data directories
+**/seafile-data/
+**/nextcloud_data/
+**/plex_data/
+**/grafana_data/
+**/prometheus_data/
+**/elasticsearch_data/
+**/logs/
+**/data/
+
+# SSL certificates and keys
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+**/certs/
+
+# Backup files
+**/*.sql
+**/*.dump
+**/backup_*
+**/backups/
+
+# Temporary files
+**/.tmp/
+**/temp/
+**/*.tmp
+**/*.swp
+**/*.swo
+**/*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker override files (if using local overrides)
+**/docker-compose.override.yml
+
+# IDE files
+.vscode/
+.idea/
+**/*.iml
+
+# Log files
+**/*.log
+**/logs/
+
+# Local configuration overrides
+**/local.yml
+**/local.json
+**/config.local.*
+
+# Runtime data
+**/pids/
+**/*.pid
+**/*.pid.lock
+
+# Coverage reports
+**/coverage/
+**/.nyc_output/
+
+# Dependency directories
+**/node_modules/
+**/vendor/
+
+# Python cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Archive files (usually backups)
+**/*.tar.gz
+**/*.zip
+**/*.rar
