@@ -1,3 +1,16 @@
+---
+name: "n8n"
+category: "🛠️ Development & DevOps"
+purpose: "Workflow Automation"
+description: "Fair-code licensed workflow automation tool with visual workflow builder"
+icon: "🔄"
+features:
+  - "Visual workflow builder"
+  - "300+ integrations"
+  - "API and webhook support"
+resource_usage: "~300MB RAM"
+---
+
 # n8n with PostgreSQL Docker Setup
 
 This Docker Compose setup provides n8n with PostgreSQL database backend.

@@ -1,3 +1,16 @@
+---
+name: "Pydio"
+category: "📁 File Management & Collaboration"
+purpose: "File Management Platform"
+description: "Modern file sharing platform with team collaboration and external storage support"
+icon: "📁"
+features:
+  - "Web-based file management"
+  - "Team collaboration tools"
+  - "External storage integration"
+resource_usage: "~400MB RAM"
+---
+
 # Pydio Cells File Sharing Docker Setup
 
 This Docker Compose setup provides Pydio Cells file sharing platform with MySQL database backend and external storage support. Configuration is managed entirely through environment variables.

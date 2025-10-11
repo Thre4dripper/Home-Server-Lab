@@ -1,3 +1,16 @@
+---
+name: "Gitea"
+category: "🛠️ Development & DevOps"
+purpose: "Lightweight Git Service"
+description: "Lightweight, self-hosted Git service with web interface, similar to GitHub"
+icon: "🍃"
+features:
+  - "Git hosting with web interface"
+  - "Pull requests and code review"
+  - "Issue tracking and project management"
+resource_usage: "~200MB RAM"
+---
+
 # Gitea Git Service Setup
 
 A lightweight, self-hosted Git service with web interface, similar to GitHub but running on your own infrastructure.

@@ -1,3 +1,16 @@
+---
+name: "Pi-hole"
+category: "🏡 Dashboard & Network Services"
+purpose: "Network Ad Blocker"
+description: "DNS-level ad blocking for network-wide protection and enhanced privacy"
+icon: "🛡️"
+features:
+  - "Network-wide ad blocking"
+  - "DNS-level filtering"
+  - "Detailed query analytics"
+resource_usage: "~100MB RAM"
+---
+
 # Pi-hole DNS Server Docker Setup
 
 This Docker Compose setup provides Pi-hole DNS server with local DNS management and ad-blocking capabilities.

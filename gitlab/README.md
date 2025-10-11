@@ -1,3 +1,16 @@
+---
+name: "GitLab"
+category: "🛠️ Development & DevOps"
+purpose: "Full DevOps Platform"
+description: "Complete DevOps platform that enables teams to collaborate on code, deploy applications, and monitor performance"
+icon: "🦊"
+features:
+  - "Git repos with CI/CD pipelines"
+  - "Issue tracking and project management"
+  - "Container and package registries"
+resource_usage: "~2GB RAM"
+---
+
 # GitLab Community Edition Setup
 
 A complete DevOps platform that enables teams to collaborate on code, deploy applications, and monitor performance - all in one place.

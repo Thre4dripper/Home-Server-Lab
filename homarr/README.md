@@ -1,3 +1,16 @@
+---
+name: "Homarr"
+category: "🏡 Dashboard & Network Services"
+purpose: "Homepage Dashboard"
+description: "Sleek, modern dashboard that brings all of your self-hosted services together in one place"
+icon: "🏡"
+features:
+  - "Customizable homepage dashboard"
+  - "Service integration and monitoring"
+  - "Modern responsive interface"
+resource_usage: "~200MB RAM"
+---
+
 # Homarr - Modern Dashboard with PostgreSQL & Redis
 
 Homarr is a sleek, modern dashboard that brings all of your self-hosted services together in one place. This setup uses **PostgreSQL 16** for robust data storage and **Redis 7** for high-performance caching, providing a production-ready configuration.

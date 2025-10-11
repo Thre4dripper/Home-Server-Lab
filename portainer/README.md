@@ -1,3 +1,16 @@
+---
+name: "Portainer"
+category: "📊 Infrastructure & Monitoring"
+purpose: "Container Management"
+description: "Lightweight service delivery platform for containerized applications"
+icon: "📊"
+features:
+  - "Complete Docker management interface"
+  - "Multi-user support with RBAC"
+  - "Application templates for quick deployment"
+resource_usage: "~100MB RAM"
+---
+
 # Portainer - Docker Management UI
 
 Portainer Community Edition (CE) is a lightweight service delivery platform for containerized applications that can be used to manage Docker, Swarm, Kubernetes and ACI environments.

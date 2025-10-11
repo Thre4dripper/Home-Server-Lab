@@ -1,3 +1,16 @@
+---
+name: "Seafile Pro"
+category: "📁 File Management & Collaboration"
+purpose: "Enterprise File Sync"
+description: "Enterprise file synchronization and sharing platform with real-time collaboration"
+icon: "🌊"
+features:
+  - "Real-time collaboration and editing"
+  - "Desktop and mobile sync clients"
+  - "Enterprise features included"
+resource_usage: "~1GB RAM"
+---
+
 # Seafile Pro Edition
 
 Enterprise file synchronization and sharing platform using the official Docker setup.
