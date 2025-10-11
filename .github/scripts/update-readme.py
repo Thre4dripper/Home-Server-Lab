@@ -223,6 +223,8 @@ graph LR
         
         # Generate new services content
         new_services_content = "\n## 🚀 **Available Services**\n\n"
+        new_services_content += "> **📝 Note:** This section is automatically generated from individual service README.md files. "
+        new_services_content += "To update service information, edit the respective service's README.md file and the changes will be reflected here automatically.\n\n"
         
         # Group services by category
         categories = {}
@@ -257,9 +259,21 @@ graph LR
         # Update mermaid diagram if present
         mermaid_start = new_content.find('```mermaid')
         if mermaid_start != -1:
-            mermaid_end = new_content.find('```', mermaid_start + 10) + 3
-            new_diagram = self.generate_mermaid_diagram(services)
-            new_content = new_content[:mermaid_start] + new_diagram + new_content[mermaid_end:]
+            # Look for any existing note before the mermaid diagram
+            note_pattern = r'> \*\*📝 Note:\*\*.*?\n\n```mermaid'
+            note_match = re.search(note_pattern, new_content[:mermaid_start + 50], re.DOTALL)
+            
+            if note_match:
+                # Note already exists, just update the diagram
+                mermaid_end = new_content.find('```', mermaid_start + 10) + 3
+                new_diagram = self.generate_mermaid_diagram(services)
+                new_content = new_content[:mermaid_start] + new_diagram + new_content[mermaid_end:]
+            else:
+                # Add note before the mermaid diagram
+                mermaid_end = new_content.find('```', mermaid_start + 10) + 3
+                new_diagram_with_note = "> **📝 Note:** This architecture diagram is automatically generated from service metadata. Changes will be reflected when services are added or modified.\n\n"
+                new_diagram_with_note += self.generate_mermaid_diagram(services)
+                new_content = new_content[:mermaid_start] + new_diagram_with_note + new_content[mermaid_end:]
         
         # Write updated content
         with open(readme_path, 'w', encoding='utf-8') as f:
