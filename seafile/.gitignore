@@ -1,0 +1,48 @@
+# Environment files with sensitive data
+.env
+.env.local
+.env.production
+.env.staging
+
+# Data directories
+data/
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+
+# Backup files
+*.sql
+*.dump
+backup_*
+
+# Temporary files
+.tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker override files
+docker-compose.override.yml
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Log files
+*.log
+logs/
