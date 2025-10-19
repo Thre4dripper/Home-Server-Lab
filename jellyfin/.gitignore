@@ -1,0 +1,14 @@
+# Jellyfin data directories
+config/
+cache/
+media/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
