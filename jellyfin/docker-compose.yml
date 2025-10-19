@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:${JELLYFIN_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-jellyfin}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    
+    ports:
+      - "${JELLYFIN_HTTP_PORT:-8096}:8096"
+      - "${JELLYFIN_HTTPS_PORT:-8920}:8920" # if TLS is enabled in Jellyfin
+    
+    environment:
+      - TZ=${TIMEZONE:-UTC}
+      - JELLYFIN_PublishedServerUrl=${PUBLISHED_SERVER_URL:-}
+
+    # Run as specific user/group for file permissions
+    user: "${PUID:-1000}:${PGID:-1000}"
+
+    volumes:
+      - ./config:/config
+      - ./cache:/cache
+      - ${MEDIA_PATH:-./media}:/media
+      - /etc/localtime:/etc/localtime:ro
+
+    # Hardware acceleration (enable as available)
+    devices:
+      - /dev/dri:/dev/dri # Intel/VAAPI; on RPi may be absent
+      # - /dev/video10:/dev/video10 # RPi MMAL/V4L2 (optional)
+      # - /dev/video11:/dev/video11
+      # - /dev/video12:/dev/video12
+
+    healthcheck:
+      # Public info endpoint returns 200 when server is up
+      test: ["CMD", "curl", "-fsS", "http://localhost:8096/System/Info/Public"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-2G}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-256M}
