@@ -1,0 +1,13 @@
+# qBittorrent data directories
+config/
+downloads/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
