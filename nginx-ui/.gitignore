@@ -7,11 +7,6 @@ nginx/
 # Environment variables
 .env
 
-# Backups
-backups/
-*.sql
-*.tar.gz
-
 # Logs
 *.log
 
