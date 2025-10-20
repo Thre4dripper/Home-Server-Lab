@@ -1,0 +1,47 @@
+services:
+  filebrowser:
+    image: filebrowser/filebrowser:${FILEBROWSER_TAG:-s6}
+    container_name: ${CONTAINER_NAME:-filebrowser}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    
+    # Network configuration
+    ports:
+      - "${FILEBROWSER_PORT:-8080}:80"
+    
+    # User configuration for file permissions
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TIMEZONE:-UTC}
+    
+    volumes:
+      # FileBrowser configuration and database
+      - ./config:/config
+      - ./database:/database
+      
+      # Root directory to browse (entire server by default)
+      # Change SRV_PATH in .env to browse a specific directory instead
+      - ${SRV_PATH:-/home/pi}:/srv
+      
+      # Optional: Mount additional directories
+      # - /mnt:/mnt:ro  # External drives (read-only)
+      # - /var/log:/logs:ro  # System logs (read-only)
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-256M}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-64M}
+
+networks:
+  default:
+    name: filebrowser
+    driver: bridge
