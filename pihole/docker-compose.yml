@@ -18,8 +18,8 @@ services:
       PIHOLE_UID: 1000
       PIHOLE_GID: 1000
     ports:
-      - "5300:53/tcp"      # Pi-hole DNS over TCP
-      - "5300:53/udp"      # Pi-hole DNS over UDP  
+      - "53:53/tcp"      # Pi-hole DNS over TCP
+      - "53:53/udp"      # Pi-hole DNS over UDP  
       - "8080:80/tcp"      # Pi-hole web interface on port 8080
       # If HTTPS is needed later, expose it after enabling inside Pi-hole
       # - "8443:443/tcp"     # (Optional) Pi-hole HTTPS on port 8443
