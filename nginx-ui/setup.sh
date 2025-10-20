@@ -23,10 +23,10 @@ case "${1:-up}" in
       echo "⚠️  No .env file found. Creating from .env.example..."
       cp .env.example .env
       echo ""
-      echo "⚠️  IMPORTANT: Edit .env and change DB_PASSWORD before starting!"
-      echo "Run: nano .env"
+      echo "✅ Using default SQLite database (recommended for home labs)"
+      echo "💡 For larger deployments, you can enable PostgreSQL in docker-compose.yml"
       echo ""
-      read -p "Press Enter to continue or Ctrl+C to abort..."
+      read -p "Press Enter to continue..."
     fi
     
     docker compose -f "$compose_file" up -d 
@@ -49,6 +49,9 @@ case "${1:-up}" in
     echo "   - ./nginx/proxy_host/     - Proxy configurations"
     echo "   - ./nginx/custom/         - Custom nginx configs"
     echo "   - ./nginx/snippets/       - Reusable config snippets"
+    echo ""
+    echo "💾 Database: SQLite (./data/database.sqlite)"
+    echo "💡 To use PostgreSQL for larger deployments, uncomment db service in docker-compose.yml"
     ;;
   down)
     docker compose -f "$compose_file" down ;;
@@ -58,20 +61,49 @@ case "${1:-up}" in
     docker compose -f "$compose_file" logs -f "${2:-nginx-proxy-manager}" ;;
   backup)
     DATE=$(date +%Y%m%d_%H%M%S)
-    echo "Creating backup: backups/npm_db_${DATE}.sql"
-    docker compose -f "$compose_file" exec -T db pg_dump -U npm npm > "backups/npm_db_${DATE}.sql"
-    echo "Creating backup: backups/npm_data_${DATE}.tar.gz"
-    tar -czf "backups/npm_data_${DATE}.tar.gz" ./data ./letsencrypt ./nginx 2>/dev/null || true
+    echo "Creating SQLite database backup: backups/database_${DATE}.sqlite"
+    sudo cp ./data/database.sqlite "backups/database_${DATE}.sqlite" 2>/dev/null && sudo chown $(whoami):$(whoami) "backups/database_${DATE}.sqlite" || echo "⚠️  Database file not found yet"
+    echo "Creating data backup: backups/npm_data_${DATE}.tar.gz"
+    sudo tar -czf "backups/npm_data_${DATE}.tar.gz" ./data ./letsencrypt ./nginx 2>/dev/null && sudo chown $(whoami):$(whoami) "backups/npm_data_${DATE}.tar.gz" || true
     echo "✅ Backup complete!"
+    echo ""
+    echo "💡 If using PostgreSQL, use: docker compose exec db pg_dump -U npm npm > backup.sql"
     ;;
   restore)
     if [ -z "${2:-}" ]; then
-      echo "Usage: $0 restore <backup.sql>"
+      echo "Usage: $0 restore <backup.sqlite>"
+      echo "Example: $0 restore backups/database_20251020.sqlite"
+      echo ""
+      echo "Available backups:"
+      ls -lh backups/*.sqlite 2>/dev/null || echo "  No backups found"
       exit 1
     fi
-    echo "Restoring database from $2..."
-    docker compose -f "$compose_file" exec -T db psql -U npm npm < "$2"
+    
+    # Check if file exists, if not try backups/ directory
+    BACKUP_FILE="$2"
+    if [ ! -f "$BACKUP_FILE" ]; then
+      # Try looking in backups/ directory
+      if [ -f "backups/$2" ]; then
+        BACKUP_FILE="backups/$2"
+      else
+        echo "❌ Error: Backup file not found: $2"
+        echo ""
+        echo "Available backups:"
+        ls -lh backups/*.sqlite 2>/dev/null || echo "  No backups found"
+        exit 1
+      fi
+    fi
+    
+    echo "Stopping container..."
+    docker compose -f "$compose_file" down
+    echo "Restoring SQLite database from $BACKUP_FILE..."
+    sudo cp "$BACKUP_FILE" ./data/database.sqlite
+    sudo chown root:root ./data/database.sqlite
+    echo "Starting container..."
+    docker compose -f "$compose_file" up -d
     echo "✅ Restore complete!"
+    echo ""
+    echo "💡 For PostgreSQL restore: docker compose exec -T db psql -U npm npm < backup.sql"
     ;;
   pull)
     docker compose -f "$compose_file" pull && docker compose -f "$compose_file" up -d ;;
