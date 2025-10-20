@@ -24,7 +24,8 @@ Nginx Proxy Manager is a user-friendly web interface for managing Nginx reverse 
 - **Custom Configurations** - Advanced nginx configs available
 
 ## Architecture
-- **PostgreSQL Database** - Stores all configurations
+- **SQLite Database** - Lightweight built-in database (default, perfect for home labs)
+- **PostgreSQL (Optional)** - For larger deployments or better performance under heavy load
 - **Exposed Config Files** - Nginx configs available as bind mounts for programmatic access
 
 ## Prerequisites
@@ -111,13 +112,17 @@ EOF
 ```
 
 ### Database Configuration
-PostgreSQL is used for storing all NPM configurations:
-- Host: `db` (internal Docker network)
-- Port: `5432`
-- Database: `npm`
-- User/Password: Set in `.env` file
+By default, NPM uses **SQLite** for storing all configurations:
+- Database file: `./data/database.sqlite`
+- Automatic initialization on first run
+- Perfect for home lab usage - simple and reliable
+- No additional containers needed
 
-**⚠️ IMPORTANT:** Change the default database password in `.env` before first run!
+**For larger deployments or production use**, you can optionally use PostgreSQL:
+1. Uncomment the `db` service in `docker-compose.yml`
+2. Uncomment the `environment` and `depends_on` sections in the `nginx-proxy-manager` service
+3. Update `DB_PASSWORD` in `.env` file
+4. Restart: `docker compose up -d`
 
 ## Common Use Cases
 
@@ -152,15 +157,14 @@ Upload your own certificates in the SSL Certificates section.
 ## Management Commands
 
 ```bash
-# Start services
+# Start service
 docker compose up -d
 
-# Stop services
+# Stop service
 docker compose down
 
 # View logs
 docker compose logs -f nginx-proxy-manager
-docker compose logs -f db
 
 # Update
 docker compose pull && docker compose up -d
@@ -170,20 +174,24 @@ docker compose restart nginx-proxy-manager
 
 # Shell access
 docker compose exec nginx-proxy-manager /bin/sh
-docker compose exec db psql -U npm
 
-# Backup database
-docker compose exec db pg_dump -U npm npm > backup.sql
+# Backup SQLite database
+cp ./data/database.sqlite ./backups/database_$(date +%Y%m%d).sqlite
 
-# Restore database
-docker compose exec -T db psql -U npm npm < backup.sql
+# Access SQLite database directly
+docker compose exec nginx-proxy-manager sqlite3 /data/database.sqlite
+
+# If using PostgreSQL (optional):
+# docker compose logs -f db
+# docker compose exec db psql -U npm
+# docker compose exec db pg_dump -U npm npm > backup.sql
 ```
 
 ## Data Persistence
-- `./data/` - Application data and SQLite fallback
+- `./data/` - Application data and SQLite database
 - `./letsencrypt/` - SSL certificates
-- `./postgres/` - PostgreSQL database
 - `./nginx/` - Nginx configuration files (editable)
+- `./postgres/` - PostgreSQL data (only if using PostgreSQL option)
 
 ## Port Configuration
 
@@ -209,8 +217,8 @@ On first login, you'll be forced to change:
 - Admin email
 - Admin password
 
-### Database Password
-Update `DB_PASSWORD` in `.env` before first run:
+### Database Security (PostgreSQL only)
+If you enable PostgreSQL, update `DB_PASSWORD` in `.env` before first run:
 ```bash
 DB_PASSWORD=$(openssl rand -base64 32)
 ```
