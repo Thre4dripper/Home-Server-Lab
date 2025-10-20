@@ -85,20 +85,20 @@ echo "🧪 Testing Pi-hole Configuration..."
 
 # Test external DNS resolution
 echo -n "External DNS (google.com): "
-if dig @$PI_IP -p 5300 google.com +short > /dev/null 2>&1; then
+if dig @$PI_IP -p 53 google.com +short > /dev/null 2>&1; then
     echo "✅ Working"
 else
     echo "❌ Failed"
-    echo "   Note: Pi-hole DNS is running on port 5300"
+    echo "   Note: Pi-hole DNS is running on port 53"
 fi
 
 # Test local DNS resolution
 echo -n "Local DNS (pihole.lan):    "
-if dig @$PI_IP -p 5300 pihole.lan +short | grep -q "$PI_IP"; then
+if dig @$PI_IP -p 53 pihole.lan +short | grep -q "$PI_IP"; then
     echo "✅ Working"
 else
     echo "❌ Failed"
-    echo "   Try: dig @$PI_IP -p 5300 pihole.lan"
+    echo "   Try: dig @$PI_IP -p 53 pihole.lan"
 fi
 
 # Test web interface
@@ -115,13 +115,13 @@ echo ""
 echo "📋 Configuration Details:"
 echo "   • Web Interface: http://$PI_IP:8080/admin/"
 echo "   • Admin Password: ${WEBPASSWORD:-admin123}"
-echo "   • DNS Server: $PI_IP:5300"
+echo "   • DNS Server: $PI_IP:53"
 echo ""
 echo "📱 Next Steps:"
 echo "   1. Set device DNS to: $PI_IP"
-echo "   2. Test with: dig @$PI_IP -p 5300 google.com"
+echo "   2. Test with: dig @$PI_IP -p 53 google.com"
 echo "   3. Edit 'dns-entries.conf' to add more local domains"
 echo "   4. Re-run './setup.sh' to apply DNS changes"
 echo ""
-echo "⚠️  Note: Pi-hole DNS runs on port 5300 (not standard port 53)"
+echo "⚠️  Note: Pi-hole DNS runs on port 53 (not standard port 53)"
 echo "   This avoids conflicts with system DNS on port 53"
