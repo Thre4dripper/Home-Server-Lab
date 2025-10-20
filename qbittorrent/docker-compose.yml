@@ -1,0 +1,59 @@
+services:
+  qbittorrent:
+    image: qbittorrentofficial/qbittorrent-nox:${QBT_VERSION:-latest}
+    container_name: ${CONTAINER_NAME:-qbittorrent}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    
+    # Network ports
+    ports:
+      - "${QBT_WEBUI_PORT:-8080}:${QBT_WEBUI_PORT:-8080}"          # WebUI
+      - "${QBT_TORRENTING_PORT:-6881}:${QBT_TORRENTING_PORT:-6881}/tcp"   # Torrenting TCP
+      - "${QBT_TORRENTING_PORT:-6881}:${QBT_TORRENTING_PORT:-6881}/udp"   # Torrenting UDP
+    
+    # Environment configuration
+    environment:
+      - QBT_LEGAL_NOTICE=${QBT_LEGAL_NOTICE:-confirm}
+      - QBT_WEBUI_PORT=${QBT_WEBUI_PORT:-8080}
+      - QBT_TORRENTING_PORT=${QBT_TORRENTING_PORT:-6881}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TIMEZONE:-UTC}
+      - UMASK=${UMASK:-022}
+    
+    volumes:
+      # Configuration and state
+      - ./config:/config
+      
+      # Downloads directory
+      - ${DOWNLOADS_PATH:-./downloads}:/downloads
+      
+      # Optional: Additional paths for organizing downloads
+      # - ${MEDIA_PATH:-./media}:/media
+      
+      # Temporary files
+      - /tmp:/tmp
+    
+    # Security: Remove read-only if you need to set PUID/PGID
+    # read_only: true
+    
+    # Stop timeout for graceful shutdown
+    stop_grace_period: 30m
+    
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${QBT_WEBUI_PORT:-8080} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-1G}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-256M}
+
+networks:
+  default:
+    name: qbittorrent
+    driver: bridge
