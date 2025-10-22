@@ -1,9 +1,9 @@
-name: dashby
+name: dashy
 
 services:
   dashy:
     image: lissy93/dashy:${DASHY_TAG:-latest}
-    container_name: ${CONTAINER_NAME:-dashby}
+    container_name: ${CONTAINER_NAME:-dashy}
     restart: ${RESTART_POLICY:-unless-stopped}
     environment:
       - NODE_ENV=${NODE_ENV:-production}
@@ -16,7 +16,7 @@ services:
     ports:
       - "${DASHY_PORT:-4000}:8080"
     networks:
-      - dashby
+      - dashy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080"]
       interval: 30s
@@ -31,5 +31,5 @@ services:
           memory: ${MEMORY_RESERVATION:-128M}
 
 networks:
-  dashby:
+  dashy:
     driver: bridge

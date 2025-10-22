@@ -1,5 +1,5 @@
 ---
-name: "Dashby"
+name: "Dashy"
 category: "🏡 Dashboard & Network Services"
 purpose: "Service Dashboard"
 description: "Highly customizable, self-hosted dashboard for organizing your homelab services"
@@ -88,7 +88,7 @@ nano ./conf.yml
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `DASHY_TAG` | Docker image tag | `latest` |
-| `CONTAINER_NAME` | Container name | `dashby` |
+| `CONTAINER_NAME` | Container name | `dashy` |
 | `NODE_ENV` | Environment mode | `production` |
 | `PUID` | User ID for file permissions | `1000` |
 | `PGID` | Group ID for file permissions | `1000` |
