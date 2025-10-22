@@ -198,7 +198,7 @@ graph LR
     class Gitlab,Gitea,Localstack,N8N devNode
     class Plex mediaNode
     class Pydio,Seafile,Owncloud fileNode
-    class Dashby,Homarr,Pihole dashNode
+    class Dashy,Homarr,Pihole dashNode
 ```"""
         return diagram
     

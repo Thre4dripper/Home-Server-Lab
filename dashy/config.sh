@@ -18,7 +18,7 @@ cd "$SCRIPT_DIR"
 
 # Configuration
 SERVICE_NAME="Dashy Dashboard"
-CONTAINER_NAME="dashby"
+CONTAINER_NAME="dashy"
 DEFAULT_PORT="4000"
 
 # Print colored output
