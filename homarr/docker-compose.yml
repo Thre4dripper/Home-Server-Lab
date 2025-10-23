@@ -1,43 +1,41 @@
-version: '3.8'
+# For simple/personal use, you can run Homarr with just SQLite (no Postgres/Redis). 
+# Uncomment the postgres and redis sections below for high-performance/production setups.
 
 services:
   homarr:
     image: ghcr.io/homarr-labs/homarr:${HOMARR_TAG:-latest}
     container_name: ${CONTAINER_NAME:-homarr}
     restart: ${RESTART_POLICY:-unless-stopped}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    # For production/high-performance, uncomment the depends_on section below:
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   redis:
+    #     condition: service_healthy
     environment:
       - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
       - NODE_ENV=${NODE_ENV:-production}
       - TZ=${TIMEZONE:-UTC}
-      
-      # Database Configuration
-      - DB_DIALECT=${DB_DIALECT:-postgresql}
-      - DB_DRIVER=${DB_DRIVER:-node-postgres}
-      - DB_HOST=${DB_HOST:-postgres}
-      - DB_PORT=${DB_PORT:-5432}
-      - DB_USER=${POSTGRES_USER:-homarr}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - DB_NAME=${POSTGRES_DB:-homarr}
-      
-      # Redis Configuration
-      - REDIS_IS_EXTERNAL=${REDIS_IS_EXTERNAL:-true}
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_DATABASE_INDEX=${REDIS_DATABASE_INDEX:-0}
-      
-      # Authentication Configuration
+      # For simple/personal use, use SQLite (default):
+      - DB_DIALECT=${DB_DIALECT:-sqlite}
+      - DB_DRIVER=${DB_DRIVER:-better-sqlite3}
+      - DB_URL=${DB_URL:-/appdata/db/db.sqlite}
+      # For production, set DB_DIALECT to postgresql and configure Postgres below
+      # - DB_DIALECT=${DB_DIALECT:-postgresql}
+      # - DB_DRIVER=${DB_DRIVER:-node-postgres}
+      # - DB_HOST=${DB_HOST:-postgres}
+      # - DB_PORT=${DB_PORT:-5432}
+      # - DB_USER=${POSTGRES_USER:-homarr}
+      # - DB_PASSWORD=${POSTGRES_PASSWORD}
+      # - DB_NAME=${POSTGRES_DB:-homarr}
+      # Redis is optional for caching/session storage. Uncomment for production:
+      # - REDIS_IS_EXTERNAL=${REDIS_IS_EXTERNAL:-true}
+      # - REDIS_HOST=${REDIS_HOST:-redis}
+      # - REDIS_PORT=${REDIS_PORT:-6379}
+      # - REDIS_PASSWORD=${REDIS_PASSWORD}
+      # - REDIS_DATABASE_INDEX=${REDIS_DATABASE_INDEX:-0}
       - AUTH_PROVIDERS=${AUTH_PROVIDERS:-credentials}
-      
-      # Logging Configuration
       - LOG_LEVEL=${LOG_LEVEL:-info}
-      
-      # Docker Integration
       - DOCKER_HOSTNAMES=${DOCKER_HOSTNAMES:-}
       - DOCKER_PORTS=${DOCKER_PORTS:-}
       - ENABLE_DOCKER=${ENABLE_DOCKER:-true}
@@ -62,57 +60,61 @@ services:
         reservations:
           memory: ${HOMARR_MEMORY_RESERVATION:-256M}
   
-  postgres:
-    image: postgres:${POSTGRES_VERSION:-16}
-    container_name: ${POSTGRES_CONTAINER_NAME:-homarr-postgres}
-    restart: ${RESTART_POLICY:-unless-stopped}
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-homarr}
-      - POSTGRES_USER=${POSTGRES_USER:-homarr}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - TZ=${TIMEZONE:-UTC}
-    volumes:
-      - ./postgres_data:/var/lib/postgresql/data
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - homarr
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-homarr} -d ${POSTGRES_DB:-homarr}"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: ${POSTGRES_MEMORY_LIMIT:-512M}
-        reservations:
-          memory: ${POSTGRES_MEMORY_RESERVATION:-128M}
+  # ---
+  # The following services are recommended for high-performance/production setups only.
+  # Uncomment to enable PostgreSQL and Redis for Homarr:
+  #
+  # postgres:
+  #   image: postgres:${POSTGRES_VERSION:-16}
+  #   container_name: ${POSTGRES_CONTAINER_NAME:-homarr-postgres}
+  #   restart: ${RESTART_POLICY:-unless-stopped}
+  #   environment:
+  #     - POSTGRES_DB=${POSTGRES_DB:-homarr}
+  #     - POSTGRES_USER=${POSTGRES_USER:-homarr}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #     - TZ=${TIMEZONE:-UTC}
+  #   volumes:
+  #     - ./postgres_data:/var/lib/postgresql/data
+  #     - /etc/localtime:/etc/localtime:ro
+  #   networks:
+  #     - homarr
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-homarr} -d ${POSTGRES_DB:-homarr}"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 30s
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: ${POSTGRES_MEMORY_LIMIT:-512M}
+  #       reservations:
+  #         memory: ${POSTGRES_MEMORY_RESERVATION:-128M}
 
-  redis:
-    image: redis:${REDIS_VERSION:-7}
-    container_name: ${REDIS_CONTAINER_NAME:-homarr-redis}
-    restart: ${RESTART_POLICY:-unless-stopped}
-    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory ${REDIS_MEMORY_LIMIT:-256mb} --maxmemory-policy allkeys-lru
-    environment:
-      - TZ=${TIMEZONE:-UTC}
-    volumes:
-      - ./redis_data:/data
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - homarr
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: ${REDIS_MEMORY_LIMIT:-256M}
-        reservations:
-          memory: ${REDIS_MEMORY_RESERVATION:-64M}
+  # redis:
+  #   image: redis:${REDIS_VERSION:-7}
+  #   container_name: ${REDIS_CONTAINER_NAME:-homarr-redis}
+  #   restart: ${RESTART_POLICY:-unless-stopped}
+  #   command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory ${REDIS_MEMORY_LIMIT:-256mb} --maxmemory-policy allkeys-lru
+  #   environment:
+  #     - TZ=${TIMEZONE:-UTC}
+  #   volumes:
+  #     - ./redis_data:/data
+  #     - /etc/localtime:/etc/localtime:ro
+  #   networks:
+  #     - homarr
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 30s
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: ${REDIS_MEMORY_LIMIT:-256M}
+  #       reservations:
+  #         memory: ${REDIS_MEMORY_RESERVATION:-64M}
 
 networks:
   homarr:
