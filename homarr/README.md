@@ -11,15 +11,15 @@ features:
 resource_usage: "~200MB RAM"
 ---
 
-# Homarr - Modern Dashboard with PostgreSQL & Redis
+# Homarr - Modern Dashboard (SQLite Default)
 
-Homarr is a sleek, modern dashboard that brings all of your self-hosted services together in one place. This setup uses **PostgreSQL 16** for robust data storage and **Redis 7** for high-performance caching, providing a production-ready configuration.
+Homarr is a sleek, modern dashboard that brings all of your self-hosted services together in one place. For simple/personal use, this setup defaults to **SQLite** for data storage. For high-performance or production environments, you can enable **PostgreSQL 16** for robust data storage and **Redis 7** for high-performance caching.
 
 ## Architecture
 
-This deployment consists of three containers:
-- **🗄️ PostgreSQL 16**: Robust database backend with ACID compliance
-- **🚀 Redis 7**: High-performance caching and session storage  
+This deployment defaults to a single **Homarr** container with SQLite. For production/high-performance, you can enable additional containers:
+- **🗄️ PostgreSQL 16**: Robust database backend with ACID compliance (Optional, for production)
+- **🚀 Redis 7**: High-performance caching and session storage (Optional, for production)  
 - **🎛️ Homarr**: Modern dashboard frontend with extensive integrations
 
 ## Features
@@ -96,27 +96,27 @@ DB_DRIVER=better-sqlite3
 DB_URL=/appdata/db/db.sqlite
 ```
 
-**MySQL**:
-```env
-DB_DIALECT=mysql
-DB_DRIVER=mysql2
-DB_HOST=mysql-server
-DB_PORT=3306
-DB_USER=homarr
-DB_PASSWORD=your-password
-DB_NAME=homarr
-```
+# **MySQL**:
+# ```env
+# DB_DIALECT=mysql
+# DB_DRIVER=mysql2
+# DB_HOST=mysql-server
+# DB_PORT=3306
+# DB_USER=homarr
+# DB_PASSWORD=your-password
+# DB_NAME=homarr
+# ```
 
-**PostgreSQL**:
-```env
-DB_DIALECT=postgresql
-DB_DRIVER=node-postgres
-DB_HOST=postgres-server
-DB_PORT=5432
-DB_USER=homarr
-DB_PASSWORD=your-password
-DB_NAME=homarr
-```
+# **PostgreSQL (for production/high-performance)**:
+# ```env
+# DB_DIALECT=postgresql
+# DB_DRIVER=node-postgres
+# DB_HOST=postgres-server
+# DB_PORT=5432
+# DB_USER=homarr
+# DB_PASSWORD=your-password
+# DB_NAME=homarr
+# ```
 
 ### Authentication Options
 

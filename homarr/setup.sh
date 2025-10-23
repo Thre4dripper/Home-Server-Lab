@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Homarr Dashboard Setup Script
-# This script sets up and starts Homarr dashboard
+# This script sets up and starts Homarr dashboard with SQLite by default.
+# For production/high-performance, uncomment the relevant sections in docker-compose.yml.
 
 set -e
 
@@ -84,23 +85,24 @@ check_encryption_key() {
         print_success "Valid encryption key found"
     fi
     
-    # Check database passwords
-    if [[ "$POSTGRES_PASSWORD" == "secure_postgres_password_change_this" ]] || [[ "$POSTGRES_PASSWORD" == "your-secure-postgres-password-change-this" ]]; then
-        print_warning "Default PostgreSQL password detected. Please update POSTGRES_PASSWORD in .env file"
-    fi
+    # Check database passwords (only if using Postgres/Redis)
+    # if [[ "$POSTGRES_PASSWORD" == "secure_postgres_password_change_this" ]] || [[ "$POSTGRES_PASSWORD" == "your-secure-postgres-password-change-this" ]]; then
+    #     print_warning "Default PostgreSQL password detected. Please update POSTGRES_PASSWORD in .env file"
+    # fi
     
-    if [[ "$REDIS_PASSWORD" == "secure_redis_password_change_this" ]] || [[ "$REDIS_PASSWORD" == "your-secure-redis-password-change-this" ]]; then
-        print_warning "Default Redis password detected. Please update REDIS_PASSWORD in .env file"
-    fi
+    # if [[ "$REDIS_PASSWORD" == "secure_redis_password_change_this" ]] || [[ "$REDIS_PASSWORD" == "your-secure-redis-password-change-this" ]]; then
+    #     print_warning "Default Redis password detected. Please update REDIS_PASSWORD in .env file"
+    # fi
 }
 
 # Create necessary directories
 create_directories() {
     print_status "Creating data directories..."
     mkdir -p homarr_data
-    mkdir -p postgres_data
-    mkdir -p redis_data
-    print_success "Data directories created (homarr_data, postgres_data, redis_data)"
+    # Uncomment the following lines if you are using PostgreSQL and Redis
+    # mkdir -p postgres_data
+    # mkdir -p redis_data
+    print_success "Data directory created (homarr_data)"
 }
 
 # Check system requirements
@@ -153,7 +155,7 @@ stop_existing() {
 
 # Start Homarr stack
 start_homarr() {
-    print_status "Starting Homarr stack (PostgreSQL + Redis + Homarr)..."
+    print_status "Starting Homarr stack (SQLite)..."
     docker compose up -d
     print_success "Homarr stack started successfully"
 }
@@ -165,27 +167,27 @@ wait_for_ready() {
     # Load environment variables
     source .env
     
-    # Wait for PostgreSQL
-    print_status "Waiting for PostgreSQL to be ready..."
-    for i in {1..30}; do
-        if docker compose exec postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
-            print_success "PostgreSQL is ready!"
-            break
-        fi
-        echo -n "."
-        sleep 2
-    done
+    # # Wait for PostgreSQL (uncomment if using)
+    # print_status "Waiting for PostgreSQL to be ready..."
+    # for i in {1..30}; do
+    #     if docker compose exec postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
+    #         print_success "PostgreSQL is ready!"
+    #         break
+    #     fi
+    #     echo -n "."
+    #     sleep 2
+    # done
     
-    # Wait for Redis
-    print_status "Waiting for Redis to be ready..."
-    for i in {1..30}; do
-        if docker compose exec redis redis-cli --no-auth-warning -a "$REDIS_PASSWORD" ping > /dev/null 2>&1; then
-            print_success "Redis is ready!"
-            break
-        fi
-        echo -n "."
-        sleep 1
-    done
+    # # Wait for Redis (uncomment if using)
+    # print_status "Waiting for Redis to be ready..."
+    # for i in {1..30}; do
+    #     if docker compose exec redis redis-cli --no-auth-warning -a "$REDIS_PASSWORD" ping > /dev/null 2>&1; then
+    #         print_success "Redis is ready!"
+    #         break
+    #     fi
+    #     echo -n "."
+    #     sleep 1
+    # done
     
     # Wait for Homarr
     print_status "Waiting for Homarr to be ready..."
@@ -225,9 +227,8 @@ show_access_info() {
     echo -e "  Network: ${GREEN}http://${SERVER_IP}:${HOMARR_PORT:-7575}${NC}"
     echo
     echo -e "${BLUE}Stack Components:${NC}"
-    echo -e "  🗄️  PostgreSQL 16: Database backend"
-    echo -e "  🚀 Redis 7: Caching and session storage"
-    echo -e "  🎛️  Homarr: Dashboard frontend"
+    echo -e "  🎛️  Homarr: Dashboard frontend (using SQLite)"
+    echo -e "  (PostgreSQL and Redis are optional and can be enabled in docker-compose.yml for production)"
     echo
     echo -e "${BLUE}First Time Setup:${NC}"
     echo "  1. Visit the URL above in your browser"
@@ -246,22 +247,21 @@ show_access_info() {
     echo -e "${BLUE}Useful Commands:${NC}"
     echo "  View all logs:     docker compose logs -f"
     echo "  View Homarr logs:  docker compose logs -f homarr"
-    echo "  View DB logs:      docker compose logs -f postgres"
-    echo "  View Redis logs:   docker compose logs -f redis"
+    # echo "  View DB logs:      docker compose logs -f postgres"
+    # echo "  View Redis logs:   docker compose logs -f redis"
     echo "  Stop all:          docker compose down"
     echo "  Restart all:       docker compose restart"
     echo "  Update all:        docker compose pull && docker compose up -d"
     echo "  Shell access:      docker compose exec homarr /bin/bash"
     echo
     echo -e "${BLUE}Database Information:${NC}"
-    echo "  • PostgreSQL 16 running on internal network"
-    echo "  • Redis 7 with password authentication"
+    echo "  • SQLite database is stored in ./homarr_data/db"
+    echo "  • For production, consider enabling PostgreSQL and Redis in docker-compose.yml"
     echo "  • All data persisted in local volumes"
-    echo "  • Production-ready configuration"
     echo
     echo -e "${BLUE}Security Reminder:${NC}"
     echo "  • Your encryption key is stored in .env file"
-    echo "  • Database passwords are in .env file"
+    # echo "  • Database passwords are in .env file"
     echo "  • Backup this configuration regularly"
     echo "  • Consider using HTTPS in production"
     echo "  • Set up strong passwords for user accounts"
@@ -286,12 +286,6 @@ show_integration_tips() {
     echo "  3. Enable API integration if supported"
     echo "  4. Add API keys for enhanced features"
     echo
-    echo -e "${BLUE}Performance Benefits:${NC}"
-    echo "  • PostgreSQL: Robust database with ACID compliance"
-    echo "  • Redis: Fast caching reduces page load times"
-    echo "  • Separate containers: Easy scaling and maintenance"
-    echo "  • Health checks: Automatic recovery from failures"
-    echo
     echo "See README.md for detailed integration guides!"
     echo
 }
@@ -299,8 +293,7 @@ show_integration_tips() {
 # Main execution
 main() {
     echo -e "${PURPLE}================================${NC}"
-    echo -e "${PURPLE}   Homarr Stack Setup           ${NC}"
-    echo -e "${PURPLE}   PostgreSQL + Redis + Homarr  ${NC}"
+    echo -e "${PURPLE}   Homarr Stack Setup (SQLite)  ${NC}"
     echo -e "${PURPLE}================================${NC}"
     echo
     
