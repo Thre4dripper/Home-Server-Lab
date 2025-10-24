@@ -1,0 +1,14 @@
+# Deluge configuration
+config/
+downloads/
+
+# Environment files
+.env
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
