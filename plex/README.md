@@ -57,7 +57,8 @@ Plex Media Server organizes your video, music, and photo collections and streams
 
 5. **Access Plex**:
    - Local: http://localhost:32400/web
-   - Network: http://192.168.0.108:32400/web
+   - Network: http://[YOUR_SERVER_IP]:32400/web
+   - Hostname: http://[YOUR_HOSTNAME]:32400/web
 
 ## Configuration
 
@@ -106,10 +107,10 @@ media/
    - Add media libraries
 
 2. **Library Setup**:
-   - Movies: `/data/movies`
-   - TV Shows: `/data/tv`
-   - Music: `/data/music`
-   - Photos: `/data/photos`
+   - Movies: `/media/movies`
+   - TV Shows: `/media/tv`
+   - Music: `/media/music`
+   - Photos: `/media/photos`
 
 3. **Remote Access** (Plex Pass required):
    - Enable in Settings > Remote Access
@@ -152,7 +153,7 @@ docker compose restart plex
 docker compose exec plex /bin/bash
 
 # Check Plex status
-curl -I http://localhost:32400/identity
+curl -I http://localhost:${PLEX_PORT:-32400}/identity
 ```
 
 ## Data Persistence
@@ -164,10 +165,10 @@ Plex data is stored in:
 
 ## Network Configuration
 
-### Host Networking
-This setup uses host networking for optimal performance and easier configuration. Plex will use the following ports:
+### Port Mapping
+This setup uses explicit port mapping for better visibility and control. Plex is accessible on the following ports:
 
-- `32400/tcp` - Main Plex port
+- `32400/tcp` - Main Plex port (configurable via `PLEX_PORT`)
 - `8324/tcp` - Roku companion
 - `32469/tcp` - DLNA discovery
 - `1900/udp` - DLNA discovery
@@ -175,7 +176,7 @@ This setup uses host networking for optimal performance and easier configuration
 
 ### Remote Access
 For external access outside your home network:
-1. Forward port 32400 in your router
+1. Forward the configured port (`PLEX_PORT`) in your router
 2. Enable Remote Access in Plex settings
 3. Use dynamic DNS if your IP changes
 
@@ -236,6 +237,9 @@ The container includes health checks to monitor Plex status:
 # Check container health
 docker compose ps
 docker inspect plex | grep -A 10 Health
+
+# Test Plex accessibility
+curl -I http://localhost:${PLEX_PORT:-32400}/identity
 ```
 
 ## Security Considerations

@@ -23,7 +23,7 @@ echo "Without it, you'll need to manually set up the server through the web inte
 echo
 
 echo -e "${BLUE}How to get your claim token:${NC}"
-echo "1. Open this URL in your browser: ${GREEN}https://www.plex.tv/claim${NC}"
+printf "1. Open this URL in your browser: ${GREEN}https://www.plex.tv/claim${NC}\n"
 echo "2. Sign in to your Plex account (or create one if needed)"
 echo "3. Copy the claim token that appears (starts with 'claim-')"
 echo
@@ -53,12 +53,12 @@ if [ -n "$CLAIM_TOKEN" ]; then
     fi
 else
     echo -e "${YELLOW}Skipping claim token setup.${NC}"
-    echo "You can manually set up Plex by visiting: http://localhost:32400/web"
+    printf "You can manually set up Plex by visiting: ${GREEN}http://localhost:32400/web${NC}\n"
 fi
 
 echo
 echo -e "${BLUE}Next steps:${NC}"
-echo "1. Access Plex at: http://localhost:32400/web"
+printf "1. Access Plex at: ${GREEN}http://localhost:32400/web${NC}\n"
 echo "2. Add your media libraries"
 echo "3. Start enjoying your media!"
 echo
