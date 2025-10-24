@@ -1,4 +1,3 @@
-````markdown
 ---
 name: "Dashdot"
 category: "📊 Monitoring & Stats"
