@@ -1,0 +1,38 @@
+services:
+  deluge:
+    # LinuxServer Deluge image - lightweight BitTorrent client with web UI
+    image: linuxserver/deluge:latest
+    container_name: deluge
+    restart: unless-stopped
+
+    # Network Configuration
+    # WebUI port for accessing the web interface
+    ports:
+      - '${DELUGE_WEBUI_PORT:-8112}:8112'                    # WebUI access
+      - '${DELUGE_TORRENT_PORT:-6882}:6882'                  # Torrenting TCP connections
+      - '${DELUGE_TORRENT_PORT:-6882}:6882/udp'              # Torrenting UDP connections
+
+    # Volume Mounts
+    volumes:
+      # Configuration directory - stores settings, preferences, and state
+      - ./config:/config
+      # Downloads directory - where completed torrents are saved
+      # Uses DOWNLOADS_PATH from .env file, defaults to ./downloads
+      - ${DOWNLOADS_PATH:-./downloads}:/downloads
+
+    # Environment Variables Configuration
+    environment:
+      # User and group IDs for file permissions (match host user)
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      # Timezone setting for proper logging timestamps
+      - TZ=${TZ:-Etc/UTC}
+      # Logging verbosity level (error, warning, info, debug)
+      - DELUGE_LOGLEVEL=${DELUGE_LOGLEVEL:-error}
+
+# Network Configuration
+networks:
+  default:
+    # Isolated network for Deluge container
+    name: deluge_network
+    driver: bridge
