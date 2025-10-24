@@ -1,23 +1,22 @@
-version: '3.8'
-
 services:
   plex:
     image: plexinc/pms-docker:${PLEX_TAG:-latest}
     container_name: ${CONTAINER_NAME:-plex}
     restart: ${RESTART_POLICY:-unless-stopped}
-    network_mode: host
+    ports:
+      - "${PLEX_PORT:-32400}:32400"
     environment:
       - TZ=${TIMEZONE:-UTC}
       - PLEX_CLAIM=${PLEX_CLAIM_TOKEN:-}
       - PLEX_UID=${PLEX_UID:-1000}
-      - PLEX_GID=${PLEX_GID:-1003}
+      - PLEX_GID=${PLEX_GID:-1000}
       - ADVERTISE_IP=${ADVERTISE_IP:-}
       - ALLOWED_NETWORKS=${ALLOWED_NETWORKS:-}
       - CHANGE_CONFIG_DIR_OWNERSHIP=${CHANGE_CONFIG_DIR_OWNERSHIP:-true}
     volumes:
       - ./config:/config
       - ./transcode:/transcode
-      - ${MEDIA_PATH:-./media}:/data
+      - ${MEDIA_PATH:-./media}:/media
       - /etc/localtime:/etc/localtime:ro
     devices:
       # Hardware transcoding for Raspberry Pi (if supported)
