@@ -1,0 +1,82 @@
+services:
+  dashdot:
+    image: mauricenino/dashdot:latest
+    container_name: dashdot
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - '${DASHDOT_PORT:-3001}:3001'
+    volumes:
+      - /:/mnt/host:ro
+    environment:
+      # Widget Configuration - Enable all widgets for maximum statistics
+      - DASHDOT_WIDGET_LIST=${DASHDOT_WIDGET_LIST:-os,cpu,storage,ram,network,gpu}
+
+      # OS Widget Configuration
+      - DASHDOT_OS_LABEL_LIST=${DASHDOT_OS_LABEL_LIST:-os,arch,up_since,dash_version}
+      - DASHDOT_SHOW_DASH_VERSION=${DASHDOT_SHOW_DASH_VERSION:-true}
+
+      # CPU Widget Configuration
+      - DASHDOT_CPU_LABEL_LIST=${DASHDOT_CPU_LABEL_LIST:-brand,model,cores,threads,frequency}
+      - DASHDOT_ENABLE_CPU_TEMPS=${DASHDOT_ENABLE_CPU_TEMPS:-true}
+      - DASHDOT_CPU_TEMPS_MODE=${DASHDOT_CPU_TEMPS_MODE:-avg}
+      - DASHDOT_CPU_CORES_TOGGLE_MODE=${DASHDOT_CPU_CORES_TOGGLE_MODE:-toggle}
+      - DASHDOT_CPU_WIDGET_GROW=${DASHDOT_CPU_WIDGET_GROW:-4}
+      - DASHDOT_CPU_WIDGET_MIN_WIDTH=${DASHDOT_CPU_WIDGET_MIN_WIDTH:-500}
+      - DASHDOT_CPU_SHOWN_DATAPOINTS=${DASHDOT_CPU_SHOWN_DATAPOINTS:-20}
+      - DASHDOT_CPU_POLL_INTERVAL=${DASHDOT_CPU_POLL_INTERVAL:-1000}
+
+      # Storage Widget Configuration
+      - DASHDOT_STORAGE_LABEL_LIST=${DASHDOT_STORAGE_LABEL_LIST:-brand,size,type}
+      - DASHDOT_STORAGE_WIDGET_ITEMS_PER_PAGE=${DASHDOT_STORAGE_WIDGET_ITEMS_PER_PAGE:-3}
+      - DASHDOT_STORAGE_WIDGET_GROW=${DASHDOT_STORAGE_WIDGET_GROW:-3.5}
+      - DASHDOT_STORAGE_WIDGET_MIN_WIDTH=${DASHDOT_STORAGE_WIDGET_MIN_WIDTH:-500}
+      - DASHDOT_STORAGE_POLL_INTERVAL=${DASHDOT_STORAGE_POLL_INTERVAL:-60000}
+
+      # RAM Widget Configuration
+      - DASHDOT_RAM_LABEL_LIST=${DASHDOT_RAM_LABEL_LIST:-brand,size,type,frequency}
+      - DASHDOT_RAM_WIDGET_GROW=${DASHDOT_RAM_WIDGET_GROW:-4}
+      - DASHDOT_RAM_WIDGET_MIN_WIDTH=${DASHDOT_RAM_WIDGET_MIN_WIDTH:-500}
+      - DASHDOT_RAM_SHOWN_DATAPOINTS=${DASHDOT_RAM_SHOWN_DATAPOINTS:-20}
+      - DASHDOT_RAM_POLL_INTERVAL=${DASHDOT_RAM_POLL_INTERVAL:-1000}
+
+      # Network Widget Configuration
+      - DASHDOT_NETWORK_LABEL_LIST=${DASHDOT_NETWORK_LABEL_LIST:-type,speed_up,speed_down,interface_speed,public_ip}
+      - DASHDOT_ACCEPT_OOKLA_EULA=${DASHDOT_ACCEPT_OOKLA_EULA:-true}
+      - DASHDOT_NETWORK_SPEED_AS_BYTES=${DASHDOT_NETWORK_SPEED_AS_BYTES:-false}
+      - DASHDOT_SPEED_TEST_INTERVAL=${DASHDOT_SPEED_TEST_INTERVAL:-240}
+      - DASHDOT_NETWORK_WIDGET_GROW=${DASHDOT_NETWORK_WIDGET_GROW:-6}
+      - DASHDOT_NETWORK_WIDGET_MIN_WIDTH=${DASHDOT_NETWORK_WIDGET_MIN_WIDTH:-500}
+      - DASHDOT_NETWORK_SHOWN_DATAPOINTS=${DASHDOT_NETWORK_SHOWN_DATAPOINTS:-20}
+      - DASHDOT_NETWORK_POLL_INTERVAL=${DASHDOT_NETWORK_POLL_INTERVAL:-1000}
+
+      # GPU Widget Configuration
+      - DASHDOT_GPU_LABEL_LIST=${DASHDOT_GPU_LABEL_LIST:-brand,model,memory}
+      - DASHDOT_GPU_WIDGET_GROW=${DASHDOT_GPU_WIDGET_GROW:-6}
+      - DASHDOT_GPU_WIDGET_MIN_WIDTH=${DASHDOT_GPU_WIDGET_MIN_WIDTH:-700}
+      - DASHDOT_GPU_SHOWN_DATAPOINTS=${DASHDOT_GPU_SHOWN_DATAPOINTS:-20}
+      - DASHDOT_GPU_POLL_INTERVAL=${DASHDOT_GPU_POLL_INTERVAL:-1000}
+
+      # General Configuration
+      - DASHDOT_ALWAYS_SHOW_PERCENTAGES=${DASHDOT_ALWAYS_SHOW_PERCENTAGES:-true}
+      - DASHDOT_USE_IMPERIAL=${DASHDOT_USE_IMPERIAL:-false}
+
+      # Timezone
+      - TZ=${TIMEZONE:-UTC}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-128M}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-64M}
+
+networks:
+  default:
+    name: dashdot_network
+    driver: bridge
