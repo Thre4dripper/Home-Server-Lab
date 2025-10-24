@@ -13,9 +13,6 @@ if ! command -v docker compose &>/dev/null; then
   exit 1
 fi
 
-# Create necessary directories
-mkdir -p data letsencrypt postgres nginx/{custom,proxy_host,redirection_host,stream,dead_host,temp,snippets} || true
-
 case "${1:-up}" in
   up)
     # Check if .env exists

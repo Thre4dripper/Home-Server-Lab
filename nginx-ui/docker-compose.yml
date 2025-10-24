@@ -23,17 +23,6 @@ services:
       # Data and configuration
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
-      
-      # Expose nginx config for programmatic access (bind mounts)
-      - ./nginx/custom:/data/nginx/custom:rw
-      - ./nginx/proxy_host:/data/nginx/proxy_host:rw
-      - ./nginx/redirection_host:/data/nginx/redirection_host:rw
-      - ./nginx/stream:/data/nginx/stream:rw
-      - ./nginx/dead_host:/data/nginx/dead_host:rw
-      - ./nginx/temp:/data/nginx/temp:rw
-      
-      # Optional: Custom nginx snippets
-      - ./nginx/snippets:/data/nginx/snippets:rw
     
     # Uncomment if using PostgreSQL
     # depends_on:
