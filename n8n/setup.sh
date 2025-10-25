@@ -6,7 +6,7 @@ echo "🤖 n8n Workflow Automation Setup"
 echo "================================="
 echo ""
 echo "📝 Configuration:"
-echo "   • Database: PostgreSQL with persistent storage"
+echo "   • Database: SQLite (default for home lab) - PostgreSQL optional for production"
 echo "   • Authentication: Basic auth enabled by default"
 echo "   • Data: Persistent volumes for workflows and database"
 echo "   • Edit '.env' to customize configuration"
@@ -28,38 +28,22 @@ echo "✅ Configuration updated"
 
 # Create data directories
 echo "📁 Creating data directories..."
-mkdir -p postgres_data n8n_data
+mkdir -p n8n_data
 
 # Source environment variables
 source .env
 
-# Start n8n and PostgreSQL
-echo "🚀 Starting n8n and PostgreSQL..."
-echo "   • PostgreSQL will start first and run health checks"
-echo "   • n8n will wait for PostgreSQL to be ready"
+# Start n8n
+echo "🚀 Starting n8n..."
+echo "   • Using SQLite database (lightweight, no additional services needed)"
+echo "   • n8n will be ready in 30-60 seconds on first run"
 echo ""
 
 docker compose up -d
 
 # Wait for services to start
-echo "⏳ Waiting for services to start..."
+echo "⏳ Waiting for n8n to start..."
 echo "   • This may take 30-60 seconds on first run..."
-
-# Wait for PostgreSQL to be healthy
-echo -n "   • PostgreSQL: "
-for i in {1..30}; do
-    if docker compose ps postgres | grep -q "healthy"; then
-        echo "✅ Ready"
-        break
-    elif [ $i -eq 30 ]; then
-        echo "❌ Timeout"
-        echo "     Check logs: docker compose logs postgres"
-        exit 1
-    else
-        echo -n "."
-        sleep 2
-    fi
-done
 
 # Wait for n8n to be ready
 echo -n "   • n8n:        "
@@ -89,17 +73,9 @@ else
     echo "❌ Not accessible"
 fi
 
-# Test database connection
-echo -n "Database:          "
-if docker exec n8n_postgres pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} > /dev/null 2>&1; then
-    echo "✅ Connected"
-else
-    echo "❌ Connection failed"
-fi
-
 # Test data persistence
 echo -n "Data Persistence:  "
-if [ -d "./postgres_data" ] && [ -d "./n8n_data" ]; then
+if [ -d "./n8n_data" ]; then
     echo "✅ Volumes mounted"
 else
     echo "❌ Volume issues"
@@ -112,7 +88,7 @@ echo "📋 Access Information:"
 echo "   • Web Interface: http://$HOST_IP:${N8N_PORT}"
 echo "   • Username: ${N8N_BASIC_AUTH_USER}"
 echo "   • Password: ${N8N_BASIC_AUTH_PASSWORD}"
-echo "   • Database: PostgreSQL on port 5432"
+echo "   • Database: SQLite (embedded, no external database needed)"
 echo ""
 echo "📱 Next Steps:"
 echo "   1. Access n8n at: http://$HOST_IP:${N8N_PORT}"
@@ -126,4 +102,5 @@ echo "   • Stop:         docker compose down"
 echo "   • Restart:      docker compose restart"
 echo "   • Update:       docker compose pull && docker compose up -d"
 echo ""
-echo "⚠️  Note: Workflows and database data are persistent in ./n8n_data and ./postgres_data"
+echo "⚠️  Note: Workflows and database data are persistent in ./n8n_data"
+echo "💡 For production/heavy usage, consider switching to PostgreSQL (see README.md)"
