@@ -1,6 +1,6 @@
 ---
 name: "Nextcloud"
-category: "☁️ Cloud Storage & Collaboration"
+category: "📁 File Management & Collaboration"
 purpose: "Self-hosted file sync and share"
 description: "Complete self-hosted cloud storage solution with file sharing, collaboration, and productivity apps"
 icon: "☁️"

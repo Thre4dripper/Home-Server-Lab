@@ -1,6 +1,6 @@
 ---
 name: "qBittorrent"
-category: "🎬 Media & Entertainment"
+category: "🧲 Download Managers"
 purpose: "BitTorrent Client"
 description: "Lightweight and powerful BitTorrent client with web interface for downloading torrents"
 icon: "📥"

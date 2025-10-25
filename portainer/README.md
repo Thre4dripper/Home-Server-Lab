@@ -1,6 +1,6 @@
 ---
 name: "Portainer"
-category: "📊 Infrastructure & Monitoring"
+category: "📊 Monitoring & Stats"
 purpose: "Container Management"
 description: "Lightweight service delivery platform for containerized applications"
 icon: "📊"
