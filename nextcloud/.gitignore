@@ -1,0 +1,53 @@
+# Nextcloud AIO Data Directories
+# Note: nextcloud_aio_mastercontainer is a named Docker volume, not a local directory
+# ./nextcloud_aio_mastercontainer/  # Commented out - this is a named volume
+
+# Environment files (keep .env.example)
+.env
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.backup
+*.bak
+nextcloud-backup*.tar.gz
+
+# Database backup files
+*.sql
+backup_*.gz
+
+# Nextcloud specific files
+.nextcloud/
+nextcloud.log*
+
+# SSL certificates (generated automatically)
+certs/
+
+# Docker override files
+docker-compose.override.yml
+
+# Local development files
+.env.local
+.env.development
+.env.production
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
