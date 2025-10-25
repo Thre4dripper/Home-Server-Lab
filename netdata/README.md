@@ -1,6 +1,6 @@
 ---
 name: "Netdata"
-category: "📊 Infrastructure & Monitoring"
+category: "📊 Monitoring & Stats"
 purpose: "Real-time System Monitoring"
 description: "Real-time performance and health monitoring system for systems and applications"
 icon: "📈"

@@ -1,6 +1,6 @@
 ---
 name: "n8n"
-category: "🛠️ Development & DevOps"
+category: "🔄 Automation & Workflow"
 purpose: "Workflow Automation"
 description: "Fair-code licensed workflow automation tool with visual workflow builder"
 icon: "🔄"

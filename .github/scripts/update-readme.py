@@ -101,6 +101,49 @@ class ServiceParser:
         
         return table + "\n"
     
+    def generate_categories_table(self, services: List[Dict]) -> str:
+        """Generate categories table with auto-generated services list."""
+        # Group services by category
+        categories = {}
+        for service in services:
+            category = service.get('category', 'Other Services')
+            if category not in categories:
+                categories[category] = []
+            categories[category].append(service)
+        
+        # Define category descriptions
+        category_descriptions = {
+            '📊 Monitoring & Stats': 'System statistics and performance dashboards',
+            '🧲 Download Managers': 'Torrent and download management',
+            '🎬 Media & Entertainment': 'Media servers and streaming',
+            '📁 File Management & Collaboration': 'File storage, synchronization and collaboration',
+            '🔄 Automation & Workflow': 'Workflow automation and task scheduling',
+            '🛠️ Development & DevOps': 'Development tools and CI/CD',
+            '🏡 Dashboard & Network Services': 'Network services and dashboards',
+            '🚀 Backend Services': 'Backend services and APIs'
+        }
+        
+        categories_text = """## 🏷️ **Service Categories**
+
+| Category | Description | Services |
+|----------|-------------|----------|
+"""
+        
+        # Generate table rows for each category that has services
+        for category, cat_services in categories.items():
+            if not cat_services:
+                continue
+                
+            description = category_descriptions.get(category, 'Various services')
+            service_names = [s.get('name', s['directory'].title()) for s in cat_services]
+            services_str = ', '.join(service_names[:4])  # Limit to 4 services for readability
+            if len(service_names) > 4:
+                services_str += f', +{len(service_names) - 4} more'
+            
+            categories_text += f"| {category} | {description} | {services_str} |\n"
+        
+        return categories_text + "\n"
+    
     def generate_mermaid_diagram(self, services: List[Dict]) -> str:
         """Generate mermaid architecture diagram with LR layout and 2-column subgraphs."""
         diagram = """```mermaid
@@ -188,18 +231,38 @@ graph LR
     %% Custom Styling for better visibility and contrast
     classDef coreInfra fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000000
     classDef infraNode fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000000
-    classDef devNode fill:#fff3e0,stroke:#f57c00,stroke-width:1px,color:#000000
-    classDef mediaNode fill:#fce4ec,stroke:#e91e63,stroke-width:1px,color:#000000
-    classDef fileNode fill:#e8f5e8,stroke:#4caf50,stroke-width:1px,color:#000000
-    classDef dashNode fill:#f3e5f5,stroke:#9c27b0,stroke-width:1px,color:#000000
+    classDef monitoringNode fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
+    classDef downloadNode fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000000
+    classDef mediaNode fill:#fce4ec,stroke:#e91e63,stroke-width:2px,color:#000000
+    classDef nasNode fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:#000000
+    classDef automationNode fill:#e0f2f1,stroke:#009688,stroke-width:2px,color:#000000
+    classDef devNode fill:#fff8e1,stroke:#ff9800,stroke-width:2px,color:#000000
+    classDef dashNode fill:#f9fbe7,stroke:#8bc34a,stroke-width:2px,color:#000000
     
-    class Internet,Router,RPI,Docker coreInfra
-    class Netdata,Portainer infraNode
-    class Gitlab,Gitea,Localstack,N8N devNode
-    class Plex mediaNode
-    class Pydio,Seafile,Owncloud fileNode
-    class Dashy,Homarr,Pihole dashNode
-```"""
+    class Internet,Router,RPI,Docker coreInfra"""
+        
+        # Assign classes based on categories
+        category_class_map = {
+            '📊 Infrastructure & Monitoring': 'infraNode',
+            '📊 Monitoring & Stats': 'monitoringNode',
+            '🧲 Download Managers': 'downloadNode',
+            '🎬 Media & Entertainment': 'mediaNode',
+            '📁 File Management & Collaboration': 'nasNode',
+            '🔄 Automation & Workflow': 'automationNode',
+            '🛠️ Development & DevOps': 'devNode',
+            '🏡 Dashboard & Network Services': 'dashNode',
+            '🚀 Backend Services': 'devNode'  # Using devNode for backend services
+        }
+        
+        # Group services by category for class assignment
+        for category, cat_services in categories.items():
+            if category in category_class_map:
+                class_name = category_class_map[category]
+                service_ids = [s['directory'].replace('-', '').replace('_', '').title() for s in cat_services]
+                if service_ids:
+                    diagram += f"\n    class {','.join(service_ids)} {class_name}"
+        
+        diagram += "\n```"
         return diagram
     
     def update_readme(self, services: List[Dict]):
@@ -236,11 +299,14 @@ graph LR
         
         # Generate tables for each category
         category_order = [
-            '📊 Infrastructure & Monitoring',
-            '🛠️ Development & DevOps', 
+            '📊 Monitoring & Stats',
+            '🧲 Download Managers',
+            '🎬 Media & Entertainment', 
             '📁 File Management & Collaboration',
-            '🎬 Media & Entertainment',
+            '🔄 Automation & Workflow',
+            '🛠️ Development & DevOps',
             '🏡 Dashboard & Network Services',
+            '🚀 Backend Services',
             'Other Services'
         ]
         
@@ -255,6 +321,40 @@ graph LR
         
         # Replace the services section
         new_content = content[:services_start] + new_services_content + content[services_end:]
+        
+        # Insert categories table above Architecture Overview (replace existing if present)
+        arch_overview_start = new_content.find('## 🏗️ **Architecture Overview**')
+        if arch_overview_start != -1:
+            categories_table = self.generate_categories_table(services)
+            
+            # Check if categories section already exists above Architecture Overview
+            existing_categories_start = new_content.rfind('## 🏷️ **Service Categories**', 0, arch_overview_start)
+            if existing_categories_start != -1:
+                # Find the end of the existing categories section
+                existing_categories_end = new_content.find('\n## ', existing_categories_start + 1)
+                if existing_categories_end == -1:
+                    existing_categories_end = arch_overview_start
+                # Replace the existing categories section
+                new_content = new_content[:existing_categories_start] + categories_table + new_content[existing_categories_end:]
+            else:
+                # Insert new categories section above Architecture Overview
+                new_content = new_content[:arch_overview_start] + categories_table + new_content[arch_overview_start:]
+        
+        # Remove any hardcoded categories section that might be embedded within the Architecture Overview section
+        # Look for categories section after the Architecture Overview header
+        arch_section_end = new_content.find('\n## ', arch_overview_start + 1)
+        if arch_section_end == -1:
+            arch_section_end = len(new_content)
+        
+        arch_section = new_content[arch_overview_start:arch_section_end]
+        hardcoded_categories_start = arch_section.find('\n## 🏷️ **Service Categories**')
+        if hardcoded_categories_start != -1:
+            hardcoded_categories_start += arch_overview_start  # Adjust for absolute position
+            hardcoded_categories_end = new_content.find('\n## ', hardcoded_categories_start + 1)
+            if hardcoded_categories_end == -1:
+                hardcoded_categories_end = arch_section_end
+            # Remove the hardcoded categories section
+            new_content = new_content[:hardcoded_categories_start] + new_content[hardcoded_categories_end:]
         
         # Update mermaid diagram if present
         mermaid_start = new_content.find('```mermaid')
