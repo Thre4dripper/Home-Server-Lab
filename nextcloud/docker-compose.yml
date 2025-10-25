@@ -1,0 +1,31 @@
+services:
+  nextcloud-aio-mastercontainer:
+    image: ghcr.io/nextcloud-releases/all-in-one:latest
+    init: true
+    restart: always
+    container_name: nextcloud-aio-mastercontainer
+    volumes:
+      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      # Port for the AIO setup interface. Default: 8081
+      - "${AIO_PORT:-8081}:8080"
+    
+    # THIS IS THE CRITICAL LINE THAT WAS MISSING.
+    # It tells Docker Compose to load all the variables from your .env file.
+    env_file:
+      - .env
+
+    # These environment variables provide fallbacks if they are not set in the .env file.
+    environment:
+      - APACHE_PORT=${APACHE_PORT:-11000}
+      - TZ=${TZ:-UTC}
+      # Critical paths that MUST be defined in your .env file
+      - NEXTCLOUD_DATADIR=${NEXTCLOUD_DATADIR}
+      - NEXTCLOUD_MOUNT=${NEXTCLOUD_MOUNT}
+      # Optional settings
+      - SKIP_DOMAIN_VALIDATION=${SKIP_DOMAIN_VALIDATION:-false}
+
+volumes:
+  nextcloud_aio_mastercontainer:
+    name: nextcloud_aio_mastercontainer
