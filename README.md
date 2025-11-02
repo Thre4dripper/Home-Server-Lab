@@ -17,77 +17,203 @@ Transform your home network into a powerful, privacy-focused digital ecosystem w
 - **Easy Deployment**: One-command setup with comprehensive documentation
 - **Security Focused**: Secure defaults with optional hardening guides
 
+## 🏷️ **Service Categories**
+
+| Category | Description | Services |
+|----------|-------------|----------|
+| 🎬 Media & Entertainment | Media servers and streaming | Jellyfin, Plex |
+| 🏡 Dashboard & Network Services | Network services and dashboards | Dashy, Homarr, Nginx Proxy Manager, Pi-hole |
+| 📁 File Management & Collaboration | File storage, synchronization and collaboration | FileBrowser, Nextcloud, Pydio, Seafile Pro, +1 more |
+| 📊 Monitoring & Stats | System statistics and performance dashboards | Dashdot, Netdata, Portainer |
+| 🔄 Automation & Workflow | Workflow automation and task scheduling | n8n |
+| 🛠️ Development & DevOps | Development tools and CI/CD | GitLab, Gitea, LocalStack |
+| 🧲 Download Managers | Torrent and download management | Deluge, qBittorrent |
+
 ## 🏗️ **Architecture Overview**
 
+> **📝 Note:** This architecture diagram is automatically generated from service metadata. Changes will be reflected when services are added or modified.
+
 ```mermaid
-graph TB
-    Internet[🌐 Internet] --> Router[🏠 Home Router]
-    Router --> RPI[🍓 Raspberry Pi 4]
+graph LR
+    Internet[🌐 Internet]
+    Router[🏠 Home Router]
+    RPI[🍓 Raspberry Pi]
+    Docker[🐳 Docker]
     
-    subgraph "Core Infrastructure"
-        RPI --> Docker[🐳 Docker Engine]
-        Docker --> Portainer[📊 Portainer<br/>Container Management]
-        Docker --> Netdata[📈 Netdata<br/>System Monitoring]
-    end
+    Internet --> Router
+    Router --> RPI
+    RPI --> Docker
     
-    subgraph "Development & Automation"
-        Docker --> GitLab[🦊 GitLab<br/>Git Repository]
-        Docker --> Gitea[🍃 Gitea<br/>Lightweight Git]
-        Docker --> N8N[🔄 n8n<br/>Workflow Automation]
-        Docker --> LocalStack[☁️ LocalStack<br/>AWS Emulation]
+    %% Core Infrastructure
+    subgraph Core["🏗️ Core Infrastructure"]
+        direction TB
     end
+
+
+    %% 🎬 Media & Entertainment
+    subgraph MediaEntertainment["🎬 Media & Entertainment"]
+        direction TB
+        Jellyfin[🎬<br/>Jellyfin]
+        Plex[🎬<br/>Plex]
+        Jellyfin --- Plex
+    end
+    Docker -.-> Jellyfin
+    Docker -.-> Plex
+
+    %% 🏡 Dashboard & Network Services
+    subgraph DashboardNetworkServices["🏡 Dashboard & Network Services"]
+        direction TB
+        Dashy[🎯<br/>Dashy]
+        Homarr[🏡<br/>Homarr]
+        Nginxui[🔀<br/>Nginx Proxy Manager]
+        Pihole[🛡️<br/>Pi-hole]
+        Dashy --- Homarr
+        Nginxui --- Pihole
+    end
+    Docker -.-> Dashy
+    Docker -.-> Homarr
+    Docker -.-> Nginxui
+    Docker -.-> Pihole
+
+    %% 📁 File Management & Collaboration
+    subgraph FileManagementCollaboration["📁 File Management & Collaboration"]
+        direction TB
+        Filebrowser[📂<br/>FileBrowser]
+        Nextcloud[☁️<br/>Nextcloud]
+        Pydio[📁<br/>Pydio]
+        Seafile[🌊<br/>Seafile Pro]
+        Owncloud[☁️<br/>ownCloud]
+        Filebrowser --- Nextcloud
+        Pydio --- Seafile
+    end
+    Docker -.-> Filebrowser
+    Docker -.-> Nextcloud
+    Docker -.-> Pydio
+    Docker -.-> Seafile
+    Docker -.-> Owncloud
+
+    %% 📊 Monitoring & Stats
+    subgraph MonitoringStats["📊 Monitoring & Stats"]
+        direction TB
+        Dashdot[📊<br/>Dashdot]
+        Netdata[📈<br/>Netdata]
+        Portainer[📊<br/>Portainer]
+        Dashdot --- Netdata
+    end
+    Docker -.-> Dashdot
+    Docker -.-> Netdata
+    Docker -.-> Portainer
+
+    %% 🔄 Automation & Workflow
+    subgraph AutomationWorkflow["🔄 Automation & Workflow"]
+        direction TB
+        N8N[🔄<br/>n8n]
+    end
+    Docker -.-> N8N
+
+    %% 🛠️ Development & DevOps
+    subgraph DevelopmentDevOps["🛠️ Development & DevOps"]
+        direction TB
+        Gitlab[🦊<br/>GitLab]
+        Gitea[🍃<br/>Gitea]
+        Localstack[☁️<br/>LocalStack]
+        Gitlab --- Gitea
+    end
+    Docker -.-> Gitlab
+    Docker -.-> Gitea
+    Docker -.-> Localstack
+
+    %% 🧲 Download Managers
+    subgraph DownloadManagers["🧲 Download Managers"]
+        direction TB
+        Deluge[🧲<br/>Deluge]
+        Qbittorrent[📥<br/>qBittorrent]
+        Deluge --- Qbittorrent
+    end
+    Docker -.-> Deluge
+    Docker -.-> Qbittorrent
+
+    %% Custom Styling for better visibility and contrast
+    classDef coreInfra fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000000
+    classDef infraNode fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000000
+    classDef monitoringNode fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
+    classDef downloadNode fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000000
+    classDef mediaNode fill:#fce4ec,stroke:#e91e63,stroke-width:2px,color:#000000
+    classDef nasNode fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:#000000
+    classDef automationNode fill:#e0f2f1,stroke:#009688,stroke-width:2px,color:#000000
+    classDef devNode fill:#fff8e1,stroke:#ff9800,stroke-width:2px,color:#000000
+    classDef dashNode fill:#f9fbe7,stroke:#8bc34a,stroke-width:2px,color:#000000
     
-    subgraph "Media & File Management"
-        Docker --> Plex[🎬 Plex<br/>Media Server]
-        Docker --> Seafile[🌊 Seafile Pro<br/>File Sync & Share]
-        Docker --> Pydio[📁 Pydio<br/>File Management]
-    end
-    
-    subgraph "Dashboard & Network"
-        Docker --> Dashby[🎯 Dashby<br/>Service Dashboard]
-        Docker --> Homarr[🏡 Homarr<br/>Homepage Dashboard]
-        Docker --> PiHole[🛡️ Pi-hole<br/>Network Ad Blocker]
-    end
+    class Internet,Router,RPI,Docker coreInfra
+    class Jellyfin,Plex mediaNode
+    class Dashy,Homarr,Nginxui,Pihole dashNode
+    class Filebrowser,Nextcloud,Pydio,Seafile,Owncloud nasNode
+    class Dashdot,Netdata,Portainer monitoringNode
+    class N8N automationNode
+    class Gitlab,Gitea,Localstack devNode
+    class Deluge,Qbittorrent downloadNode
 ```
+
 
 ## 🚀 **Available Services**
 
-### 📊 **Infrastructure & Monitoring**
+> **📝 Note:** This section is automatically generated from individual service README.md files. To update service information, edit the respective service's README.md file and the changes will be reflected here automatically.
+
+### 📊 Monitoring & Stats
 
 | Service | Purpose | Key Features | Resource Usage |
 |---------|---------|--------------|----------------|
-| [**Portainer**](./portainer/) | Container Management | Web UI for Docker, stack deployment, monitoring | ~100MB RAM |
-| [**Netdata**](./netdata/) | System Monitoring | Real-time metrics, alerts, performance tracking | ~250MB RAM |
+| [**Dashdot**](./dashdot/) | Server Resource Monitoring | Real-time CPU, RAM, Storage, Network, and GPU monitoring, CPU temperature mon... | ~50MB RAM |
+| [**Netdata**](./netdata/) | Real-time System Monitoring | Real-time metrics with 1-second granularity, Interactive web dashboards, Smar... | ~250MB RAM |
+| [**Portainer**](./portainer/) | Container Management | Complete Docker management interface, Multi-user support with RBAC, Applicati... | ~100MB RAM |
 
-### 🛠️ **Development & DevOps**
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**GitLab**](./gitlab/) | Full DevOps Platform | Git repos, CI/CD, issue tracking, wikis | ~2GB RAM |
-| [**Gitea**](./gitea/) | Lightweight Git Service | Git hosting, pull requests, lightweight alternative | ~200MB RAM |
-| [**n8n**](./n8n/) | Workflow Automation | Visual workflow builder, API integrations | ~300MB RAM |
-| [**LocalStack**](./localstack/) | AWS Cloud Emulation | Local AWS services for development & testing | ~500MB RAM |
-
-### 📁 **File Management & Collaboration**
+### 🧲 Download Managers
 
 | Service | Purpose | Key Features | Resource Usage |
 |---------|---------|--------------|----------------|
-| [**Seafile Pro**](./seafile/) | Enterprise File Sync | Real-time collaboration, document editing, sync clients | ~1GB RAM |
-| [**Pydio**](./pydio/) | File Management Platform | Web-based file manager, sharing, team collaboration | ~400MB RAM |
+| [**Deluge**](./deluge/) | BitTorrent Client | Web-based user interface, Torrent management and monitoring, Bandwidth limiti... | ~200MB RAM |
+| [**qBittorrent**](./qbittorrent/) | BitTorrent Client | Web-based UI for remote access, Sequential downloading support, RSS feed supp... | ~500MB RAM |
 
-### 🎬 **Media & Entertainment**
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**Plex**](./plex/) | Media Server | Stream movies, TV shows, music, transcoding | ~1GB RAM |
-
-### 🏡 **Dashboard & Network Services**
+### 🎬 Media & Entertainment
 
 | Service | Purpose | Key Features | Resource Usage |
 |---------|---------|--------------|----------------|
-| [**Dashby**](./dashby/) | Service Dashboard | Modern dashboard, service status, quick access | ~150MB RAM |
-| [**Homarr**](./homarr/) | Homepage Dashboard | Customizable homepage, service integration | ~200MB RAM |
-| [**Pi-hole**](./pihole/) | Network Ad Blocker | DNS-level ad blocking, network-wide protection | ~100MB RAM |
+| [**Jellyfin**](./jellyfin/) | Self-hosted Media Server | Stream movies, TV, music, and photos, Multi-user with permissions, Hardware a... | ~1GB RAM |
+| [**Plex**](./plex/) | Media Server | Stream personal media anywhere, Cross-platform device support, Hardware trans... | ~1GB RAM |
+
+### 📁 File Management & Collaboration
+
+| Service | Purpose | Key Features | Resource Usage |
+|---------|---------|--------------|----------------|
+| [**FileBrowser**](./filebrowser/) | Web-based File Manager | Browse and manage server files, Upload/download files via web, Create, edit, ... | ~100MB RAM |
+| [**Nextcloud**](./nextcloud/) | Self-hosted file sync and share | File sync and sharing, Calendar and contacts, Office document editing | ~1-2GB RAM (scales with usage) |
+| [**Pydio**](./pydio/) | File Management Platform | Web-based file management, Team collaboration tools, External storage integra... | ~400MB RAM |
+| [**Seafile Pro**](./seafile/) | Enterprise File Sync | Real-time collaboration and editing, Desktop and mobile sync clients, Enterpr... | ~1GB RAM |
+| [**ownCloud**](./owncloud/) | File Synchronization & Sharing | Self-hosted file sync and share, Web interface and mobile apps, User manageme... | ~800MB RAM |
+
+### 🔄 Automation & Workflow
+
+| Service | Purpose | Key Features | Resource Usage |
+|---------|---------|--------------|----------------|
+| [**n8n**](./n8n/) | Workflow Automation | Visual workflow builder, 300+ integrations, API and webhook support | ~300MB RAM |
+
+### 🛠️ Development & DevOps
+
+| Service | Purpose | Key Features | Resource Usage |
+|---------|---------|--------------|----------------|
+| [**GitLab**](./gitlab/) | Full DevOps Platform | Git repos with CI/CD pipelines, Issue tracking and project management, Contai... | ~2GB RAM |
+| [**Gitea**](./gitea/) | Lightweight Git Service | Git hosting with web interface, Pull requests and code review, Issue tracking... | ~200MB RAM |
+| [**LocalStack**](./localstack/) | AWS Cloud Emulation | Local AWS services emulation, Development and testing platform, Cloud dashboa... | ~500MB RAM |
+
+### 🏡 Dashboard & Network Services
+
+| Service | Purpose | Key Features | Resource Usage |
+|---------|---------|--------------|----------------|
+| [**Dashy**](./dashy/) | Service Dashboard | Customizable dashboard interface, Service status monitoring, Advanced search ... | ~150MB RAM |
+| [**Homarr**](./homarr/) | Homepage Dashboard | Customizable homepage dashboard, Service integration and monitoring, Modern r... | ~200MB RAM |
+| [**Nginx Proxy Manager**](./nginx-ui/) | Reverse Proxy Management UI | Web UI for reverse proxy setup, Free SSL with Let's Encrypt, Access lists and... | ~400MB RAM |
+| [**Pi-hole**](./pihole/) | Network Ad Blocker | Network-wide ad blocking, DNS-level filtering, Detailed query analytics | ~100MB RAM |
+
 
 ## 🚀 **Quick Start**
 
