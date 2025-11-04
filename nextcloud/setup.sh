@@ -19,6 +19,19 @@ ROUTER_IP=$(ip route | grep default | awk '{print $3}' | head -1)
 
 echo "📍 Server IP: $PI_IP | Router: $ROUTER_IP"
 
+# Ensure a .env exists for docker-compose. If missing, create from .env.example with placeholders replaced
+if [ ! -f .env ]; then
+  if [ -f .env.example ]; then
+    # Export variables for envsubst
+    export PI_IP="$PI_IP"
+    export ROUTER_IP="$ROUTER_IP"
+    envsubst < .env.example > .env
+    echo "Created .env from .env.example with placeholders replaced"
+  else
+    echo "Warning: .env not found and .env.example not present. Continuing without .env"
+  fi
+fi
+
 # Source environment variables from .env file
 source .env
 

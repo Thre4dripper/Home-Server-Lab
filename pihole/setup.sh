@@ -20,6 +20,20 @@ NETWORK_CIDR="${NETWORK_BASE}.0/24"
 
 echo "📍 Configuration: $PI_IP | Router: $ROUTER_IP | Network: $NETWORK_CIDR"
 
+# Ensure a .env exists for docker-compose. If missing, create from .env.example with placeholders replaced
+if [ ! -f .env ]; then
+  if [ -f .env.example ]; then
+    # Export variables for envsubst
+    export PIHOLE_IP="$PI_IP"
+    export ROUTER_IP="$ROUTER_IP"
+    export NETWORK_CIDR="$NETWORK_CIDR"
+    envsubst < .env.example > .env
+    echo "Created .env from .env.example with placeholders replaced"
+  else
+    echo "Warning: .env not found and .env.example not present. Continuing without .env"
+  fi
+fi
+
 # Update .env file
 sed -i "s/PIHOLE_IP=.*/PIHOLE_IP=$PI_IP/" .env
 sed -i "s/ROUTER_IP=.*/ROUTER_IP=$ROUTER_IP/" .env
@@ -29,6 +43,17 @@ echo "✅ Configuration updated"
 
 # Create data directories
 mkdir -p pihole-data dnsmasq-data
+
+# Disable systemd-resolved to free port 53 for Pi-hole
+echo "🔧 Disabling systemd-resolved to free port 53..."
+sudo systemctl stop systemd-resolved 2>/dev/null || true
+sudo systemctl disable systemd-resolved 2>/dev/null || true
+
+# Backup and update resolv.conf to use external DNS temporarily
+sudo cp /etc/resolv.conf /etc/resolv.conf.backup 2>/dev/null || true
+echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
+
+echo "✅ systemd-resolved disabled and DNS updated"
 
 # Start Pi-hole
 echo "🚀 Starting Pi-hole..."
@@ -117,11 +142,18 @@ echo "   • Web Interface: http://$PI_IP:8080/admin/"
 echo "   • Admin Password: ${WEBPASSWORD:-admin123}"
 echo "   • DNS Server: $PI_IP:53"
 echo ""
+
+# Update host's resolv.conf to use Pi-hole
+echo "🔧 Updating host DNS to use Pi-hole..."
+echo "nameserver $PI_IP" | sudo tee /etc/resolv.conf > /dev/null
+echo "✅ Host DNS updated to use Pi-hole"
+
+echo ""
 echo "📱 Next Steps:"
 echo "   1. Set device DNS to: $PI_IP"
 echo "   2. Test with: dig @$PI_IP -p 53 google.com"
 echo "   3. Edit 'dns-entries.conf' to add more local domains"
 echo "   4. Re-run './setup.sh' to apply DNS changes"
 echo ""
-echo "⚠️  Note: Pi-hole DNS runs on port 53 (not standard port 53)"
-echo "   This avoids conflicts with system DNS on port 53"
+echo "⚠️  Note: systemd-resolved has been disabled and host DNS now uses Pi-hole"
+echo "   If you need to restore, run: sudo systemctl enable systemd-resolved && sudo systemctl start systemd-resolved"
