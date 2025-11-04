@@ -17,6 +17,16 @@ mkdir -p config cache media || true
 
 case "${1:-up}" in
   up)
+    # Ensure a .env exists for docker-compose. If missing, create from .env.example
+    if [ ! -f .env ]; then
+      if [ -f .env.example ]; then
+        cp .env.example .env
+        echo "Created .env from .env.example"
+      else
+        echo "Warning: .env not found and .env.example not present. Continuing without .env"
+      fi
+    fi
+
     docker compose -f "$compose_file" up -d ;;
   down)
     docker compose -f "$compose_file" down ;;
