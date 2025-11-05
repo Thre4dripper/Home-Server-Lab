@@ -12,6 +12,17 @@ echo "   • Data: Persistent volumes for workflows and database"
 echo "   • Edit '.env' to customize configuration"
 echo ""
 
+# Create .env file from .env.example if it doesn't exist
+if [ ! -f .env ]; then
+    cp .env.example .env
+    echo "✅ Created .env from .env.example"
+    
+    # Generate a secure encryption key
+    ENCRYPTION_KEY=$(openssl rand -hex 32)
+    sed -i "s/N8N_ENCRYPTION_KEY=.*/N8N_ENCRYPTION_KEY=$ENCRYPTION_KEY/" .env
+    echo "🔐 Generated secure encryption key"
+fi
+
 # Auto-detect network configuration
 HOST_IP=$(hostname -I | awk '{print $1}')
 
