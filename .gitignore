@@ -21,6 +21,7 @@
 **/elasticsearch_data/
 **/logs/
 **/data/
+**/home-assistant/config/
 
 # SSL certificates and keys
 **/*.pem
