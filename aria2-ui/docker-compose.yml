@@ -1,0 +1,23 @@
+services:
+  ariang:
+    image: hurlenko/aria2-ariang
+    container_name: ${CONTAINER_NAME:-aria2-ui}
+    ports:
+      - "${WEBUI_PORT:-8080}:8080"
+    volumes:
+      - ${DOWNLOADS_PATH:-./downloads}:/aria2/data
+      - ${CONFIG_PATH:-./config}:/aria2/conf
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1004}
+      - RPC_SECRET=${RPC_SECRET:-your-secret-here}
+      - ARIA2RPCPORT=${ARIA2RPCPORT:-6800}
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
+networks:
+  default:
+    name: aria2-ui
+    driver: bridge
