@@ -35,10 +35,6 @@ services:
       - "${WEBDAV_PORT:-5573}:5573"
       - "${FTP_PORT:-2121}:2121"
     
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    
     # Capabilities for mounting (if needed)
     cap_add:
       - SYS_ADMIN

@@ -13,9 +13,6 @@ services:
       - RPC_SECRET=${RPC_SECRET:-your-secret-here}
       - ARIA2RPCPORT=${ARIA2RPCPORT:-6800}
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
 
 networks:
   default:

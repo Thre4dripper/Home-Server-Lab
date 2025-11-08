@@ -3,9 +3,6 @@ services:
     image: qbittorrentofficial/qbittorrent-nox:${QBT_VERSION:-latest}
     container_name: ${CONTAINER_NAME:-qbittorrent}
     restart: ${RESTART_POLICY:-unless-stopped}
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     
     # Network ports
     ports:
