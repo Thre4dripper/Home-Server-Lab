@@ -1,0 +1,61 @@
+services:
+  rclone:
+    image: rclone/rclone:${RCLONE_VERSION:-latest}
+    container_name: ${CONTAINER_NAME:-rclone}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    
+    # Environment configuration
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TIMEZONE:-UTC}
+    
+    volumes:
+      # Configuration
+      - ${CONFIG_PATH:-./config}:/config/rclone
+      
+      # Data directories
+      - ${DATA_PATH:-./data}:/data
+      
+      # Pendrive mount for local storage access
+      - /home/pi/pendrive:/pendrive
+      
+      # Optional: Mount host directories for backup/sync
+      # - /path/to/local/backup:/backup:ro
+    
+    # Network mode for better performance
+    network_mode: ${NETWORK_MODE:-bridge}
+    
+    # Keep rclone running as a daemon with web GUI (no auth - handled by reverse proxy)
+    command: rcd --rc-addr 0.0.0.0:5572 --rc-serve --rc-web-gui --rc-no-auth
+    
+    # Expose ports if using serve commands
+    ports:
+      - "${HTTP_PORT:-5572}:5572"
+      - "${WEBDAV_PORT:-5573}:5573"
+      - "${FTP_PORT:-2121}:2121"
+    
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    
+    # Capabilities for mounting (if needed)
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "rclone", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  default:
+    name: rclone
+    driver: bridge
