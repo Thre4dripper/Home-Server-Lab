@@ -117,7 +117,7 @@ class ServiceParser:
             '🧲 Download Managers': 'Torrent and download management',
             '🎬 Media & Entertainment': 'Media servers and streaming',
             '📁 File Management & Collaboration': 'File storage, synchronization and collaboration',
-            '🔄 Automation & Workflow': 'Workflow automation and task scheduling',
+            '🏠 Smart Home Automation & Workflow': 'Workflow automation and task scheduling',
             '🛠️ Development & DevOps': 'Development tools and CI/CD',
             '🏡 Dashboard & Network Services': 'Network services and dashboards',
             '🚀 Backend Services': 'Backend services and APIs'
@@ -149,11 +149,13 @@ class ServiceParser:
         diagram = """```mermaid
 graph LR
     Internet[🌐 Internet]
+    Twingate_Connector[🛡️ Twingate]
     Router[🏠 Home Router]
     RPI[🍓 Raspberry Pi]
     Docker[🐳 Docker]
     
-    Internet --> Router
+    Internet --> Twingate_Connector
+    Twingate_Connector --> Router
     Router --> RPI
     RPI --> Docker
     
@@ -239,7 +241,7 @@ graph LR
     classDef devNode fill:#fff8e1,stroke:#ff9800,stroke-width:2px,color:#000000
     classDef dashNode fill:#f9fbe7,stroke:#8bc34a,stroke-width:2px,color:#000000
     
-    class Internet,Router,RPI,Docker coreInfra"""
+    class Internet,Twingate_Connector,Router,RPI,Docker coreInfra"""
         
         # Assign classes based on categories
         category_class_map = {
@@ -248,7 +250,7 @@ graph LR
             '🧲 Download Managers': 'downloadNode',
             '🎬 Media & Entertainment': 'mediaNode',
             '📁 File Management & Collaboration': 'nasNode',
-            '🔄 Automation & Workflow': 'automationNode',
+            '🏠 Smart Home Automation & Workflow': 'automationNode',
             '🛠️ Development & DevOps': 'devNode',
             '🏡 Dashboard & Network Services': 'dashNode',
             '🚀 Backend Services': 'devNode'  # Using devNode for backend services
@@ -303,7 +305,7 @@ graph LR
             '🧲 Download Managers',
             '🎬 Media & Entertainment', 
             '📁 File Management & Collaboration',
-            '🔄 Automation & Workflow',
+            '🏠 Smart Home Automation & Workflow',
             '🛠️ Development & DevOps',
             '🏡 Dashboard & Network Services',
             '🚀 Backend Services',
