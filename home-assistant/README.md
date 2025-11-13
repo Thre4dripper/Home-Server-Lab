@@ -24,7 +24,10 @@ This Docker Compose setup provides Home Assistant for home automation in your ho
    ```bash
    ./setup.sh
    ```
-   This will automatically configure and start Home Assistant with health checks and status verification.
+   This will:
+   - Collect a hardware snapshot (network, Bluetooth, serial, USB) and suggest `/dev` mappings
+   - Ensure `configuration.yaml` exists and contains a managed `http:` block for reverse proxies
+   - Start Home Assistant and run the usual health checks
 
 ### Manual Setup
 
@@ -58,6 +61,36 @@ Edit files in `./config` for advanced customization:
 - `automations.yaml` - Automation rules
 - `scenes.yaml` - Scene definitions
 - `scripts.yaml` - Script definitions
+
+## Reverse Proxy Support
+
+`setup.sh` keeps a managed block in `config/configuration.yaml` between the markers:
+
+```
+# --- BEGIN setup.sh managed http block ---
+...
+# --- END setup.sh managed http block ---
+```
+
+The block turns on `use_x_forwarded_for` and populates `trusted_proxies` with sane defaults (`127.0.0.1`, `::1`, `172.16.0.0/12`). Set the `HA_TRUSTED_PROXIES` environment variable with a comma-separated list to override or extend the defaults:
+
+```bash
+export HA_TRUSTED_PROXIES="127.0.0.1,::1,172.20.0.0/16,192.168.0.0/24"
+./setup.sh
+```
+
+Every time the script runs it refreshes the managed block so your reverse proxies stay whitelisted.
+
+## Hardware & Device Discovery
+
+Before bringing the container up, the setup script scans the host for:
+
+- Network interfaces (including Docker bridges)
+- Bluetooth adapters and their backing drivers
+- Serial / USB devices (e.g., `/dev/ttyAMA0`, `/dev/ttyUSB0`)
+- Full `lsusb` output (falls back to `sudo` if required)
+
+Detected device paths are echoed back as ready-to-copy entries for the `devices:` section in `docker-compose.yml`, making it easier to expose Zigbee/Z-Wave sticks, Bluetooth controllers, or other peripherals to Home Assistant.
 
 ## Data Persistence
 

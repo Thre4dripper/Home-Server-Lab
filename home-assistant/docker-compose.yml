@@ -6,6 +6,14 @@ services:
       - ./config:/config
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
+      - /dev:/dev
     restart: unless-stopped
     privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+      - /dev/ttyUSB0:/dev/ttyUSB0
+      - /dev/ttyACM0:/dev/ttyACM0
     network_mode: host
