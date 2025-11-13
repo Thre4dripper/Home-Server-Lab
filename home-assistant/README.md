@@ -1,6 +1,6 @@
 ---
 name: "Home Assistant"
-category: "🏠 Smart Home"
+category: "🏠 Smart Home Automation & Workflow"
 purpose: "Home Automation Platform"
 description: "Open source home automation that puts local control and privacy first"
 icon: "🏠"

@@ -1,6 +1,6 @@
 ---
 name: "Twingate Connector"
-category: "🔐 Security & Access"
+category: "🏡 Dashboard & Network Services"
 purpose: "Zero-Trust Remote Access"
 description: "Lightweight connector that bridges your private network to the Twingate fabric."
 icon: "🛡️"
