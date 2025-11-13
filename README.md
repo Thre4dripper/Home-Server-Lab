@@ -22,12 +22,13 @@ Transform your home network into a powerful, privacy-focused digital ecosystem w
 | Category | Description | Services |
 |----------|-------------|----------|
 | 🎬 Media & Entertainment | Media servers and streaming | Jellyfin, Plex |
-| 🏡 Dashboard & Network Services | Network services and dashboards | Dashy, Homarr, Nginx Proxy Manager, Pi-hole |
-| 📁 File Management & Collaboration | File storage, synchronization and collaboration | FileBrowser, Nextcloud, Pydio, Seafile Pro, +1 more |
+| 🏠 Smart Home Automation & Workflow | Workflow automation and task scheduling | Home Assistant, n8n |
+| 🏡 Dashboard & Network Services | Network services and dashboards | Dashy, Homarr, Nginx Proxy Manager, Pi-hole, +1 more |
+| 📁 File Management & Collaboration | File storage, synchronization and collaboration | FileBrowser, Nextcloud, Pydio, Rclone, +2 more |
 | 📊 Monitoring & Stats | System statistics and performance dashboards | Dashdot, Netdata, Portainer |
-| 🔄 Automation & Workflow | Workflow automation and task scheduling | n8n |
 | 🛠️ Development & DevOps | Development tools and CI/CD | GitLab, Gitea, LocalStack |
-| 🧲 Download Managers | Torrent and download management | Deluge, qBittorrent |
+| 🧲 Download Managers | Torrent and download management | Aria2, Deluge, qBittorrent |
+
 
 ## 🏗️ **Architecture Overview**
 
@@ -36,11 +37,13 @@ Transform your home network into a powerful, privacy-focused digital ecosystem w
 ```mermaid
 graph LR
     Internet[🌐 Internet]
+    Twingate_Connector[🛡️ Twingate]
     Router[🏠 Home Router]
     RPI[🍓 Raspberry Pi]
     Docker[🐳 Docker]
     
-    Internet --> Router
+    Internet --> Twingate_Connector
+    Twingate_Connector --> Router
     Router --> RPI
     RPI --> Docker
     
@@ -60,6 +63,16 @@ graph LR
     Docker -.-> Jellyfin
     Docker -.-> Plex
 
+    %% 🏠 Smart Home Automation & Workflow
+    subgraph SmartHomeAutomationWorkflow["🏠 Smart Home Automation & Workflow"]
+        direction TB
+        Homeassistant[🏠<br/>Home Assistant]
+        N8N[🔄<br/>n8n]
+        Homeassistant --- N8N
+    end
+    Docker -.-> Homeassistant
+    Docker -.-> N8N
+
     %% 🏡 Dashboard & Network Services
     subgraph DashboardNetworkServices["🏡 Dashboard & Network Services"]
         direction TB
@@ -67,6 +80,7 @@ graph LR
         Homarr[🏡<br/>Homarr]
         Nginxui[🔀<br/>Nginx Proxy Manager]
         Pihole[🛡️<br/>Pi-hole]
+        Twingate[🛡️<br/>Twingate Connector]
         Dashy --- Homarr
         Nginxui --- Pihole
     end
@@ -74,6 +88,7 @@ graph LR
     Docker -.-> Homarr
     Docker -.-> Nginxui
     Docker -.-> Pihole
+    Docker -.-> Twingate
 
     %% 📁 File Management & Collaboration
     subgraph FileManagementCollaboration["📁 File Management & Collaboration"]
@@ -81,14 +96,17 @@ graph LR
         Filebrowser[📂<br/>FileBrowser]
         Nextcloud[☁️<br/>Nextcloud]
         Pydio[📁<br/>Pydio]
+        Rclone[🔄<br/>Rclone]
         Seafile[🌊<br/>Seafile Pro]
         Owncloud[☁️<br/>ownCloud]
         Filebrowser --- Nextcloud
-        Pydio --- Seafile
+        Pydio --- Rclone
+        Seafile --- Owncloud
     end
     Docker -.-> Filebrowser
     Docker -.-> Nextcloud
     Docker -.-> Pydio
+    Docker -.-> Rclone
     Docker -.-> Seafile
     Docker -.-> Owncloud
 
@@ -103,13 +121,6 @@ graph LR
     Docker -.-> Dashdot
     Docker -.-> Netdata
     Docker -.-> Portainer
-
-    %% 🔄 Automation & Workflow
-    subgraph AutomationWorkflow["🔄 Automation & Workflow"]
-        direction TB
-        N8N[🔄<br/>n8n]
-    end
-    Docker -.-> N8N
 
     %% 🛠️ Development & DevOps
     subgraph DevelopmentDevOps["🛠️ Development & DevOps"]
@@ -126,10 +137,12 @@ graph LR
     %% 🧲 Download Managers
     subgraph DownloadManagers["🧲 Download Managers"]
         direction TB
+        Aria2Ui[⬇️<br/>Aria2]
         Deluge[🧲<br/>Deluge]
         Qbittorrent[📥<br/>qBittorrent]
-        Deluge --- Qbittorrent
+        Aria2Ui --- Deluge
     end
+    Docker -.-> Aria2Ui
     Docker -.-> Deluge
     Docker -.-> Qbittorrent
 
@@ -144,15 +157,16 @@ graph LR
     classDef devNode fill:#fff8e1,stroke:#ff9800,stroke-width:2px,color:#000000
     classDef dashNode fill:#f9fbe7,stroke:#8bc34a,stroke-width:2px,color:#000000
     
-    class Internet,Router,RPI,Docker coreInfra
+    class Internet,Twingate_Connector,Router,RPI,Docker coreInfra
     class Jellyfin,Plex mediaNode
-    class Dashy,Homarr,Nginxui,Pihole dashNode
-    class Filebrowser,Nextcloud,Pydio,Seafile,Owncloud nasNode
+    class Homeassistant,N8N automationNode
+    class Dashy,Homarr,Nginxui,Pihole,Twingate dashNode
+    class Filebrowser,Nextcloud,Pydio,Rclone,Seafile,Owncloud nasNode
     class Dashdot,Netdata,Portainer monitoringNode
-    class N8N automationNode
     class Gitlab,Gitea,Localstack devNode
-    class Deluge,Qbittorrent downloadNode
+    class Aria2Ui,Deluge,Qbittorrent downloadNode
 ```
+
 
 
 ## 🚀 **Available Services**
@@ -171,6 +185,7 @@ graph LR
 
 | Service | Purpose | Key Features | Resource Usage |
 |---------|---------|--------------|----------------|
+| [**Aria2**](./aria2-ui/) | Multi-Protocol Download Manager | HTTP/HTTPS/FTP/BitTorrent/Metalink support, Web UI (AriaNg), RPC interface fo... | ~100MB RAM |
 | [**Deluge**](./deluge/) | BitTorrent Client | Web-based user interface, Torrent management and monitoring, Bandwidth limiti... | ~200MB RAM |
 | [**qBittorrent**](./qbittorrent/) | BitTorrent Client | Web-based UI for remote access, Sequential downloading support, RSS feed supp... | ~500MB RAM |
 
@@ -188,13 +203,15 @@ graph LR
 | [**FileBrowser**](./filebrowser/) | Web-based File Manager | Browse and manage server files, Upload/download files via web, Create, edit, ... | ~100MB RAM |
 | [**Nextcloud**](./nextcloud/) | Self-hosted file sync and share | File sync and sharing, Calendar and contacts, Office document editing | ~1-2GB RAM (scales with usage) |
 | [**Pydio**](./pydio/) | File Management Platform | Web-based file management, Team collaboration tools, External storage integra... | ~400MB RAM |
+| [**Rclone**](./rclone/) | Cloud Storage Sync & Management | 70+ cloud storage providers support, Mount cloud storage as local filesystem,... | ~50MB RAM |
 | [**Seafile Pro**](./seafile/) | Enterprise File Sync | Real-time collaboration and editing, Desktop and mobile sync clients, Enterpr... | ~1GB RAM |
 | [**ownCloud**](./owncloud/) | File Synchronization & Sharing | Self-hosted file sync and share, Web interface and mobile apps, User manageme... | ~800MB RAM |
 
-### 🔄 Automation & Workflow
+### 🏠 Smart Home Automation & Workflow
 
 | Service | Purpose | Key Features | Resource Usage |
 |---------|---------|--------------|----------------|
+| [**Home Assistant**](./home-assistant/) | Home Automation Platform | Local control and privacy, 1000+ integrations, Automation engine | ~500MB RAM |
 | [**n8n**](./n8n/) | Workflow Automation | Visual workflow builder, 300+ integrations, API and webhook support | ~300MB RAM |
 
 ### 🛠️ Development & DevOps
@@ -213,6 +230,7 @@ graph LR
 | [**Homarr**](./homarr/) | Homepage Dashboard | Customizable homepage dashboard, Service integration and monitoring, Modern r... | ~200MB RAM |
 | [**Nginx Proxy Manager**](./nginx-ui/) | Reverse Proxy Management UI | Web UI for reverse proxy setup, Free SSL with Let's Encrypt, Access lists and... | ~400MB RAM |
 | [**Pi-hole**](./pihole/) | Network Ad Blocker | Network-wide ad blocking, DNS-level filtering, Detailed query analytics | ~100MB RAM |
+| [**Twingate Connector**](./twingate/) | Zero-Trust Remote Access | Outbound-only connector for safe remote access, Automatic labeling for auditi... | ~75MB RAM |
 
 
 ## 🚀 **Quick Start**
