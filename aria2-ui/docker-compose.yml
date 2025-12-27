@@ -11,8 +11,15 @@ services:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1004}
       - RPC_SECRET=${RPC_SECRET:-your-secret-here}
-      - ARIA2RPCPORT=${ARIA2RPCPORT:-6800}
+      - ARIA2RPCPORT=${ARIA2RPCPORT:-443}
+      - EMBED_RPC_SECRET=${EMBED_RPC_SECRET:-false}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -an | grep 6800 > /dev/null; if [ 0 != $$? ]; then exit 1; fi;"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   default:

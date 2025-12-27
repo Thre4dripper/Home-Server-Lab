@@ -106,9 +106,56 @@ docker compose down
 
 ## Troubleshooting
 
-1. **Permission issues:** Ensure PUID/PGID match your host user
-2. **Port conflicts:** Change WEBUI_PORT if 8080 is in use
-3. **Download failures:** Check network connectivity and RPC settings
+### AriaNg Connection Issues
+
+If AriaNg disconnects from aria2 or you see "Aria2 RPC server error":
+
+**The setup script now handles this automatically!** Just run:
+```bash
+./setup.sh
+```
+
+The script will:
+- Preserve your existing .env and RPC secret
+- Initialize config files properly without deleting them
+- Ensure aria2.conf doesn't have hardcoded secrets
+- Set up proper session file permissions
+- Configure AriaNg based on your ARIA2RPCPORT setting
+
+**Understanding ARIA2RPCPORT:**
+- This tells AriaNg what port to use when connecting to aria2 RPC
+- For **reverse proxy with HTTPS**: set to `443` (or your proxy port)
+- For **reverse proxy with HTTP**: set to `80` (or your proxy port)
+- For **direct access**: set to `6800` (aria2's default port)
+- **Note**: aria2 inside the container always runs on port 6800
+
+**Manual Connection Setup (if needed):**
+
+For **Reverse Proxy** (ARIA2RPCPORT=443):
+1. Open AriaNg Web UI
+2. Go to: **AriaNg Settings → RPC**
+3. Set:
+   - **Aria2 RPC Address**: `https://your-domain.com:443/jsonrpc`
+   - **Aria2 RPC Secret Token**: Check your `.env` file for `RPC_SECRET` value
+4. Click "Reload AriaNg"
+
+For **Direct Access** (ARIA2RPCPORT=6800):
+1. Open AriaNg Web UI
+2. Go to: **AriaNg Settings → RPC**
+3. Set:
+   - **Aria2 RPC Address**: `http://localhost:6800/jsonrpc`
+   - **Aria2 RPC Secret Token**: Check your `.env` file for `RPC_SECRET` value
+4. Click "Reload AriaNg"
+
+**Auto-Configuration Option:**
+Set `EMBED_RPC_SECRET=true` in `.env` to automatically configure AriaNg with your RPC secret (only use with proper authentication like basic auth, as the secret will be visible in the web UI code).
+
+**Common Issues:**
+- **"Connection failed"**: Make sure RPC secret in AriaNg matches the one in `.env`
+- **After restart, connection lost**: The RPC secret must match between `.env` and AriaNg settings
+- **Permission issues**: Ensure PUID/PGID match your host user
+- **Port conflicts**: Change WEBUI_PORT if 8080 is in use
+- **Behind reverse proxy not working**: Ensure your proxy forwards WebSocket connections to port 6800
 
 ## RPC Integration
 
