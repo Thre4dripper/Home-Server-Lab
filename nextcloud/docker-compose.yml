@@ -19,7 +19,6 @@ services:
     # These environment variables provide fallbacks if they are not set in the .env file.
     environment:
       - APACHE_PORT=${APACHE_PORT:-11000}
-      - TZ=${TZ:-UTC}
       # Critical paths that MUST be defined in your .env file
       - NEXTCLOUD_DATADIR=${NEXTCLOUD_DATADIR}
       - NEXTCLOUD_MOUNT=${NEXTCLOUD_MOUNT}
