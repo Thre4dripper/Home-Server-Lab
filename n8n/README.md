@@ -11,9 +11,33 @@ features:
 resource_usage: "~300MB RAM"
 ---
 
-# n8n Docker Setup (SQLite for Home Lab, PostgreSQL for Production)
+# n8n Docker Setup (Custom Image with DevOps Tools)
 
-This Docker Compose setup provides n8n with SQLite database backend for small home lab installations. For production environments requiring better performance and concurrent access, PostgreSQL can be enabled.
+This Docker Compose setup provides n8n with a **custom Docker image** that includes a comprehensive set of DevOps tools and utilities. The setup uses SQLite database backend for small home lab installations. For production environments requiring better performance and concurrent access, PostgreSQL can be enabled.
+
+## Custom Docker Image
+
+The n8n instance runs on a custom-built Docker image based on `node:20-bookworm-slim` that includes:
+
+### Pre-installed Tools
+- **Container & Orchestration**: Docker CLI, Docker Compose, kubectl, Helm
+- **Infrastructure as Code**: Terraform
+- **Cloud Tools**: AWS CLI, rclone
+- **Programming**: Python 3 (with pip and venv), Node.js
+- **Data Processing**: jq (JSON), yq (YAML)
+- **Archive Tools**: zip, unzip, tar, gzip, bzip2, xz-utils, p7zip
+- **Network Utilities**: curl, wget, openssh-client, rsync, netcat, dig, ping
+- **Text Editors**: vim, nano
+- **System Tools**: htop, procps, git, bash, zsh
+
+### Host Integration
+The container has access to:
+- **Docker Socket**: Full Docker control on the host system
+- **Host Binaries**: Read-only access to `/bin`, `/usr/bin`, `/usr/local/bin`
+- **Configuration Files**: SSH keys, kubeconfig, AWS credentials (read-only)
+- **External Storage**: Mounted pendrive at `/home/node/pendrive`
+
+This allows n8n workflows to execute complex automation tasks, manage containers, deploy to Kubernetes, provision infrastructure, and interact with cloud services.
 
 ## Database Options
 
@@ -31,17 +55,35 @@ This Docker Compose setup provides n8n with SQLite database backend for small ho
 
 ### Using the Setup Script (Recommended)
 
-1. **Run the setup script:**
+The `setup.sh` script is a unified tool for both initial setup and ongoing management of n8n.
+
+1. **Initial setup (first time):**
    ```bash
    ./setup.sh
+   # or explicitly:
+   ./setup.sh setup
    ```
    This will automatically configure and start n8n with health checks and status verification.
+
+2. **Management commands:**
+   ```bash
+   ./setup.sh start      # Start n8n
+   ./setup.sh stop       # Stop n8n
+   ./setup.sh restart    # Restart n8n
+   ./setup.sh logs       # View logs
+   ./setup.sh shell      # Open shell in container
+   ./setup.sh test       # Test tool availability
+   ./setup.sh status     # Show container status
+   ./setup.sh backup     # Backup n8n data
+   ./setup.sh update     # Update n8n (rebuilds custom image)
+   ./setup.sh rebuild    # Rebuild image from scratch
+   ```
 
 ### Manual Setup
 
 1. **Start the services:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 2. **Access n8n:**
@@ -51,7 +93,7 @@ This Docker Compose setup provides n8n with SQLite database backend for small ho
 
 3. **Stop the services:**
    ```bash
-   docker-compose down
+   docker compose down
    ```
 
 ## Configuration
@@ -90,29 +132,52 @@ Data is stored in local directories:
 
 ## Useful Commands
 
+### Using setup.sh (Recommended)
 ```bash
 # View logs
-docker-compose logs -f
-
-# View specific service logs
-docker-compose logs -f n8n
-# docker-compose logs -f postgres  # Only if using PostgreSQL
+./setup.sh logs
 
 # Restart services
-docker-compose restart
+./setup.sh restart
 
-# Update to latest images
-docker-compose pull
-docker-compose up -d
+# Update n8n (rebuilds custom image with latest n8n)
+./setup.sh update
+
+# Test installed tools
+./setup.sh test
+
+# Backup data
+./setup.sh backup
+
+# Open shell in container
+./setup.sh shell
+```
+
+### Using Docker Compose Directly
+```bash
+# View logs
+docker compose logs -f
+
+# View specific service logs
+docker compose logs -f n8n
+# docker compose logs -f postgres  # Only if using PostgreSQL
+
+# Restart services
+docker compose restart
+
+# Rebuild custom image
+docker compose build --no-cache
+docker compose up -d
 
 # Backup data (SQLite - default)
 # n8n data is automatically backed up in ./n8n_data/
+tar czf n8n-backup.tar.gz n8n_data/
 
 # Backup database (only if using PostgreSQL)
-# docker-compose exec postgres pg_dump -U n8n n8n > backup.sql
+# docker compose exec postgres pg_dump -U n8n n8n > backup.sql
 
 # Restore database (only if using PostgreSQL)
-# docker-compose exec -T postgres psql -U n8n n8n < backup.sql
+# docker compose exec -T postgres psql -U n8n n8n < backup.sql
 ```
 
 ## Troubleshooting
