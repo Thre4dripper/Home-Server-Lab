@@ -1,0 +1,39 @@
+services:
+  samba:
+    image: dperson/samba:latest
+    container_name: ${CONTAINER_NAME:-samba}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    # Use host network for proper network discovery (NetBIOS/WINS)
+    network_mode: host
+    environment:
+      TZ: ${TIMEZONE:-UTC}
+      USERID: ${PUID:-1000}
+      GROUPID: ${PGID:-1000}
+      # Enable NetBIOS name service for network discovery
+      NMBD: "true"
+    volumes:
+      # Samba configuration (read-only)
+      - ./smb.conf:/etc/samba/smb.conf:ro
+      
+      # Persistent Samba password database (users persist here)
+      - ./samba_private:/var/lib/samba/private
+      
+      # Shared directories - customize in .env
+      - ${SHARE_PATH_1:-/home/pi/shared}:/shares/public
+      - ${SHARE_PATH_2:-/home/pi/media}:/shares/media
+      - ${SHARE_PATH_3:-/home/pi/documents}:/shares/documents
+      
+      # Optional: external storage
+      # - /mnt/external:/shares/external
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-256M}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-64M}
+    healthcheck:
+      test: ["CMD-SHELL", "smbclient -L localhost -U % -N || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
