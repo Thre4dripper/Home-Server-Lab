@@ -1,0 +1,22 @@
+# Samba specific ignores
+*.log
+*.pid
+
+# Persistent data directories (created at runtime)
+samba_private/
+
+# Data directories (created at runtime)
+# Don't ignore smb.conf - it's the main config file
+
+# Environment file with secrets
+.env
+!.env.example
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
