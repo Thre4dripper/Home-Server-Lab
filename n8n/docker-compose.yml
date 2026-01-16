@@ -22,18 +22,23 @@ services:
   #     retries: 5
 
   n8n:
-    image: n8nio/n8n:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     container_name: n8n
+    user: "root:root"
     environment:
       # Database configuration - using SQLite (default) for small home lab
       # For production/heavy usage, uncomment postgres service above and use:
       # DB_TYPE: postgresdb
-      # DB_POSTGRESDB_HOST: postgres
-      # DB_POSTGRESDB_PORT: 5432
+      # DB_POSTGRESDB_HOST: ${POSTGRES_HOST}
+      # DB_POSTGRESDB_PORT: ${POSTGRES_PORT}
       # DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
       # DB_POSTGRESDB_USER: ${POSTGRES_USER}
       # DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      # DB_POSTGRESDB_SSL_ENABLED: ${POSTGRES_SSL_ENABLED}
+      # DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED: false
       
       # n8n configuration
       N8N_BASIC_AUTH_ACTIVE: true
@@ -45,9 +50,11 @@ services:
       WEBHOOK_URL: http://${N8N_HOST}:${N8N_PORT}
       GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      NODES_EXCLUDE: "[]"
       
       # Security
       N8N_SECURE_COOKIE: false
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"  # Disable SSL verification for self-signed certs (home lab only)
       
       # Execution
       EXECUTIONS_PROCESS: main
@@ -56,7 +63,27 @@ services:
     ports:
       - "${N8N_PORT}:5678"
     volumes:
+      # n8n data persistence
       - ./n8n_data:/home/node/.n8n
+      
+      # Mount Docker socket for Docker control
+      - /var/run/docker.sock:/var/run/docker.sock
+      
+      # Mount host binaries (read-only)
+      # This allows n8n to use tools installed on your Pi
+      - /bin:/host-bin:ro
+      - /usr/bin:/host-usr-bin:ro
+      - /usr/local/bin:/host-usr-local-bin:ro
+      
+      # Mount configuration directories (for tools that need config)
+      - ~/.ssh:/home/node/.ssh:ro
+      - ~/.kube:/home/node/.kube:ro
+      - ~/.aws:/home/node/.aws:ro
+      - ~/.config:/home/node/.config:ro
+      
+      # Mount additional directories you might need
+      # - /path/to/your/scripts:/scripts:ro
+      # - /path/to/your/data:/data
 
       # External storage mount
       - /home/pi/pendrive:/home/node/pendrive
