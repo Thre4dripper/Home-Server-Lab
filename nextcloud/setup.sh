@@ -1,110 +1,204 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+# ─── Configuration ───────────────────────────────────────────────────────────
+SERVICE_NAME="nextcloud"
+CONTAINER_NAME="nextcloud-aio-mastercontainer"
+REQUIRED_RAM_MB=1536
+REQUIRED_DISK_GB=10
+DEFAULT_PORT="8081"
 
-echo "☁️ Nextcloud All-in-One Setup"
-echo "============================="
-echo ""
-echo "⚠️  IMPORTANT: SSL and domain validation are handled externally"
-echo "   Make sure you have:"
-echo "   • A domain pointing to this server (e.g., nextcloud.yourdomain.com)"
-echo "   • Pi-hole configured with the domain entry"
-echo "   • Nginx reverse proxy setup with SSL certificates"
-echo "   • Domain validation is skipped in this configuration"
-echo ""
+# ─── Colors ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; PURPLE='\033[0;35m'; NC='\033[0m'
 
-# Auto-detect network configuration
-PI_IP=$(hostname -I | awk '{print $1}')
-ROUTER_IP=$(ip route | grep default | awk '{print $3}' | head -1)
+print_status()  { echo -e "${BLUE}[INFO]${NC} $1"; }
+print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+print_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
-echo "📍 Server IP: $PI_IP | Router: $ROUTER_IP"
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-# Ensure a .env exists for docker-compose. If missing, create from .env.example with placeholders replaced
-if [ ! -f .env ]; then
-  if [ -f .env.example ]; then
-    # Export variables for envsubst
-    export PI_IP="$PI_IP"
-    export ROUTER_IP="$ROUTER_IP"
-    envsubst < .env.example > .env
-    echo "Created .env from .env.example with placeholders replaced"
-  else
-    echo "Warning: .env not found and .env.example not present. Continuing without .env"
-  fi
-fi
+check_docker() {
+    if ! command -v docker &>/dev/null; then print_error "Docker is not installed"; exit 1; fi
+    if ! docker info &>/dev/null; then print_error "Docker is not running"; exit 1; fi
+    if ! docker compose version &>/dev/null; then print_error "Docker Compose V2 is required"; exit 1; fi
+    print_success "Docker is running"
+}
 
-# Source environment variables from .env file
-source .env
+check_system() {
+    local total_ram; total_ram=$(free -m | awk 'NR==2{print $2}')
+    if (( total_ram < REQUIRED_RAM_MB )); then
+        print_warning "Low memory: ${total_ram}MB available, ${REQUIRED_RAM_MB}MB recommended for ${SERVICE_NAME}"
+    else
+        print_success "Memory check passed (${total_ram}MB available)"
+    fi
+    local available_disk; available_disk=$(df -BG . | awk 'NR==2{print int($4)}')
+    if (( available_disk < REQUIRED_DISK_GB )); then
+        print_warning "Low disk space: ${available_disk}GB available, ${REQUIRED_DISK_GB}GB recommended"
+    else
+        print_success "Disk space check passed (${available_disk}GB available)"
+    fi
+}
 
-# Check if domain is configured
-if [ -z "$NEXTCLOUD_DOMAIN" ]; then
-    echo ""
-    echo "❓ Nextcloud Domain Configuration:"
-    echo "   Please set your domain by running:"
-    echo "   export NEXTCLOUD_DOMAIN=nextcloud.yourdomain.com"
-    echo "   Then re-run this script"
-    echo ""
-    echo "   Or edit the domain in the .env file"
-    exit 1
-fi
+setup_env() {
+    local host_ip; host_ip=$(get_host_ip)
+    local router_ip; router_ip=$(ip route | grep default | awk '{print $3}' | head -1)
 
-echo "🌐 Domain: $NEXTCLOUD_DOMAIN"
+    if [[ ! -f .env ]]; then
+        if [[ -f .env.example ]]; then
+            export PI_IP="$host_ip"
+            export ROUTER_IP="$router_ip"
+            envsubst < .env.example > .env
+            print_success "Created .env from .env.example (IP: ${host_ip})"
+        else
+            print_error ".env.example not found"; exit 1
+        fi
+    else
+        print_status "Using existing .env file"
+    fi
+    source .env
+}
 
-# Create data directories (named volume is handled by Docker)
-# Note: nextcloud_aio_mastercontainer is a named Docker volume, not a directory
+get_host_ip() { hostname -I | awk '{print $1}'; }
 
-# Check if external storage path exists
-if [ ! -d "$EXTERNAL_STORAGE_PATH" ]; then
-    echo "⚠️  External storage path does not exist: $EXTERNAL_STORAGE_PATH"
-    echo "   Creating directory..."
-    mkdir -p "$EXTERNAL_STORAGE_PATH"
-    echo "   Please ensure this path has sufficient storage space"
-fi
+wait_for_service() {
+    local port="${1:-$DEFAULT_PORT}" max=30
+    print_status "Waiting for ${SERVICE_NAME} AIO to start..."
+    local host_ip; host_ip=$(get_host_ip)
+    for i in $(seq 1 "$max"); do
+        if sudo docker ps | grep -q "$CONTAINER_NAME"; then
+            print_success "${SERVICE_NAME} AIO mastercontainer is running!"; return 0
+        fi
+        echo -n "."; sleep 2
+    done
+    echo; print_warning "${SERVICE_NAME} may still be starting. Check: sudo docker compose logs -f"; return 1
+}
 
-# Check Docker socket access
-if [ ! -w /var/run/docker.sock ]; then
-    echo "⚠️  Docker socket not writable. Adding user to docker group..."
-    sudo usermod -aG docker $USER
-    echo "   Please log out and back in, then re-run this script"
-    exit 1
-fi
+# ─── Commands ────────────────────────────────────────────────────────────────
+cmd_setup() {
+    echo -e "${PURPLE}================================${NC}"
+    echo -e "${PURPLE}   ${SERVICE_NAME} Setup${NC}"
+    echo -e "${PURPLE}================================${NC}"
+    echo
 
-# Start Nextcloud AIO
-echo "🚀 Starting Nextcloud AIO..."
-sudo docker compose up -d
+    check_docker
+    check_system
+    setup_env
 
-# Wait for AIO mastercontainer to start
-echo "⏳ Waiting for Nextcloud AIO to initialize..."
-sleep 30
+    local host_ip; host_ip=$(get_host_ip)
 
-# Check if AIO is running
-if ! sudo docker ps | grep -q nextcloud-aio-mastercontainer; then
-    echo "❌ Nextcloud AIO failed to start"
-    echo "   Check logs: sudo docker compose logs"
-    exit 1
-fi
+    # Validate domain
+    if [[ -z "${NEXTCLOUD_DOMAIN:-}" ]]; then
+        print_error "NEXTCLOUD_DOMAIN is not set in .env"
+        print_status "Please set your domain: edit .env and add NEXTCLOUD_DOMAIN=nextcloud.yourdomain.com"
+        exit 1
+    fi
 
-echo ""
-echo "🎉 Nextcloud AIO Setup Complete!"
-echo ""
-echo "📋 Access Information:"
-echo "   • AIO Interface: http://$PI_IP:8081"
-echo "   • Nextcloud will be available at: https://$NEXTCLOUD_DOMAIN (via reverse proxy)"
-echo ""
-echo "📱 Initial Setup Steps:"
-echo "   1. Open http://$PI_IP:8081 in your browser"
-echo "   2. Enter your domain: $NEXTCLOUD_DOMAIN (validation skipped)"
-echo "   3. Create admin account and configure"
-echo "   4. AIO will automatically create all required containers"
-echo "   5. Set up reverse proxy for SSL access at https://$NEXTCLOUD_DOMAIN"
-echo ""
-echo "⚠️  Domain Requirements:"
-echo "   • Ensure $NEXTCLOUD_DOMAIN resolves to $PI_IP"
-echo "   • Add to Pi-hole: $NEXTCLOUD_DOMAIN=$PI_IP"
-echo "   • Configure nginx reverse proxy with SSL certificates for https://$NEXTCLOUD_DOMAIN"
-echo ""
-echo "🔧 Management:"
-echo "   • View logs: sudo docker compose logs -f"
-echo "   • Stop: sudo docker compose down"
-echo "   • Update: sudo docker compose pull && sudo docker compose up -d"
-echo ""
-echo "📚 Documentation: https://github.com/nextcloud/all-in-one"
+    # Create data directories
+    if [[ -n "${EXTERNAL_STORAGE_PATH:-}" ]] && [[ ! -d "$EXTERNAL_STORAGE_PATH" ]]; then
+        mkdir -p "$EXTERNAL_STORAGE_PATH"
+        print_success "Created external storage: $EXTERNAL_STORAGE_PATH"
+    fi
+
+    print_status "Starting ${SERVICE_NAME} AIO..."
+    sudo docker compose up -d
+
+    echo -e "\n${BLUE}Waiting for AIO to initialize...${NC}"
+    sleep 30
+    wait_for_service || true
+
+    echo
+    print_success "Setup complete!"
+    echo
+    echo -e "${BLUE}Access Information:${NC}"
+    echo "  AIO Interface: http://${host_ip}:${DEFAULT_PORT}"
+    echo "  Domain:        https://${NEXTCLOUD_DOMAIN}"
+    echo
+    echo -e "${BLUE}Initial Setup Steps:${NC}"
+    echo "  1. Open http://${host_ip}:${DEFAULT_PORT} in your browser"
+    echo "  2. Enter your domain: ${NEXTCLOUD_DOMAIN}"
+    echo "  3. Create admin account and configure"
+    echo
+    echo -e "${BLUE}Management:${NC}"
+    echo "  ./setup.sh start     Start ${SERVICE_NAME}"
+    echo "  ./setup.sh stop      Stop ${SERVICE_NAME}"
+    echo "  ./setup.sh logs      View logs"
+    echo "  ./setup.sh status    Show status"
+    echo "  ./setup.sh update    Update to latest"
+}
+
+cmd_start() {
+    print_status "Starting ${SERVICE_NAME}..."
+    sudo docker compose up -d
+    local host_ip; host_ip=$(get_host_ip)
+    print_success "${SERVICE_NAME} started at http://${host_ip}:${DEFAULT_PORT}"
+}
+
+cmd_stop() {
+    print_status "Stopping ${SERVICE_NAME}..."
+    sudo docker compose down
+    print_success "${SERVICE_NAME} stopped"
+}
+
+cmd_restart() {
+    print_status "Restarting ${SERVICE_NAME}..."
+    sudo docker compose restart
+    print_success "${SERVICE_NAME} restarted"
+}
+
+cmd_logs() {
+    print_status "Showing ${SERVICE_NAME} logs (Ctrl+C to exit)..."
+    sudo docker compose logs -f
+}
+
+cmd_status() {
+    echo -e "${BLUE}=== ${SERVICE_NAME} Status ===${NC}"
+    echo
+    if sudo docker compose ps | grep -q "Up\|running"; then
+        print_success "Container is running"
+        sudo docker compose ps
+    else
+        print_warning "Container is not running"
+    fi
+}
+
+cmd_update() {
+    print_status "Updating ${SERVICE_NAME}..."
+    sudo docker compose pull
+    sudo docker compose up -d
+    print_success "${SERVICE_NAME} updated"
+}
+
+show_usage() {
+    echo "${SERVICE_NAME} Management Script"
+    echo
+    echo "Usage: ./setup.sh [command]"
+    echo
+    echo "Commands:"
+    echo "  setup     Initial setup and start (default)"
+    echo "  start     Start the service"
+    echo "  stop      Stop the service"
+    echo "  restart   Restart the service"
+    echo "  logs      View logs"
+    echo "  status    Show service status"
+    echo "  update    Update to latest version"
+    echo "  help      Show this help message"
+    echo
+    echo "Note: This service uses 'sudo docker compose' as required by Nextcloud AIO."
+}
+
+# ─── Main ────────────────────────────────────────────────────────────────────
+case "${1:-setup}" in
+    setup)    cmd_setup ;;
+    start)    cmd_start ;;
+    stop)     cmd_stop ;;
+    restart)  cmd_restart ;;
+    logs)     cmd_logs ;;
+    status)   cmd_status ;;
+    update)   cmd_update ;;
+    help|--help|-h) show_usage ;;
+    *)  print_error "Unknown command: $1"; echo; show_usage; exit 1 ;;
+esac

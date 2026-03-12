@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-SERVICE_NAME="netdata"
-CONTAINER_NAME="netdata"
-REQUIRED_RAM_MB=250
+SERVICE_NAME="LocalStack"
+CONTAINER_NAME="localstack-main"
+REQUIRED_RAM_MB=500
 REQUIRED_DISK_GB=2
-DEFAULT_PORT="19999"
+DEFAULT_PORT="4566"
 
 # ─── Colors ──────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -18,9 +18,6 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
 check_docker() {
     if ! command -v docker &>/dev/null; then print_error "Docker is not installed"; exit 1; fi
     if ! docker info &>/dev/null; then print_error "Docker is not running"; exit 1; fi
@@ -59,12 +56,24 @@ setup_env() {
 
 get_host_ip() { hostname -I | awk '{print $1}'; }
 
+get_edition() {
+    local edition="${LOCALSTACK_EDITION:-community}"
+    echo "${edition,,}"  # lowercase
+}
+
+get_compose_file() {
+    local edition; edition=$(get_edition)
+    case "$edition" in
+        pro) echo "docker-compose.pro.yml" ;;
+        *)   echo "docker-compose.community.yml" ;;
+    esac
+}
+
 wait_for_service() {
     local port="${1:-$DEFAULT_PORT}" max=30
     print_status "Waiting for ${SERVICE_NAME} to start..."
-    local host_ip; host_ip=$(get_host_ip)
     for i in $(seq 1 "$max"); do
-        if curl -sf -o /dev/null "http://${host_ip}:${port}"; then
+        if curl -sf -o /dev/null "http://localhost:${port}/_localstack/health"; then
             print_success "${SERVICE_NAME} is ready!"; return 0
         fi
         echo -n "."; sleep 2
@@ -83,70 +92,115 @@ cmd_setup() {
     check_system
     setup_env
 
-    local port="${NETDATA_PORT:-$DEFAULT_PORT}"
-    local host_ip; host_ip=$(get_host_ip)
+    local edition; edition=$(get_edition)
+    local compose_file; compose_file=$(get_compose_file)
+    print_status "Edition: ${edition}"
 
-    print_status "Starting ${SERVICE_NAME}..."
-    docker compose up -d
+    if [[ ! -f "$compose_file" ]]; then
+        print_error "Compose file not found: ${compose_file}"; exit 1
+    fi
+
+    if [[ "$edition" == "pro" ]]; then
+        if [[ "${LOCALSTACK_AUTH_TOKEN:-your_auth_token_here}" == "your_auth_token_here" ]]; then
+            print_warning "Pro edition requires a valid LOCALSTACK_AUTH_TOKEN in .env"
+        fi
+    fi
+
+    mkdir -p volume
+    print_success "Directories ready"
+
+    local host_ip; host_ip=$(get_host_ip)
+    local port="${LOCALSTACK_PORT:-$DEFAULT_PORT}"
+
+    print_status "Starting ${SERVICE_NAME} (${edition})..."
+    docker compose -f "$compose_file" up -d
     wait_for_service "$port" || true
 
     echo
     print_success "Setup complete!"
     echo
     echo -e "${BLUE}Access Information:${NC}"
-    echo "  Dashboard: http://${host_ip}:${port}"
+    echo "  API Endpoint: http://${host_ip}:${port}"
+    echo "  Health Check: http://${host_ip}:${port}/_localstack/health"
+    echo "  Edition:      ${edition}"
+    echo
+    echo -e "${BLUE}AWS CLI Configuration:${NC}"
+    echo "  export AWS_ACCESS_KEY_ID=test"
+    echo "  export AWS_SECRET_ACCESS_KEY=test"
+    echo "  export AWS_ENDPOINT_URL=http://${host_ip}:${port}"
     echo
     echo -e "${BLUE}Management:${NC}"
     echo "  ./setup.sh start     Start ${SERVICE_NAME}"
     echo "  ./setup.sh stop      Stop ${SERVICE_NAME}"
     echo "  ./setup.sh logs      View logs"
+    echo "  ./setup.sh health    Check service health"
     echo "  ./setup.sh status    Show status"
     echo "  ./setup.sh update    Update to latest"
 }
 
 cmd_start() {
-    print_status "Starting ${SERVICE_NAME}..."
-    docker compose up -d
-    source .env 2>/dev/null || true
+    setup_env
+    local compose_file; compose_file=$(get_compose_file)
+    print_status "Starting ${SERVICE_NAME} ($(get_edition))..."
+    docker compose -f "$compose_file" up -d
     local host_ip; host_ip=$(get_host_ip)
-    print_success "${SERVICE_NAME} started at http://${host_ip}:${NETDATA_PORT:-$DEFAULT_PORT}"
+    print_success "${SERVICE_NAME} started at http://${host_ip}:${LOCALSTACK_PORT:-$DEFAULT_PORT}"
 }
 
 cmd_stop() {
+    setup_env
+    local compose_file; compose_file=$(get_compose_file)
     print_status "Stopping ${SERVICE_NAME}..."
-    docker compose down
+    docker compose -f "$compose_file" down
     print_success "${SERVICE_NAME} stopped"
 }
 
 cmd_restart() {
+    setup_env
+    local compose_file; compose_file=$(get_compose_file)
     print_status "Restarting ${SERVICE_NAME}..."
-    docker compose restart
+    docker compose -f "$compose_file" restart
     print_success "${SERVICE_NAME} restarted"
 }
 
 cmd_logs() {
+    setup_env
+    local compose_file; compose_file=$(get_compose_file)
     print_status "Showing ${SERVICE_NAME} logs (Ctrl+C to exit)..."
-    docker compose logs -f
+    docker compose -f "$compose_file" logs -f
+}
+
+cmd_health() {
+    source .env 2>/dev/null || true
+    local port="${LOCALSTACK_PORT:-$DEFAULT_PORT}"
+    print_status "Checking ${SERVICE_NAME} health..."
+    local response
+    response=$(curl -sf "http://localhost:${port}/_localstack/health" 2>/dev/null) || {
+        print_error "${SERVICE_NAME} is not responding"; exit 1
+    }
+    print_success "Health response:"
+    echo "$response" | python3 -m json.tool 2>/dev/null || echo "$response"
 }
 
 cmd_status() {
-    echo -e "${BLUE}=== ${SERVICE_NAME} Status ===${NC}"
+    setup_env
+    local compose_file; compose_file=$(get_compose_file)
+    echo -e "${BLUE}=== ${SERVICE_NAME} Status ($(get_edition)) ===${NC}"
     echo
-    if docker compose ps | grep -q "Up\|running"; then
+    if docker compose -f "$compose_file" ps | grep -q "Up\|running"; then
         print_success "Container is running"
-        docker compose ps
-        echo
-        echo -e "${BLUE}Resource Usage:${NC}"
-        docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}" "$CONTAINER_NAME" 2>/dev/null || true
+        docker compose -f "$compose_file" ps
     else
         print_warning "Container is not running"
     fi
 }
 
 cmd_update() {
+    setup_env
+    local compose_file; compose_file=$(get_compose_file)
     print_status "Updating ${SERVICE_NAME}..."
-    docker compose pull
-    docker compose up -d
+    docker compose -f "$compose_file" pull
+    docker compose -f "$compose_file" up -d
     print_success "${SERVICE_NAME} updated"
 }
 
@@ -161,9 +215,12 @@ show_usage() {
     echo "  stop      Stop the service"
     echo "  restart   Restart the service"
     echo "  logs      View logs"
+    echo "  health    Check service health"
     echo "  status    Show service status"
     echo "  update    Update to latest version"
     echo "  help      Show this help message"
+    echo
+    echo "Edition is controlled by LOCALSTACK_EDITION in .env (community/pro)"
 }
 
 # ─── Main ────────────────────────────────────────────────────────────────────
@@ -173,6 +230,7 @@ case "${1:-setup}" in
     stop)     cmd_stop ;;
     restart)  cmd_restart ;;
     logs)     cmd_logs ;;
+    health)   cmd_health ;;
     status)   cmd_status ;;
     update)   cmd_update ;;
     help|--help|-h) show_usage ;;

@@ -1,253 +1,249 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Plex Media Server Setup Script
-# This script sets up and starts Plex Media Server on Raspberry Pi
+# ─── Configuration ───────────────────────────────────────────────────────────
+SERVICE_NAME="plex"
+CONTAINER_NAME="plex"
+REQUIRED_RAM_MB=1024
+REQUIRED_DISK_GB=5
+DEFAULT_PORT="32400"
 
-set -e
+# ─── Colors ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; PURPLE='\033[0;35m'; NC='\033[0m'
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-NC='\033[0m' # No Color
+print_status()  { echo -e "${BLUE}[INFO]${NC} $1"; }
+print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+print_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Function to print colored output
-print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-print_important() {
-    echo -e "${PURPLE}[IMPORTANT]${NC} $1"
-}
-
-# Check if Docker is running
 check_docker() {
-    print_status "Checking Docker..."
-    if ! docker info > /dev/null 2>&1; then
-        print_error "Docker is not running. Please start Docker first."
-        exit 1
-    fi
+    if ! command -v docker &>/dev/null; then print_error "Docker is not installed"; exit 1; fi
+    if ! docker info &>/dev/null; then print_error "Docker is not running"; exit 1; fi
+    if ! docker compose version &>/dev/null; then print_error "Docker Compose V2 is required"; exit 1; fi
     print_success "Docker is running"
 }
 
-# Check if .env file exists
-check_env() {
-    print_status "Checking environment configuration..."
-    if [ ! -f .env ]; then
-        print_warning ".env file not found. Creating from .env.example..."
-        cp .env.example .env
-        print_success "Created .env file from template"
-        print_important "Please review and update .env file with your settings"
-        print_important "Especially set PLEX_CLAIM_TOKEN from https://www.plex.tv/claim"
-    else
-        print_success "Environment file found"
-    fi
-}
-
-# Create necessary directories
-create_directories() {
-    print_status "Creating necessary directories..."
-    
-    mkdir -p config
-    mkdir -p transcode
-    mkdir -p media/{movies,tv,music,photos}
-    
-    # Set proper permissions
-    if [ "$(id -u)" -eq 0 ]; then
-        chown -R 1000:1003 config transcode media
-    fi
-    
-    print_success "Directories created with proper permissions"
-}
-
-# Check system requirements
 check_system() {
-    print_status "Checking system requirements..."
-    
-    # Check available memory
-    TOTAL_MEM=$(free -m | awk 'NR==2{printf "%.0f", $2}')
-    if [ "$TOTAL_MEM" -lt 1024 ]; then
-        print_warning "Low memory detected (${TOTAL_MEM}MB). Consider reducing memory limits."
+    local total_ram; total_ram=$(free -m | awk 'NR==2{print $2}')
+    if (( total_ram < REQUIRED_RAM_MB )); then
+        print_warning "Low memory: ${total_ram}MB available, ${REQUIRED_RAM_MB}MB recommended for ${SERVICE_NAME}"
     else
-        print_success "Memory check passed (${TOTAL_MEM}MB available)"
+        print_success "Memory check passed (${total_ram}MB available)"
     fi
-    
-    # Check available disk space
-    AVAILABLE_SPACE=$(df -h . | awk 'NR==2{print $4}')
-    print_status "Available disk space: $AVAILABLE_SPACE"
-    
-    # Check for hardware transcoding support
-    if [ -d "/dev/dri" ]; then
+    local available_disk; available_disk=$(df -BG . | awk 'NR==2{print int($4)}')
+    if (( available_disk < REQUIRED_DISK_GB )); then
+        print_warning "Low disk space: ${available_disk}GB available, ${REQUIRED_DISK_GB}GB recommended"
+    else
+        print_success "Disk space check passed (${available_disk}GB available)"
+    fi
+
+    # Check for hardware transcoding
+    if [[ -d "/dev/dri" ]]; then
         print_success "Hardware transcoding device detected (/dev/dri)"
     else
         print_warning "No hardware transcoding device found"
     fi
 }
 
-# Stop existing container if running
-stop_existing() {
-    print_status "Checking for existing Plex containers..."
-    if docker ps -q -f name=plex > /dev/null 2>&1; then
-        print_warning "Stopping existing Plex container..."
-        docker compose down
-        print_success "Existing container stopped"
-    fi
-}
-
-# Start Plex
-start_plex() {
-    print_status "Starting Plex Media Server..."
-    docker compose up -d
-    print_success "Plex started successfully"
-}
-
-# Wait for Plex to be ready
-wait_for_ready() {
-    print_status "Waiting for Plex to be ready..."
-    
-    # Wait up to 120 seconds for Plex to be ready
-    for i in {1..120}; do
-        if curl -s -f "http://localhost:32400/identity" > /dev/null 2>&1; then
-            print_success "Plex is ready!"
-            break
-        fi
-        if [ $((i % 10)) -eq 0 ]; then
-            echo -n " (${i}s)"
+setup_env() {
+    if [[ ! -f .env ]]; then
+        if [[ -f .env.example ]]; then
+            cp .env.example .env
+            print_success "Created .env from .env.example"
+            print_warning "Set PLEX_CLAIM_TOKEN from https://www.plex.tv/claim"
         else
-            echo -n "."
+            print_error ".env.example not found"; exit 1
         fi
+    else
+        print_status "Using existing .env file"
+    fi
+    source .env
+}
+
+get_host_ip() { hostname -I | awk '{print $1}'; }
+
+wait_for_service() {
+    local port="${1:-$DEFAULT_PORT}" max=60
+    print_status "Waiting for ${SERVICE_NAME} to start..."
+    local host_ip; host_ip=$(get_host_ip)
+    for i in $(seq 1 "$max"); do
+        if curl -sf "http://${host_ip}:${port}/identity" &>/dev/null; then
+            print_success "${SERVICE_NAME} is ready!"; return 0
+        fi
+        if (( i % 10 == 0 )); then echo -n " (${i}s)"; else echo -n "."; fi
         sleep 1
     done
-    echo
-    
-    # Check if Plex is actually running
-    if ! curl -s -f "http://localhost:32400/identity" > /dev/null 2>&1; then
-        print_warning "Plex may still be starting up. Check logs with: docker compose logs -f plex"
-    fi
+    echo; print_warning "${SERVICE_NAME} may still be starting. Check: docker compose logs -f"; return 1
 }
 
-# Get Plex claim token info
-get_claim_token_info() {
-    # Load environment variables
-    source .env
-    
-    if [ -z "$PLEX_CLAIM_TOKEN" ]; then
-        echo
-        print_important "🔑 Plex Claim Token Setup"
-        echo "For automatic server setup, you need a claim token:"
-        echo "1. Visit: https://www.plex.tv/claim"
-        echo "2. Sign in to your Plex account"
-        echo "3. Copy the claim token"
-        echo "4. Add it to your .env file: PLEX_CLAIM_TOKEN=claim-xxxxxxxxxxxx"
-        echo "5. Restart the container: docker compose restart plex"
-        echo
-    fi
-}
+# ─── Commands ────────────────────────────────────────────────────────────────
+cmd_setup() {
+    echo -e "${PURPLE}================================${NC}"
+    echo -e "${PURPLE}   ${SERVICE_NAME} Setup${NC}"
+    echo -e "${PURPLE}================================${NC}"
+    echo
 
-# Display access information
-show_access_info() {
-    # Load environment variables
-    source .env
-    
-    # Get server IP
-    SERVER_IP=$(hostname -I | awk '{print $1}')
-    
+    check_docker
+    check_system
+    setup_env
+
+    local host_ip; host_ip=$(get_host_ip)
+
+    mkdir -p config transcode media/{movies,tv,music,photos}
+    print_success "Directories ready"
+
+    print_status "Starting ${SERVICE_NAME}..."
+    docker compose up -d
+    wait_for_service || true
+
     echo
-    print_success "🚀 Plex Media Server is now running!"
+    print_success "Setup complete!"
     echo
-    echo -e "${BLUE}Access URLs:${NC}"
-    echo -e "  Local:   ${GREEN}http://localhost:32400/web${NC}"
-    echo -e "  Network: ${GREEN}http://${SERVER_IP}:32400/web${NC}"
+    echo -e "${BLUE}Access Information:${NC}"
+    echo "  Web UI: http://${host_ip}:${DEFAULT_PORT}/web"
     echo
-    echo -e "${BLUE}Initial Setup:${NC}"
-    if [ -z "$PLEX_CLAIM_TOKEN" ]; then
-        echo "  1. Visit the local URL above in your browser"
-        echo "  2. Sign in to your Plex account or create one"
-        echo "  3. Name your server (e.g., 'Pi Plex Server')"
-        echo "  4. Add media libraries:"
-        echo "     • Movies: /media/movies"
-        echo "     • TV Shows: /media/tv"
-        echo "     • Music: /media/music"
-        echo "     • Photos: /media/photos"
+    if [[ -z "${PLEX_CLAIM_TOKEN:-}" ]]; then
+        echo -e "${YELLOW}Claim token not set. Run: ./setup.sh claim${NC}"
     else
-        echo "  1. Server should be automatically claimed to your account"
-        echo "  2. Visit Plex web interface to add media libraries"
-        echo "  3. Add your media to the directories:"
+        echo -e "${GREEN}Server will auto-claim to your Plex account${NC}"
     fi
     echo
     echo -e "${BLUE}Media Directories:${NC}"
-    echo "  Movies:    $(realpath media/movies)"
-    echo "  TV Shows:  $(realpath media/tv)"
-    echo "  Music:     $(realpath media/music)"
-    echo "  Photos:    $(realpath media/photos)"
+    echo "  Movies:  $(realpath media/movies)"
+    echo "  TV:      $(realpath media/tv)"
+    echo "  Music:   $(realpath media/music)"
+    echo "  Photos:  $(realpath media/photos)"
     echo
-    echo -e "${BLUE}Useful Commands:${NC}"
-    echo "  View logs:     docker compose logs -f plex"
-    echo "  Stop:          docker compose down"
-    echo "  Restart:       docker compose restart plex"
-    echo "  Update:        docker compose pull && docker compose up -d"
-    echo "  Shell access:  docker compose exec plex /bin/bash"
-    echo
-    echo -e "${BLUE}Performance Tips:${NC}"
-    echo "  • Use Direct Play when possible (no transcoding)"
-    echo "  • Place media on fast storage (SSD preferred)"
-    echo "  • Monitor CPU usage during transcoding"
-    echo "  • Limit concurrent transcoding streams"
-    echo
+    echo -e "${BLUE}Management:${NC}"
+    echo "  ./setup.sh start     Start ${SERVICE_NAME}"
+    echo "  ./setup.sh stop      Stop ${SERVICE_NAME}"
+    echo "  ./setup.sh logs      View logs"
+    echo "  ./setup.sh claim     Set Plex claim token"
+    echo "  ./setup.sh shell     Open container shell"
+    echo "  ./setup.sh status    Show status"
+    echo "  ./setup.sh update    Update to latest"
 }
 
-# Show media organization tips
-show_media_tips() {
-    echo -e "${BLUE}📁 Media Organization Tips:${NC}"
-    echo
-    echo "For best results, organize your media like this:"
-    echo
-    echo "Movies:"
-    echo "  media/movies/Movie Name (Year)/Movie Name (Year).mp4"
-    echo
-    echo "TV Shows:"
-    echo "  media/tv/Show Name/Season 01/S01E01 - Episode Name.mp4"
-    echo
-    echo "Music:"
-    echo "  media/music/Artist Name/Album Name/01 - Track Name.mp3"
-    echo
-    echo "For more details, see: https://support.plex.tv/articles/naming-and-organizing-your-media-files/"
-    echo
+cmd_start() {
+    print_status "Starting ${SERVICE_NAME}..."
+    docker compose up -d
+    local host_ip; host_ip=$(get_host_ip)
+    print_success "${SERVICE_NAME} started at http://${host_ip}:${DEFAULT_PORT}/web"
 }
 
-# Main execution
-main() {
-    echo -e "${PURPLE}================================${NC}"
-    echo -e "${PURPLE}   Plex Media Server Setup      ${NC}"
-    echo -e "${PURPLE}   Raspberry Pi Docker Edition  ${NC}"
-    echo -e "${PURPLE}================================${NC}"
-    echo
-    
-    check_docker
-    check_env
-    check_system
-    create_directories
-    stop_existing
-    start_plex
-    wait_for_ready
-    get_claim_token_info
-    show_access_info
-    show_media_tips
+cmd_stop() {
+    print_status "Stopping ${SERVICE_NAME}..."
+    docker compose down
+    print_success "${SERVICE_NAME} stopped"
 }
 
-# Run main function
-main "$@"
+cmd_restart() {
+    print_status "Restarting ${SERVICE_NAME}..."
+    docker compose restart
+    print_success "${SERVICE_NAME} restarted"
+}
+
+cmd_logs() {
+    print_status "Showing ${SERVICE_NAME} logs (Ctrl+C to exit)..."
+    docker compose logs -f
+}
+
+cmd_shell() {
+    print_status "Opening shell in ${SERVICE_NAME} container..."
+    docker exec -it "$CONTAINER_NAME" /bin/bash
+}
+
+cmd_claim() {
+    echo -e "${PURPLE}=== Plex Claim Token Helper ===${NC}"
+    echo
+    echo -e "${BLUE}What is a Plex Claim Token?${NC}"
+    echo "A claim token links your Plex server to your Plex account automatically."
+    echo
+    echo -e "${BLUE}How to get your claim token:${NC}"
+    echo "  1. Open https://www.plex.tv/claim in your browser"
+    echo "  2. Sign in to your Plex account"
+    echo "  3. Copy the claim token (starts with 'claim-')"
+    echo
+    echo -n "Enter your claim token (or press Enter to skip): "
+    read -r claim_token
+
+    if [[ -n "$claim_token" ]]; then
+        if grep -q "PLEX_CLAIM_TOKEN=" .env 2>/dev/null; then
+            sed -i "s/PLEX_CLAIM_TOKEN=.*/PLEX_CLAIM_TOKEN=$claim_token/" .env
+        else
+            echo "PLEX_CLAIM_TOKEN=$claim_token" >> .env
+        fi
+        print_success "Claim token saved to .env"
+
+        if docker ps -q -f name="$CONTAINER_NAME" | grep -q .; then
+            print_status "Restarting Plex to apply claim token..."
+            docker compose restart
+            print_success "Plex restarted"
+        fi
+    else
+        print_warning "Skipped. Set manually in .env or visit http://localhost:${DEFAULT_PORT}/web"
+    fi
+}
+
+cmd_status() {
+    echo -e "${BLUE}=== ${SERVICE_NAME} Status ===${NC}"
+    echo
+    if docker compose ps | grep -q "Up\|running"; then
+        print_success "Container is running"
+        docker compose ps
+        echo
+        local host_ip; host_ip=$(get_host_ip)
+        if curl -sf "http://${host_ip}:${DEFAULT_PORT}/identity" &>/dev/null; then
+            print_success "Plex is responding"
+        else
+            print_warning "Plex is not responding yet"
+        fi
+    else
+        print_warning "Container is not running"
+    fi
+}
+
+cmd_update() {
+    print_status "Updating ${SERVICE_NAME}..."
+    docker compose pull
+    docker compose up -d
+    print_success "${SERVICE_NAME} updated"
+}
+
+show_usage() {
+    echo "${SERVICE_NAME} Management Script"
+    echo
+    echo "Usage: ./setup.sh [command]"
+    echo
+    echo "Commands:"
+    echo "  setup     Initial setup and start (default)"
+    echo "  start     Start the service"
+    echo "  stop      Stop the service"
+    echo "  restart   Restart the service"
+    echo "  logs      View logs"
+    echo "  shell     Open container shell"
+    echo "  claim     Set Plex claim token interactively"
+    echo "  status    Show service status"
+    echo "  update    Update to latest version"
+    echo "  help      Show this help message"
+}
+
+# ─── Main ────────────────────────────────────────────────────────────────────
+case "${1:-setup}" in
+    setup)    cmd_setup ;;
+    start)    cmd_start ;;
+    stop)     cmd_stop ;;
+    restart)  cmd_restart ;;
+    logs)     cmd_logs ;;
+    shell)    cmd_shell ;;
+    claim)    cmd_claim ;;
+    status)   cmd_status ;;
+    update)   cmd_update ;;
+    help|--help|-h) show_usage ;;
+    *)  print_error "Unknown command: $1"; echo; show_usage; exit 1 ;;
+esac
