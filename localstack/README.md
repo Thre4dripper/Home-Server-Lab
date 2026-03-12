@@ -17,26 +17,25 @@ resource_usage: "~500MB RAM"
 
 LocalStack provides an easy-to-use test/mocking framework for developing Cloud applications. This setup includes both Community and Pro versions with cloud dashboard integration.
 
-## 🚀 Quick Start
+## Quick Start
 
-### LocalStack Pro (Recommended)
-1. **Set up LocalStack Pro**:
+1. **Configure edition** (in `.env`):
    ```bash
-   ./setup-pro.sh
+   cp .env.example .env
+   # Set LOCALSTACK_EDITION=community or LOCALSTACK_EDITION=pro
    ```
 
-### LocalStack Community
-1. **Set up LocalStack Community**:
+2. **Run the setup script**:
    ```bash
-   ./setup-community.sh
+   ./setup.sh
    ```
 
-2. **Access LocalStack**:
+3. **Access LocalStack**:
    - **LocalStack Gateway**: http://localhost:4566
    - **Cloud Dashboard**: https://app.localstack.cloud (Pro only)
    - **Health Check**: http://localhost:4566/_localstack/health
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables (.env)
 
@@ -52,7 +51,7 @@ LocalStack provides an easy-to-use test/mocking framework for developing Cloud a
 - **`docker-compose.pro.yml`**: Pro version with all features
 - **`docker-compose.community.yml`**: Community version (free)
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 localstack/
@@ -60,13 +59,12 @@ localstack/
 ├── docker-compose.community.yml   # Community version
 ├── .env                          # Configuration
 ├── .env.example                  # Configuration template
-├── setup-pro.sh                 # Pro setup script
-├── setup-community.sh           # Community setup script
+├── setup.sh                     # Unified setup script
 ├── README.md                     # This file
 └── volume/                       # LocalStack data (persistent)
 ```
 
-## 🔧 Management
+## Management
 
 ### Using Docker Compose
 
@@ -105,7 +103,7 @@ aws configure --profile localstack
 aws --profile localstack --endpoint-url=http://localhost:4566 s3 ls
 ```
 
-## 🌟 Features
+## Features
 
 ### Pro Features (Requires Auth Token)
 - ✅ **Cloud Dashboard Integration** - Monitor your LocalStack instance
@@ -120,14 +118,14 @@ aws --profile localstack --endpoint-url=http://localhost:4566 s3 ls
 - ✅ **CI/CD Integration** - Perfect for automated testing
 - ✅ **Free & Open Source** - No limits for basic usage
 
-## 🔒 Security Notes
+## Security Notes
 
 - LocalStack runs on `127.0.0.1` (localhost only) for security
 - Pro features require valid authentication token
 - Data persisted in `./volume` directory
 - No real AWS charges - everything is emulated locally
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -161,18 +159,10 @@ curl http://localhost:4566/_localstack/health
 curl http://localhost:4566/_localstack/health | jq .services
 ```
 
-## 📚 Documentation
+## Links
 
-- **LocalStack Docs**: https://docs.localstack.cloud
-- **AWS CLI Reference**: https://docs.aws.amazon.com/cli/
-- **LocalStack Pro**: https://localstack.cloud/pricing
-- **Community Support**: https://github.com/localstack/localstack
-
-## 🤝 Integration
-
-This LocalStack setup integrates with the Home Server Lab ecosystem:
-
-- **Service Discovery**: Accessible at `localhost:4566`
-- **Persistence**: Data stored in `./volume`
-- **Logging**: Centralized with other services
+- [LocalStack Documentation](https://docs.localstack.cloud)
+- [AWS CLI Reference](https://docs.aws.amazon.com/cli/)
+- [LocalStack Pro](https://localstack.cloud/pricing)
+- [GitHub Repository](https://github.com/localstack/localstack)
 - **Monitoring**: Health checks and status reporting

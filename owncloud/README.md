@@ -15,17 +15,17 @@ resource_usage: "~800MB RAM"
 
 Open-source file synchronization and sharing platform with enterprise features.
 
-## ☁️ Overview
+## Overview
 
 ownCloud provides a secure, self-hosted file sync and share solution. Access your files from anywhere while maintaining complete control over your data. Perfect for teams, families, or personal file management.
 
-## 🏗️ Architecture
+## Architecture
 
 - **ownCloud Server**: Core file sync and web interface
 - **MariaDB**: Database for metadata and user management
 - **Redis**: Performance caching layer
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Configure Environment**:
    ```bash
@@ -50,7 +50,7 @@ ownCloud provides a secure, self-hosted file sync and share solution. Access you
    - URL: http://your-server-ip:8080
    - Login with admin credentials from .env
 
-## 📋 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -82,7 +82,7 @@ This allows access from:
 
 Add additional IPs/domains as needed, separated by commas.
 
-## 🌟 Features
+## Features
 
 ### File Management
 - **Web Interface**: Full-featured file browser
@@ -111,7 +111,7 @@ Add additional IPs/domains as needed, separated by commas.
 - **LDAP Integration**: Enterprise authentication
 - **Activity Stream**: Track all file activities
 
-## 🔧 Management
+## Management
 
 ### Daily Operations
 ```bash
@@ -148,7 +148,7 @@ tar -czf owncloud-full-backup-$(date +%Y%m%d).tar.gz files/ mysql/ redis/
 - **Groups**: Organize users by department/function
 - **Permissions**: Fine-grained access control
 
-## 🌐 Network Configuration
+## Network Configuration
 
 ### Port Information
 - **Web Interface**: 8080 (configurable)
@@ -165,7 +165,7 @@ tar -czf owncloud-full-backup-$(date +%Y%m%d).tar.gz files/ mysql/ redis/
 - **Android**: https://play.google.com/store/apps/details?id=com.owncloud.android
 - **iOS**: https://apps.apple.com/app/owncloud/id543672169
 
-## 🛡️ Security
+## Security
 
 ### Access Control
 - **Trusted Domains**: Restricts access to configured IPs/domains
@@ -184,7 +184,7 @@ tar -czf owncloud-full-backup-$(date +%Y%m%d).tar.gz files/ mysql/ redis/
 - **HTTPS Ready**: Add reverse proxy for SSL termination
 - **Firewall**: Only port 8080 needs external access
 
-## 📊 Resource Usage
+## Resource Usage
 
 ### System Requirements
 - **RAM**: 1GB minimum, 2GB+ recommended
@@ -198,7 +198,7 @@ tar -czf owncloud-full-backup-$(date +%Y%m%d).tar.gz files/ mysql/ redis/
 - **File Chunking**: Efficient large file uploads
 - **Background Jobs**: Async processing via cron
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -267,7 +267,7 @@ tar -czf owncloud-full-backup-$(date +%Y%m%d).tar.gz files/ mysql/ redis/
 - **Features**: More enterprise features
 - **Integration**: Calendar, contacts, external storage
 
-## 🔗 Resources
+## Links
 
 ### Official Links
 - [ownCloud Website](https://owncloud.com/)

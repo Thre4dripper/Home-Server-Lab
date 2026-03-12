@@ -91,7 +91,7 @@ The connector runs in `network_mode: host`, so there are no exposed ports. Conne
    - Run `./setup.sh logs` and look for authentication errors.  
    - Regenerate the access/refresh token pair and update `.env`.
 
-## Useful Links
+## Links
 
 - [Twingate Documentation](https://www.twingate.com/docs)
 - [Connector Container on Docker Hub](https://hub.docker.com/r/twingate/connector)
