@@ -172,7 +172,7 @@ docker compose down
 - `./config` - Rclone configuration and credentials
 - `./data` - Local data directory for operations
 
-## Help & Resources
+## Links
 
 - [Rclone Official Website](https://rclone.org/)
 - [Rclone Documentation](https://rclone.org/docs/)

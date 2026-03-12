@@ -15,7 +15,7 @@ resource_usage: "~2GB RAM"
 
 A complete DevOps platform that enables teams to collaborate on code, deploy applications, and monitor performance - all in one place.
 
-## 🌟 Features
+## Features
 
 - **Git Repository Management**: Full Git hosting with branches, tags, and merge requests
 - **Integrated CI/CD**: Built-in continuous integration and deployment pipelines
@@ -26,7 +26,7 @@ A complete DevOps platform that enables teams to collaborate on code, deploy app
 - **Security Scanning**: Vulnerability scanning and security dashboards
 - **Project Management**: Agile planning tools with roadmaps and iterations
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Docker and Docker Compose installed
 - **Minimum 2GB RAM** (4GB+ recommended for better performance)
@@ -34,7 +34,7 @@ A complete DevOps platform that enables teams to collaborate on code, deploy app
 - Port 8929 (web interface) and 2424 (SSH) available
 - Network access to pull Docker images
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Configure the installation**:
    ```bash
@@ -56,7 +56,7 @@ A complete DevOps platform that enables teams to collaborate on code, deploy app
 
 **Why "root"?** GitLab follows Unix conventions and always creates `root` as the initial administrator account.
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables (.env)
 
@@ -72,7 +72,7 @@ A complete DevOps platform that enables teams to collaborate on code, deploy app
 
 GitLab runs on its own isolated Docker network for security and performance.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 gitlab/
@@ -88,7 +88,7 @@ gitlab/
 └── backups/             # GitLab backups (created on first run)
 ```
 
-## 🔧 Management
+## Management
 
 ### Starting Services
 ```bash
@@ -131,7 +131,7 @@ docker compose exec gitlab gitlab-backup list
 docker compose exec gitlab gitlab-backup restore BACKUP=TIMESTAMP
 ```
 
-## 🌐 Access Methods
+## Access Methods
 
 ### Web Interface
 - **URL**: http://192.168.0.108:8929
@@ -169,7 +169,7 @@ curl -X POST -H "PRIVATE-TOKEN: your_token" \
      "http://192.168.0.108:8929/api/v4/projects"
 ```
 
-## 🛡️ Security Considerations
+## Security Considerations
 
 ### Default Security Settings
 - Root password required for initial access
@@ -186,7 +186,7 @@ curl -X POST -H "PRIVATE-TOKEN: your_token" \
 6. **User Management**: Create individual user accounts, disable root for daily use
 7. **Two-Factor Authentication**: Enable 2FA for all users
 
-## 🔗 CI/CD Integration
+## CI/CD Integration
 
 ### GitLab Runner Setup
 ```bash
@@ -224,7 +224,7 @@ deploy:
     - main
 ```
 
-## 📊 Health Monitoring
+## Health Monitoring
 
 ### Service Health Checks
 GitLab includes comprehensive health monitoring:
@@ -247,7 +247,7 @@ docker stats gitlab-server
 docker compose exec gitlab gitlab-ctl status
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -308,7 +308,7 @@ sudo rm -rf config logs data backups
 ./setup.sh
 ```
 
-## 🎯 Performance Optimization
+## Performance Optimization
 
 ### For Raspberry Pi / Low-Resource Systems
 Add these to your GITLAB_OMNIBUS_CONFIG in docker-compose.yml:
@@ -328,7 +328,7 @@ mattermost['enable'] = false
 registry['enable'] = false
 ```
 
-## 📚 Additional Resources
+## Links
 
 - [GitLab Official Documentation](https://docs.gitlab.com/)
 - [GitLab CI/CD Documentation](https://docs.gitlab.com/ee/ci/)
@@ -336,7 +336,7 @@ registry['enable'] = false
 - [GitLab Runner Documentation](https://docs.gitlab.com/runner/)
 - [Docker Configuration](https://docs.gitlab.com/ee/install/docker.html)
 
-## 🤝 Support
+## Support
 
 For issues specific to this setup:
 1. Check the troubleshooting section above

@@ -15,11 +15,11 @@ resource_usage: "~1GB RAM"
 
 Enterprise file synchronization and sharing platform using the official Docker setup.
 
-## 🌊 Overview
+## Overview
 
 This is the **official Seafile Pro Edition setup** with enterprise features, free for up to 3 users. No reverse proxy included - direct HTTP access on port 8000 for simplicity.
 
-## 🏗️ Architecture
+## Architecture
 
 - **Seafile Pro Server**: Main application with enterprise features
 - **MariaDB**: MySQL-compatible database for metadata
@@ -27,7 +27,7 @@ This is the **official Seafile Pro Edition setup** with enterprise features, fre
 - **Memcached**: Performance caching layer
 - **SeaDoc**: Online document editor integration
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Configure Environment**:
    ```bash
@@ -52,7 +52,7 @@ This is the **official Seafile Pro Edition setup** with enterprise features, fre
    - URL: http://your-server-ip:8000
    - Login with credentials from .env file
 
-## 💎 Pro Features (Free for 3 Users)
+## Pro Features (Free for 3 Users)
 
 ### Core Enterprise Features
 - **Advanced Admin Panel**: Complete system management
@@ -72,7 +72,7 @@ This is the **official Seafile Pro Edition setup** with enterprise features, fre
 - **Smart Indexing**: Automatic content analysis
 - **Advanced Filters**: Search by type, date, user, etc.
 
-## 📁 Data Structure
+## Data Structure
 
 ```
 seafile/
@@ -90,7 +90,7 @@ seafile/
 └── setup.sh             # Automated deployment
 ```
 
-## 🔧 Configuration Files
+## Configuration Files
 
 ### Environment Variables (.env)
 - **Database**: MariaDB connection and credentials
@@ -104,7 +104,7 @@ seafile/
 - **seadoc.yml**: Document editor integration
 - **No caddy.yml**: Removed reverse proxy for direct access
 
-## 🌐 Network Configuration
+## Network Configuration
 
 | Service | Port | Access | Purpose |
 |---------|------|--------|---------|
@@ -114,7 +114,7 @@ seafile/
 | Memcached | 11211 | Internal | Performance cache |
 | SeaDoc | 7070 | Internal | Document editor |
 
-## 🛡️ Security Features
+## Security Features
 
 ### Built-in Security
 - **Two-Factor Authentication**: TOTP support
@@ -129,7 +129,7 @@ seafile/
 - **JWT Authentication**: Secure service-to-service auth
 - **Direct HTTP**: No reverse proxy complexity
 
-## 📱 Client Applications
+## Client Applications
 
 ### Desktop Sync
 - **Windows/macOS/Linux**: Native sync clients
@@ -149,7 +149,7 @@ seafile/
 - **Online Editing**: SeaDoc integration  
 - **Sharing**: Public links, user/group sharing
 
-## 🔄 Management
+## Management
 
 ### Daily Operations
 ```bash
@@ -187,7 +187,7 @@ cp .env .env.backup
 - **Application Logs**: Detailed logging for troubleshooting
 - **Database Performance**: MariaDB slow query logs
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -237,7 +237,7 @@ cp .env .env.backup
 - ✅ Unlimited storage (your hardware)
 - ❌ Requires technical setup/maintenance
 
-## 🔗 Official Resources
+## Links
 
 - [Seafile Manual](https://manual.seafile.com/)
 - [Pro Edition Features](https://www.seafile.com/en/product/private_server/)
@@ -245,7 +245,7 @@ cp .env .env.backup
 - [Community Forum](https://forum.seafile.com/)
 - [Docker Hub](https://hub.docker.com/u/seafileltd)
 
-## 📈 Scaling Options
+## Scaling Options
 
 ### Resource Requirements
 - **Minimum**: 4GB RAM, 2 CPU cores

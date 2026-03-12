@@ -15,7 +15,7 @@ resource_usage: "~200MB RAM"
 
 A lightweight, self-hosted Git service with web interface, similar to GitHub but running on your own infrastructure.
 
-## 🌟 Features
+## Features
 
 - **Git Repository Hosting**: Full Git repository management with web interface
 - **User & Organization Management**: Create users, teams, and organizations
@@ -26,14 +26,14 @@ A lightweight, self-hosted Git service with web interface, similar to GitHub but
 - **API Access**: REST API for integration and automation
 - **PostgreSQL Database**: Reliable, high-performance database backend
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Docker and Docker Compose installed
 - Port 3000 (web interface) and 222 (SSH) available
 - At least 1GB RAM and 10GB disk space recommended
 - Network access to pull Docker images
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Configure the installation**:
    ```bash
@@ -51,7 +51,7 @@ A lightweight, self-hosted Git service with web interface, similar to GitHub but
    - Complete the initial setup wizard
    - Create your admin account
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables (.env)
 
@@ -69,7 +69,7 @@ A lightweight, self-hosted Git service with web interface, similar to GitHub but
 
 Gitea connects to the shared `pi-services` network, allowing integration with other services in your home lab.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 gitea/
@@ -81,7 +81,7 @@ gitea/
 └── postgres/            # PostgreSQL database data (created on first run)
 ```
 
-## 🔧 Management
+## Management
 
 ### Starting Services
 ```bash
@@ -121,7 +121,7 @@ tar -czf gitea-backup-$(date +%Y%m%d).tar.gz gitea/ postgres/
 docker compose up -d
 ```
 
-## 🌐 Access Methods
+## Access Methods
 
 ### Web Interface
 - **URL**: http://192.168.0.108:3000
@@ -159,7 +159,7 @@ curl -X POST -H "Authorization: token YOUR_TOKEN" \
      http://192.168.0.108:3000/api/v1/user/repos
 ```
 
-## 🛡️ Security Considerations
+## Security Considerations
 
 ### Default Security Settings
 - PostgreSQL database is isolated on internal network
@@ -174,7 +174,7 @@ curl -X POST -H "Authorization: token YOUR_TOKEN" \
 5. **SSH Key Authentication**: Use SSH keys instead of passwords
 6. **Two-Factor Authentication**: Enable 2FA for admin accounts
 
-## 🔗 Integration
+## Integration
 
 ### Reverse Proxy Setup
 For HTTPS and custom domains, configure Nginx:
@@ -200,7 +200,7 @@ Works seamlessly with other services in the pi-services network:
 - **n8n**: Automation workflows for Git webhooks
 - **Pydio**: File sharing for repository artifacts
 
-## 📊 Health Monitoring
+## Health Monitoring
 
 ### Service Health Checks
 Both services include health checks:
@@ -220,7 +220,7 @@ docker compose exec db pg_isready -U gitea -d gitea
 docker stats gitea-server gitea-db
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -271,14 +271,14 @@ sudo rm -rf gitea/ postgres/
 ./setup.sh
 ```
 
-## 📚 Additional Resources
+## Links
 
 - [Gitea Official Documentation](https://docs.gitea.com/)
 - [Gitea Configuration Options](https://docs.gitea.com/administration/config-cheat-sheet)
 - [Git Documentation](https://git-scm.com/docs)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 
-## 🤝 Support
+## Support
 
 For issues specific to this setup:
 1. Check the troubleshooting section above

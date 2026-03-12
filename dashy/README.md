@@ -43,7 +43,7 @@ Dashy is a highly customizable, self-hosted dashboard for organizing your homela
 
 3. **Configure Dashboard**:
    ```bash
-   ./config.sh edit
+   ./setup.sh config-edit
    ```
 
 4. **Access Dashboard**:
@@ -70,17 +70,17 @@ Dashy uses a **two-tier configuration system** for safety and flexibility:
 
 ```bash
 # 1. Edit the main configuration file
-./config.sh edit
+./setup.sh config-edit
 
 # 2. Or manually edit and then sync
 nano ./conf.yml
-./config.sh sync
+./setup.sh config-sync
 
 # 3. Validate configuration
-./config.sh validate
+./setup.sh config-validate
 
 # 4. Check status
-./config.sh status
+./setup.sh config-status
 ```
 
 ### Environment Variables
@@ -358,29 +358,29 @@ document.addEventListener('DOMContentLoaded', function() {
 ./setup.sh update          # Update to latest version
 ```
 
-### Configuration Management (config.sh)
+### Configuration Management
 
 ```bash
 # Configuration management
-./config.sh edit           # Edit configuration with validation
-./config.sh sync           # Apply changes to running service
-./config.sh validate       # Validate configuration syntax
-./config.sh status         # Show configuration status
-./config.sh diff           # Check if sync is needed
-./config.sh reset          # Reset to default template
+./setup.sh config-edit           # Edit configuration with validation
+./setup.sh config-sync           # Apply changes to running service
+./setup.sh config-validate       # Validate configuration syntax
+./setup.sh config-status         # Show configuration status
+./setup.sh config-diff           # Check if sync is needed
+./setup.sh config-reset          # Reset to default template
 ```
 
 ### Configuration Workflow
 
 ```bash
 # 1. Edit configuration
-./config.sh edit
+./setup.sh config-edit
 
 # 2. Validate changes
-./config.sh validate
+./setup.sh config-validate
 
 # 3. Apply to running service
-./config.sh sync
+./setup.sh config-sync
 
 # 4. Check service status
 ./setup.sh status

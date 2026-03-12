@@ -277,7 +277,7 @@ Aria2 can be integrated with other tools via RPC:
 - Custom scripts
 - Other download managers
 
-## Help & Resources
+## Links
 
 - [Aria2 Official Website](https://aria2.github.io/)
 - [Aria2 GitHub Repository](https://github.com/aria2/aria2)
