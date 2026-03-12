@@ -1,171 +1,268 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# GitLab Community Edition Setup Script
-# Automated installation and configuration for GitLab CE
+# ─── Configuration ───────────────────────────────────────────────────────────
+SERVICE_NAME="GitLab"
+CONTAINER_NAME="gitlab-server"
+REQUIRED_RAM_MB=2048
+REQUIRED_DISK_GB=10
+DEFAULT_PORT="8929"
 
-set -e  # Exit on any error
+# ─── Colors ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; PURPLE='\033[0;35m'; NC='\033[0m'
 
-echo "🦊 GitLab Community Edition Setup"
-echo "================================="
-echo ""
-echo "📝 Configuration:"
-echo "   • Full-featured Git hosting platform"
-echo "   • Built-in CI/CD pipelines"
-echo "   • Issue tracking and project management" 
-echo "   • Container registry and package registry"
-echo "   • Edit '.env' to customize configuration"
-echo ""
+print_status()  { echo -e "${BLUE}[INFO]${NC} $1"; }
+print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+print_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Load environment variables
-if [ -f .env ]; then
-    set -a  # Export all variables
-    source .env
-    set +a  # Stop exporting
-else
-    echo "❌ Error: .env file not found"
-    echo "   Please copy .env.example to .env and configure it"
-    exit 1
-fi
-
-# Validate required variables
-required_vars=("GITLAB_DOMAIN" "GITLAB_PORT" "GITLAB_ROOT_PASSWORD")
-for var in "${required_vars[@]}"; do
-    if [ -z "${!var}" ]; then
-        echo "❌ Error: Required variable $var is not set in .env file"
-        exit 1
-    fi
-done
-
-# Get host IP for display
-HOST_IP=$(hostname -I | awk '{print $1}' || echo $GITLAB_DOMAIN)
-
-echo "📍 Host Configuration: $HOST_IP"
-echo "✅ Configuration updated"
-
-# Create data directories
-echo "📁 Creating data directories..."
-mkdir -p config logs data backups
-
-# Set proper permissions
-echo "🔐 Setting permissions..."
-sudo chown -R 998:998 config logs data backups 2>/dev/null || {
-    echo "⚠️  Warning: Could not set ownership. GitLab may have permission issues"
-    echo "   You may need to run: sudo chown -R 998:998 config logs data backups"
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+check_docker() {
+    if ! command -v docker &>/dev/null; then print_error "Docker is not installed"; exit 1; fi
+    if ! docker info &>/dev/null; then print_error "Docker is not running"; exit 1; fi
+    if ! docker compose version &>/dev/null; then print_error "Docker Compose V2 is required"; exit 1; fi
+    print_success "Docker is running"
 }
 
-# Check system requirements
-echo "🔍 Checking system requirements..."
-available_ram=$(free -m | awk 'NR==2{printf "%.0f", $7}')
-if [ "$available_ram" -lt 2048 ]; then
-    echo "⚠️  Warning: GitLab requires at least 2GB RAM. Available: ${available_ram}MB"
-    echo "   GitLab may run slowly or fail to start"
-fi
-
-available_disk=$(df -BM . | awk 'NR==2{print $4}' | sed 's/M//')
-if [ "$available_disk" -lt 10240 ]; then
-    echo "⚠️  Warning: GitLab requires at least 10GB disk space. Available: ${available_disk}MB"
-fi
-
-# Start services
-echo "🚀 Starting GitLab..."
-echo "   • This may take 5-10 minutes on first startup"
-echo "   • GitLab needs to initialize its database and services"
-echo "   • Be patient - this is normal for GitLab!"
-echo ""
-
-docker compose up -d
-
-# Wait for GitLab to be ready (this takes a long time)
-echo "⏳ Waiting for GitLab to initialize..."
-echo "   This can take up to 10 minutes, please be patient..."
-echo -n "   • GitLab:     "
-
-for i in {1..120}; do
-    if curl -s -o /dev/null -w "%{http_code}" http://$HOST_IP:${GITLAB_PORT}/-/health | grep -q "200"; then
-        echo "✅ Ready"
-        break
-    elif [ $i -eq 120 ]; then
-        echo "❌ Timeout (this is common on first startup)"
-        echo "     GitLab may still be initializing. Check logs: docker compose logs -f"
-        echo "     Try accessing http://$HOST_IP:${GITLAB_PORT} in a few more minutes"
+check_system() {
+    local total_ram; total_ram=$(free -m | awk 'NR==2{print $2}')
+    if (( total_ram < REQUIRED_RAM_MB )); then
+        print_warning "Low memory: ${total_ram}MB available, ${REQUIRED_RAM_MB}MB recommended for ${SERVICE_NAME}"
     else
-        if [ $((i % 10)) -eq 0 ]; then
-            echo -n "[$i/120]"
-        else
-            echo -n "."
-        fi
-        sleep 5
+        print_success "Memory check passed (${total_ram}MB available)"
     fi
-done
+    local available_disk; available_disk=$(df -BG . | awk 'NR==2{print int($4)}')
+    if (( available_disk < REQUIRED_DISK_GB )); then
+        print_warning "Low disk space: ${available_disk}GB available, ${REQUIRED_DISK_GB}GB recommended"
+    else
+        print_success "Disk space check passed (${available_disk}GB available)"
+    fi
+}
 
-echo ""
-echo "🧪 Testing GitLab Setup..."
+setup_env() {
+    if [[ ! -f .env ]]; then
+        if [[ -f .env.example ]]; then
+            cp .env.example .env
+            print_success "Created .env from .env.example"
+        else
+            print_error ".env.example not found"; exit 1
+        fi
+    else
+        print_status "Using existing .env file"
+    fi
+    set -a; source .env; set +a
+}
 
-# Test web interface
-echo -n "Web Interface:     "
-response_code=$(curl -s -o /dev/null -w "%{http_code}" http://$HOST_IP:${GITLAB_PORT} || echo "000")
-if [[ "$response_code" =~ ^(200|302)$ ]]; then
-    echo "✅ Accessible"
-elif [ "$response_code" = "502" ]; then
-    echo "⏳ Still initializing (502 Bad Gateway - this is normal)"
-else
-    echo "❌ Not accessible (HTTP: $response_code)"
-fi
+get_host_ip() { hostname -I | awk '{print $1}'; }
 
-# Check data persistence
-echo -n "Data Persistence:  "
-if [ -d "./config" ] && [ -d "./logs" ] && [ -d "./data" ]; then
-    echo "✅ Volumes mounted"
-else
-    echo "❌ Volume mount failed"
-fi
+wait_for_service() {
+    local port="${1:-$DEFAULT_PORT}" max=120
+    print_status "Waiting for ${SERVICE_NAME} to initialize (this can take 5-10 minutes)..."
+    for i in $(seq 1 "$max"); do
+        if curl -sf -o /dev/null "http://localhost:${port}/-/health"; then
+            print_success "${SERVICE_NAME} is ready!"; return 0
+        fi
+        if (( i % 10 == 0 )); then echo -n " [${i}/${max}]"; else echo -n "."; fi
+        sleep 5
+    done
+    echo; print_warning "${SERVICE_NAME} may still be initializing. Check: docker compose logs -f"; return 1
+}
 
-# Check SSH port
-echo -n "SSH Access:        "
-if netstat -ln 2>/dev/null | grep -q ":${GITLAB_SSH_PORT}" || ss -ln 2>/dev/null | grep -q ":${GITLAB_SSH_PORT}"; then
-    echo "✅ Port ${GITLAB_SSH_PORT} open"
-else
-    echo "⚠️  Port ${GITLAB_SSH_PORT} not accessible yet"
-fi
+# ─── Commands ────────────────────────────────────────────────────────────────
+cmd_setup() {
+    echo -e "${PURPLE}================================${NC}"
+    echo -e "${PURPLE}   ${SERVICE_NAME} Setup${NC}"
+    echo -e "${PURPLE}================================${NC}"
+    echo
 
-echo ""
-echo "🎉 Setup Initiated!"
-echo ""
-echo "📋 Access Information:"
-echo "   • Web Interface: http://$HOST_IP:${GITLAB_PORT}"
-echo "   • Username:      root"
-echo "   • Password:      ${GITLAB_ROOT_PASSWORD}"
-echo "   • Git SSH:       ssh://git@$HOST_IP:${GITLAB_SSH_PORT}/username/project.git"
-echo ""
-echo "⏱️  First Startup Notes:"
-echo "   • GitLab may take 5-10 minutes to fully initialize"
-echo "   • You may see 502 errors initially - this is normal"
-echo "   • Monitor progress: docker compose logs -f gitlab"
-echo "   • Check health: curl http://$HOST_IP:${GITLAB_PORT}/-/health"
-echo ""
-echo "📱 Next Steps:"
-echo "   1. Wait for GitLab to fully initialize"
-echo "   2. Access GitLab at: http://$HOST_IP:${GITLAB_PORT}"
-echo "   3. Login with root/${GITLAB_ROOT_PASSWORD}"
-echo "   4. Complete the admin area configuration"
-echo "   5. Create users and projects"
-echo "   6. Set up CI/CD runners if needed"
-echo ""
-echo "🔧 Management Commands:"
-echo "   • View logs:    docker compose logs -f"
-echo "   • Stop:         docker compose down"
-echo "   • Restart:      docker compose restart"
-echo "   • Update:       docker compose pull && docker compose up -d"
-echo "   • Backup:       docker compose exec gitlab gitlab-backup create"
-echo ""
-echo "⚠️  Security Notes:"
-echo "   • Change default passwords immediately"
-echo "   • Configure proper SSL certificates for production"
-echo "   • Set up proper firewall rules"
-echo "   • Data stored in: ./config, ./logs, ./data, ./backups"
-echo "   • Default SSH port: ${GITLAB_SSH_PORT}"
-echo ""
-echo "💡 Troubleshooting:"
-echo "   • If GitLab doesn't start: check system RAM (needs 2GB+)"
-echo "   • If 502 errors persist: wait longer or check logs"
-echo "   • Permission issues: sudo chown -R 998:998 config logs data backups"
+    check_docker
+    check_system
+    setup_env
+
+    mkdir -p config logs data backups
+    sudo chown -R 998:998 config logs data backups 2>/dev/null || \
+        print_warning "Could not set ownership. Run: sudo chown -R 998:998 config logs data backups"
+
+    local host_ip; host_ip=$(get_host_ip)
+    local port="${GITLAB_PORT:-$DEFAULT_PORT}"
+
+    print_status "Starting ${SERVICE_NAME}..."
+    print_status "First startup may take 5-10 minutes..."
+    docker compose up -d
+    wait_for_service "$port" || true
+
+    echo
+    print_success "Setup initiated!"
+    echo
+    echo -e "${BLUE}Access Information:${NC}"
+    echo "  Web UI:   http://${host_ip}:${port}"
+    echo "  Username: root"
+    echo "  Password: ${GITLAB_ROOT_PASSWORD:-check .env}"
+    echo "  Git SSH:  ssh://git@${host_ip}:${GITLAB_SSH_PORT:-2424}/user/project.git"
+    echo
+    echo -e "${BLUE}Management:${NC}"
+    echo "  ./setup.sh start       Start ${SERVICE_NAME}"
+    echo "  ./setup.sh stop        Stop ${SERVICE_NAME}"
+    echo "  ./setup.sh logs        View logs"
+    echo "  ./setup.sh shell       Open container shell"
+    echo "  ./setup.sh console     Open Rails console"
+    echo "  ./setup.sh backup      Create backup"
+    echo "  ./setup.sh restore     Restore from backup"
+    echo "  ./setup.sh reset-root  Reset root password"
+    echo "  ./setup.sh status      Show status"
+    echo "  ./setup.sh update      Update to latest"
+}
+
+cmd_start() {
+    print_status "Starting ${SERVICE_NAME}..."
+    docker compose up -d
+    print_success "${SERVICE_NAME} started"
+}
+
+cmd_stop() {
+    print_status "Stopping ${SERVICE_NAME}..."
+    docker compose down
+    print_success "${SERVICE_NAME} stopped"
+}
+
+cmd_restart() {
+    print_status "Restarting ${SERVICE_NAME}..."
+    docker compose restart
+    print_success "${SERVICE_NAME} restarted"
+}
+
+cmd_logs() {
+    print_status "Showing ${SERVICE_NAME} logs (Ctrl+C to exit)..."
+    docker compose logs -f gitlab
+}
+
+cmd_shell() {
+    print_status "Opening shell in ${SERVICE_NAME} container..."
+    docker compose exec gitlab bash
+}
+
+cmd_console() {
+    print_status "Opening ${SERVICE_NAME} Rails console (type 'exit' to return)..."
+    docker compose exec gitlab gitlab-rails console
+}
+
+cmd_backup() {
+    print_status "Creating ${SERVICE_NAME} backup..."
+    docker compose exec gitlab gitlab-backup create
+    echo
+    print_success "Backup completed!"
+    print_status "Available backups:"
+    docker compose exec gitlab ls -la /var/opt/gitlab/backups/
+}
+
+cmd_restore() {
+    print_status "Available backups:"
+    docker compose exec gitlab ls -la /var/opt/gitlab/backups/
+    echo
+    read -rp "Enter backup timestamp (format: YYYYMMDD_HHmmss): " backup_timestamp
+    if [[ -z "$backup_timestamp" ]]; then print_error "No timestamp provided"; exit 1; fi
+
+    echo
+    print_warning "This will replace ALL current data!"
+    read -rp "Are you sure? (yes/no): " confirm
+    if [[ "$confirm" != "yes" ]]; then print_status "Restore cancelled"; exit 0; fi
+
+    print_status "Stopping services..."
+    docker compose exec gitlab gitlab-ctl stop puma
+    docker compose exec gitlab gitlab-ctl stop sidekiq
+
+    print_status "Restoring backup..."
+    docker compose exec gitlab gitlab-backup restore BACKUP="$backup_timestamp"
+
+    print_status "Restarting ${SERVICE_NAME}..."
+    docker compose restart
+    print_success "Restore completed!"
+}
+
+cmd_reset_root() {
+    read -rsp "Enter new root password: " new_password; echo
+    read -rsp "Confirm new password: " confirm_password; echo
+    if [[ "$new_password" != "$confirm_password" ]]; then
+        print_error "Passwords don't match"; exit 1
+    fi
+    print_status "Resetting root password..."
+    docker compose exec gitlab gitlab-rails runner \
+        "user = User.where(id: 1).first; user.password = '$new_password'; user.password_confirmation = '$new_password'; user.save!"
+    print_success "Root password reset successfully!"
+}
+
+cmd_status() {
+    echo -e "${BLUE}=== ${SERVICE_NAME} Status ===${NC}"
+    echo
+    if docker compose ps | grep -q "Up\|running"; then
+        print_success "Container is running"
+        docker compose ps
+        echo
+        source .env 2>/dev/null || true
+        local host_ip; host_ip=$(get_host_ip)
+        local port="${GITLAB_PORT:-$DEFAULT_PORT}"
+        local health_code
+        health_code=$(curl -sf -o /dev/null -w "%{http_code}" "http://${host_ip}:${port}/-/health" 2>/dev/null || echo "000")
+        case "$health_code" in
+            200|302) print_success "Health: Healthy" ;;
+            503)     print_warning "Health: Starting up" ;;
+            *)       print_warning "Health: HTTP ${health_code}" ;;
+        esac
+        echo
+        docker stats "${CONTAINER_NAME}" --no-stream --format "  CPU: {{.CPUPerc}} | RAM: {{.MemUsage}} | NET: {{.NetIO}}" 2>/dev/null || true
+    else
+        print_warning "Container is not running"
+    fi
+}
+
+cmd_update() {
+    print_warning "Always backup before updating!"
+    read -rp "Have you created a recent backup? (yes/no): " confirm
+    if [[ "$confirm" != "yes" ]]; then
+        print_status "Please create a backup first: ./setup.sh backup"; exit 0
+    fi
+    print_status "Updating ${SERVICE_NAME}..."
+    docker compose pull
+    docker compose up -d
+    print_success "${SERVICE_NAME} updated. May take a few minutes to reconfigure."
+}
+
+show_usage() {
+    echo "${SERVICE_NAME} Management Script"
+    echo
+    echo "Usage: ./setup.sh [command]"
+    echo
+    echo "Commands:"
+    echo "  setup       Initial setup and start (default)"
+    echo "  start       Start the service"
+    echo "  stop        Stop the service"
+    echo "  restart     Restart the service"
+    echo "  logs        View logs"
+    echo "  shell       Open container shell"
+    echo "  console     Open GitLab Rails console"
+    echo "  backup      Create a backup"
+    echo "  restore     Restore from backup"
+    echo "  reset-root  Reset root password"
+    echo "  status      Show service status and health"
+    echo "  update      Update to latest version"
+    echo "  help        Show this help message"
+}
+
+# ─── Main ────────────────────────────────────────────────────────────────────
+case "${1:-setup}" in
+    setup)      cmd_setup ;;
+    start)      cmd_start ;;
+    stop)       cmd_stop ;;
+    restart)    cmd_restart ;;
+    logs)       cmd_logs ;;
+    shell)      cmd_shell ;;
+    console)    cmd_console ;;
+    backup)     cmd_backup ;;
+    restore)    cmd_restore ;;
+    reset-root) cmd_reset_root ;;
+    status)     cmd_status ;;
+    update)     cmd_update ;;
+    help|--help|-h) show_usage ;;
+    *)  print_error "Unknown command: $1"; echo; show_usage; exit 1 ;;
+esac

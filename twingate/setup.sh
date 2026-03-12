@@ -1,243 +1,202 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 set -euo pipefail
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# ─── Configuration ───────────────────────────────────────────────────────────
+SERVICE_NAME="twingate"
+CONTAINER_NAME="twingate-connector"
+REQUIRED_RAM_MB=75
+REQUIRED_DISK_GB=1
+DEFAULT_PORT=""  # No web UI - host network mode
 
+REQUIRED_ENV_VARS=(TWINGATE_NETWORK TWINGATE_ACCESS_TOKEN TWINGATE_REFRESH_TOKEN)
+
+# ─── Colors ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; PURPLE='\033[0;35m'; NC='\033[0m'
+
+print_status()  { echo -e "${BLUE}[INFO]${NC} $1"; }
+print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+print_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
+
+# ─── Helpers ─────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-COMPOSE_BIN=()
-REQUIRED_ENV_VARS=(TWINGATE_NETWORK TWINGATE_ACCESS_TOKEN TWINGATE_REFRESH_TOKEN)
-
-print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-usage() {
-    cat <<EOF
-Usage: ./setup.sh [command]
-
-Commands:
-  up|start       Create/update the connector (default)
-  down|stop      Stop and remove the connector container
-  restart        Restart the connector
-  status         Show connector container status
-  logs           Tail connector logs
-  update         Pull latest image and recreate the connector
-
-Examples:
-  ./setup.sh
-  ./setup.sh logs
-  ./setup.sh update
-EOF
-}
-
 check_docker() {
-    print_status "Checking Docker..."
-    if ! command -v docker >/dev/null 2>&1; then
-        print_error "Docker is not installed or not in PATH."
-        exit 1
-    fi
-
-    if ! docker info >/dev/null 2>&1; then
-        print_error "Docker is not running. Please start Docker first."
-        exit 1
-    fi
+    if ! command -v docker &>/dev/null; then print_error "Docker is not installed"; exit 1; fi
+    if ! docker info &>/dev/null; then print_error "Docker is not running"; exit 1; fi
+    if ! docker compose version &>/dev/null; then print_error "Docker Compose V2 is required"; exit 1; fi
     print_success "Docker is running"
 }
 
-detect_compose() {
-    print_status "Detecting Docker Compose..."
-    if docker compose version >/dev/null 2>&1; then
-        COMPOSE_BIN=(docker compose)
-    elif command -v docker-compose >/dev/null 2>&1; then
-        COMPOSE_BIN=(docker-compose)
+check_system() {
+    local total_ram; total_ram=$(free -m | awk 'NR==2{print $2}')
+    if (( total_ram < REQUIRED_RAM_MB )); then
+        print_warning "Low memory: ${total_ram}MB available, ${REQUIRED_RAM_MB}MB recommended for ${SERVICE_NAME}"
     else
-        print_error "Docker Compose v2 or v1 not found. Please install Docker Compose."
-        exit 1
+        print_success "Memory check passed (${total_ram}MB available)"
     fi
-    print_success "Using '${COMPOSE_BIN[*]}'"
+    local available_disk; available_disk=$(df -BG . | awk 'NR==2{print int($4)}')
+    if (( available_disk < REQUIRED_DISK_GB )); then
+        print_warning "Low disk space: ${available_disk}GB available, ${REQUIRED_DISK_GB}GB recommended"
+    else
+        print_success "Disk space check passed (${available_disk}GB available)"
+    fi
 }
 
-run_compose() {
-    "${COMPOSE_BIN[@]}" "$@"
-}
-
-ensure_env_file() {
-    if [[ ! -f ".env" ]]; then
-        if [[ -f ".env.example" ]]; then
-            print_warning ".env file not found. Creating one from .env.example..."
+setup_env() {
+    if [[ ! -f .env ]]; then
+        if [[ -f .env.example ]]; then
             cp .env.example .env
-            print_success ".env created. Please edit it with your connector tokens."
+            print_success "Created .env from .env.example"
+            print_warning "Please edit .env with your Twingate connector tokens"
         else
-            print_error ".env file is missing and .env.example was not found."
-            exit 1
+            print_error ".env.example not found"; exit 1
         fi
+    else
+        print_status "Using existing .env file"
     fi
-}
 
-load_env_file() {
-    if [[ -f ".env" ]]; then
-        set -a
-        source .env
-        set +a
-    fi
-}
+    set -a; source .env; set +a
 
-validate_required_env() {
+    # Validate required environment variables
     local invalid=0
     for var in "${REQUIRED_ENV_VARS[@]}"; do
         local value="${!var:-}"
         if [[ -z "$value" ]]; then
-            print_error "Environment variable '$var' is not set."
-            invalid=1
-            continue
-        fi
-        if [[ "$value" == "your-"* || "$value" == "replace-"* ]]; then
-            print_error "Environment variable '$var' still has a placeholder value ('$value')."
-            invalid=1
+            print_error "Environment variable '$var' is not set"; invalid=1
+        elif [[ "$value" == "your-"* || "$value" == "replace-"* ]]; then
+            print_error "Environment variable '$var' still has a placeholder value"; invalid=1
         fi
     done
 
     if (( invalid )); then
-        print_warning "Update the .env file with real values from the Twingate Admin console."
+        print_warning "Update .env with real values from the Twingate Admin console"
         exit 1
     fi
 }
 
-wait_for_container() {
-    local name="${CONTAINER_NAME:-twingate-diligent-binturong}"
-    print_status "Waiting for container '$name' to report as running..."
-    for _ in {1..15}; do
-        if docker ps --filter "name=$name" --filter "status=running" --format '{{.Names}}' | grep -q "^$name$"; then
-            print_success "Connector container is running."
-            return 0
+get_host_ip() { hostname -I | awk '{print $1}'; }
+
+wait_for_service() {
+    local name="${CONTAINER_NAME}"
+    print_status "Waiting for connector container to start..."
+    for _ in $(seq 1 15); do
+        if docker ps --filter "name=$name" --filter "status=running" --format '{{.Names}}' | grep -q "^$name"; then
+            print_success "Connector container is running"; return 0
         fi
         sleep 1
     done
-    print_warning "Container '$name' did not report running status yet. Check logs if needed."
+    print_warning "Container may still be starting. Check: docker compose logs -f"; return 1
 }
 
-show_post_setup_info() {
-    local host_ip
-    host_ip=$(hostname -I | awk '{print $1}')
+# ─── Commands ────────────────────────────────────────────────────────────────
+cmd_setup() {
+    echo -e "${PURPLE}================================${NC}"
+    echo -e "${PURPLE}   ${SERVICE_NAME} Setup${NC}"
+    echo -e "${PURPLE}================================${NC}"
+    echo
+
+    check_docker
+    check_system
+    setup_env
+
+    local host_ip; host_ip=$(get_host_ip)
+
+    print_status "Starting ${SERVICE_NAME} connector..."
+    docker compose up -d
+    wait_for_service || true
 
     echo
-    print_success "Twingate Connector is up!"
-    echo "Network Name : ${TWINGATE_NETWORK:-not-set}"
-    echo "Connector ID : ${CONTAINER_NAME:-twingate-connector}"
-    echo "Host Network : Enabled (no local port mapping)"
-    echo "Host IP      : ${host_ip:-127.0.0.1}"
+    print_success "Setup complete!"
     echo
-    echo "Manage routing, resources, and users from https://controller.twingate.com/"
-    echo "Logs: ./setup.sh logs"
-    echo "Stop: ./setup.sh down"
-    echo "Update Image: ./setup.sh update"
+    echo -e "${BLUE}Connector Information:${NC}"
+    echo "  Network:      ${TWINGATE_NETWORK:-not-set}"
+    echo "  Host Network: Enabled (no port mapping)"
+    echo "  Host IP:      ${host_ip}"
     echo
+    echo -e "${BLUE}Management:${NC}"
+    echo "  Admin Console: https://controller.twingate.com/"
+    echo "  ./setup.sh start     Start connector"
+    echo "  ./setup.sh stop      Stop connector"
+    echo "  ./setup.sh logs      View logs"
+    echo "  ./setup.sh status    Show status"
+    echo "  ./setup.sh update    Update to latest"
 }
 
-command_up() {
-    ensure_env_file
-    load_env_file
-    validate_required_env
-    check_docker
-    detect_compose
-
-    print_status "Starting (or updating) the Twingate connector..."
-    run_compose up -d
-    wait_for_container
-    show_post_setup_info
+cmd_start() {
+    setup_env
+    print_status "Starting ${SERVICE_NAME} connector..."
+    docker compose up -d
+    wait_for_service || true
+    print_success "${SERVICE_NAME} started"
 }
 
-command_down() {
-    check_docker
-    detect_compose
-    print_status "Stopping the Twingate connector..."
-    run_compose down
-    print_success "Connector stopped."
+cmd_stop() {
+    print_status "Stopping ${SERVICE_NAME} connector..."
+    docker compose down
+    print_success "${SERVICE_NAME} stopped"
 }
 
-command_status() {
-    check_docker
-    detect_compose
-    print_status "Connector status:"
-    run_compose ps
+cmd_restart() {
+    print_status "Restarting ${SERVICE_NAME} connector..."
+    docker compose down
+    setup_env
+    docker compose up -d
+    wait_for_service || true
+    print_success "${SERVICE_NAME} restarted"
 }
 
-command_logs() {
-    check_docker
-    detect_compose
-    print_status "Tailing logs (Ctrl+C to exit)..."
-    run_compose logs -f || true
+cmd_logs() {
+    print_status "Showing ${SERVICE_NAME} logs (Ctrl+C to exit)..."
+    docker compose logs -f
 }
 
-command_update() {
-    ensure_env_file
-    load_env_file
-    validate_required_env
-    check_docker
-    detect_compose
-
-    print_status "Pulling latest connector image..."
-    run_compose pull
-    print_status "Recreating connector with latest image..."
-    run_compose up -d
-    wait_for_container
-    show_post_setup_info
+cmd_status() {
+    echo -e "${BLUE}=== ${SERVICE_NAME} Status ===${NC}"
+    echo
+    if docker compose ps | grep -q "Up\|running"; then
+        print_success "Connector is running"
+        docker compose ps
+    else
+        print_warning "Connector is not running"
+    fi
 }
 
-command_restart() {
-    command_down
-    command_up
+cmd_update() {
+    print_status "Updating ${SERVICE_NAME}..."
+    docker compose pull
+    docker compose up -d
+    wait_for_service || true
+    print_success "${SERVICE_NAME} updated"
 }
 
-main() {
-    local action=${1:-up}
-    case "$action" in
-        up|start)
-            command_up
-            ;;
-        down|stop)
-            command_down
-            ;;
-        restart)
-            command_restart
-            ;;
-        status)
-            command_status
-            ;;
-        logs)
-            command_logs
-            ;;
-        update)
-            command_update
-            ;;
-        -h|--help|help)
-            usage
-            ;;
-        *)
-            usage
-            exit 1
-            ;;
-    esac
+show_usage() {
+    echo "${SERVICE_NAME} Management Script"
+    echo
+    echo "Usage: ./setup.sh [command]"
+    echo
+    echo "Commands:"
+    echo "  setup     Initial setup and start (default)"
+    echo "  start     Start the connector"
+    echo "  stop      Stop the connector"
+    echo "  restart   Restart the connector"
+    echo "  logs      View logs"
+    echo "  status    Show connector status"
+    echo "  update    Update to latest version"
+    echo "  help      Show this help message"
 }
 
-main "$@"
+# ─── Main ────────────────────────────────────────────────────────────────────
+case "${1:-setup}" in
+    setup)    cmd_setup ;;
+    start)    cmd_start ;;
+    stop)     cmd_stop ;;
+    restart)  cmd_restart ;;
+    logs)     cmd_logs ;;
+    status)   cmd_status ;;
+    update)   cmd_update ;;
+    help|--help|-h) show_usage ;;
+    *)  print_error "Unknown command: $1"; echo; show_usage; exit 1 ;;
+esac

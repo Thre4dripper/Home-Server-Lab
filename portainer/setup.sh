@@ -1,141 +1,185 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Portainer Setup Script
-# This script sets up and starts Portainer CE
+# ─── Configuration ───────────────────────────────────────────────────────────
+SERVICE_NAME="portainer"
+CONTAINER_NAME="portainer"
+REQUIRED_RAM_MB=100
+REQUIRED_DISK_GB=1
+DEFAULT_PORT="9000"
 
-set -e
+# ─── Colors ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; PURPLE='\033[0;35m'; NC='\033[0m'
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+print_status()  { echo -e "${BLUE}[INFO]${NC} $1"; }
+print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+print_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Function to print colored output
-print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Check if Docker is running
 check_docker() {
-    print_status "Checking Docker..."
-    if ! docker info > /dev/null 2>&1; then
-        print_error "Docker is not running. Please start Docker first."
-        exit 1
-    fi
+    if ! command -v docker &>/dev/null; then print_error "Docker is not installed"; exit 1; fi
+    if ! docker info &>/dev/null; then print_error "Docker is not running"; exit 1; fi
+    if ! docker compose version &>/dev/null; then print_error "Docker Compose V2 is required"; exit 1; fi
     print_success "Docker is running"
 }
 
-# Check if .env file exists
-check_env() {
-    print_status "Checking environment configuration..."
-    if [ ! -f .env ]; then
-        print_warning ".env file not found. Creating from .env.example..."
-        cp .env.example .env
-        print_success "Created .env file from template"
-        print_warning "Please review and update .env file with your settings"
+check_system() {
+    local total_ram; total_ram=$(free -m | awk 'NR==2{print $2}')
+    if (( total_ram < REQUIRED_RAM_MB )); then
+        print_warning "Low memory: ${total_ram}MB available, ${REQUIRED_RAM_MB}MB recommended for ${SERVICE_NAME}"
     else
-        print_success "Environment file found"
+        print_success "Memory check passed (${total_ram}MB available)"
+    fi
+    local available_disk; available_disk=$(df -BG . | awk 'NR==2{print int($4)}')
+    if (( available_disk < REQUIRED_DISK_GB )); then
+        print_warning "Low disk space: ${available_disk}GB available, ${REQUIRED_DISK_GB}GB recommended"
+    else
+        print_success "Disk space check passed (${available_disk}GB available)"
     fi
 }
 
-# Create data directory
-create_directories() {
-    print_status "Creating data directories..."
-    mkdir -p portainer_data
-    print_success "Data directories created"
-}
-
-# Stop existing container if running
-stop_existing() {
-    print_status "Checking for existing Portainer containers..."
-    if docker ps -q -f name=portainer > /dev/null 2>&1; then
-        print_warning "Stopping existing Portainer container..."
-        docker compose down
-        print_success "Existing container stopped"
-    fi
-}
-
-# Start Portainer
-start_portainer() {
-    print_status "Starting Portainer..."
-    docker compose up -d
-    print_success "Portainer started successfully"
-}
-
-# Wait for Portainer to be ready
-wait_for_ready() {
-    print_status "Waiting for Portainer to be ready..."
-    
-    # Load environment variables
-    source .env
-    
-    # Wait up to 30 seconds for Portainer to be ready
-    for i in {1..30}; do
-        if curl -s -f "http://localhost:${PORTAINER_PORT}" > /dev/null 2>&1; then
-            print_success "Portainer is ready!"
-            break
+setup_env() {
+    if [[ ! -f .env ]]; then
+        if [[ -f .env.example ]]; then
+            cp .env.example .env
+            print_success "Created .env from .env.example"
+        else
+            print_error ".env.example not found"; exit 1
         fi
-        echo -n "."
-        sleep 1
-    done
-    echo
+    else
+        print_status "Using existing .env file"
+    fi
+    source .env
 }
 
-# Display access information
-show_access_info() {
-    # Load environment variables
-    source .env
-    
+get_host_ip() { hostname -I | awk '{print $1}'; }
+
+wait_for_service() {
+    local port="${1:-$DEFAULT_PORT}" max=30
+    print_status "Waiting for ${SERVICE_NAME} to start..."
+    local host_ip; host_ip=$(get_host_ip)
+    for i in $(seq 1 "$max"); do
+        if curl -sf -o /dev/null "http://${host_ip}:${port}"; then
+            print_success "${SERVICE_NAME} is ready!"; return 0
+        fi
+        echo -n "."; sleep 2
+    done
+    echo; print_warning "${SERVICE_NAME} may still be starting. Check: docker compose logs -f"; return 1
+}
+
+# ─── Commands ────────────────────────────────────────────────────────────────
+cmd_setup() {
+    echo -e "${PURPLE}================================${NC}"
+    echo -e "${PURPLE}   ${SERVICE_NAME} Setup${NC}"
+    echo -e "${PURPLE}================================${NC}"
     echo
-    print_success "🚀 Portainer is now running!"
+
+    check_docker
+    check_system
+    setup_env
+
+    local port="${PORTAINER_PORT:-$DEFAULT_PORT}"
+    local host_ip; host_ip=$(get_host_ip)
+
+    mkdir -p portainer_data
+    print_success "Directories ready"
+
+    print_status "Starting ${SERVICE_NAME}..."
+    docker compose up -d
+    wait_for_service "$port" || true
+
     echo
-    echo -e "${BLUE}Access URLs:${NC}"
-    echo -e "  Local:   ${GREEN}http://localhost:${PORTAINER_PORT}${NC}"
-    echo -e "  Network: ${GREEN}http://${PORTAINER_HOST}:${PORTAINER_PORT}${NC}"
+    print_success "Setup complete!"
     echo
-    echo -e "${BLUE}First time setup:${NC}"
+    echo -e "${BLUE}Access Information:${NC}"
+    echo "  Web UI: http://${host_ip}:${port}"
+    echo
+    echo -e "${BLUE}First Time Setup:${NC}"
     echo "  1. Open the URL above in your browser"
     echo "  2. Create an admin user account"
     echo "  3. Select 'Docker' environment"
-    echo "  4. Start managing your containers!"
     echo
-    echo -e "${BLUE}Useful commands:${NC}"
-    echo "  View logs:    docker compose logs -f"
-    echo "  Stop:         docker compose down"
-    echo "  Restart:      docker compose restart"
-    echo "  Update:       docker compose pull && docker compose up -d"
-    echo
+    echo -e "${BLUE}Management:${NC}"
+    echo "  ./setup.sh start     Start ${SERVICE_NAME}"
+    echo "  ./setup.sh stop      Stop ${SERVICE_NAME}"
+    echo "  ./setup.sh logs      View logs"
+    echo "  ./setup.sh status    Show status"
+    echo "  ./setup.sh update    Update to latest"
 }
 
-# Main execution
-main() {
-    echo -e "${BLUE}================================${NC}"
-    echo -e "${BLUE}   Portainer CE Setup Script    ${NC}"
-    echo -e "${BLUE}================================${NC}"
-    echo
-    
-    check_docker
-    check_env
-    create_directories
-    stop_existing
-    start_portainer
-    wait_for_ready
-    show_access_info
+cmd_start() {
+    print_status "Starting ${SERVICE_NAME}..."
+    docker compose up -d
+    source .env 2>/dev/null || true
+    local host_ip; host_ip=$(get_host_ip)
+    print_success "${SERVICE_NAME} started at http://${host_ip}:${PORTAINER_PORT:-$DEFAULT_PORT}"
 }
 
-# Run main function
-main "$@"
+cmd_stop() {
+    print_status "Stopping ${SERVICE_NAME}..."
+    docker compose down
+    print_success "${SERVICE_NAME} stopped"
+}
+
+cmd_restart() {
+    print_status "Restarting ${SERVICE_NAME}..."
+    docker compose restart
+    print_success "${SERVICE_NAME} restarted"
+}
+
+cmd_logs() {
+    print_status "Showing ${SERVICE_NAME} logs (Ctrl+C to exit)..."
+    docker compose logs -f
+}
+
+cmd_status() {
+    echo -e "${BLUE}=== ${SERVICE_NAME} Status ===${NC}"
+    echo
+    if docker compose ps | grep -q "Up\|running"; then
+        print_success "Container is running"
+        docker compose ps
+    else
+        print_warning "Container is not running"
+    fi
+}
+
+cmd_update() {
+    print_status "Updating ${SERVICE_NAME}..."
+    docker compose pull
+    docker compose up -d
+    print_success "${SERVICE_NAME} updated"
+}
+
+show_usage() {
+    echo "${SERVICE_NAME} Management Script"
+    echo
+    echo "Usage: ./setup.sh [command]"
+    echo
+    echo "Commands:"
+    echo "  setup     Initial setup and start (default)"
+    echo "  start     Start the service"
+    echo "  stop      Stop the service"
+    echo "  restart   Restart the service"
+    echo "  logs      View logs"
+    echo "  status    Show service status"
+    echo "  update    Update to latest version"
+    echo "  help      Show this help message"
+}
+
+# ─── Main ────────────────────────────────────────────────────────────────────
+case "${1:-setup}" in
+    setup)    cmd_setup ;;
+    start)    cmd_start ;;
+    stop)     cmd_stop ;;
+    restart)  cmd_restart ;;
+    logs)     cmd_logs ;;
+    status)   cmd_status ;;
+    update)   cmd_update ;;
+    help|--help|-h) show_usage ;;
+    *)  print_error "Unknown command: $1"; echo; show_usage; exit 1 ;;
+esac
