@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - '*/README.md'
+      - 'docker/*/README.md'
       - '.github/scripts/validate-service.py'
   workflow_dispatch:
 
@@ -46,7 +46,7 @@ jobs:
         VALIDATED_SERVICES=""
         
         for file in $CHANGED_FILES; do
-          if [[ $file == */README.md ]] && [[ $file != "README.md" ]]; then
+          if [[ $file == docker/*/README.md ]]; then
             SERVICE_DIR=$(dirname "$file")
             echo "📋 Validating $SERVICE_DIR..."
             
