@@ -49,7 +49,10 @@ class ServiceParser:
         services = []
         
         # Look for all directories with README.md files that contain metadata
-        for item in self.repo_root.iterdir():
+        docker_dir = self.repo_root / 'docker'
+        if not docker_dir.is_dir():
+            return services
+        for item in docker_dir.iterdir():
             if not item.is_dir() or item.name.startswith('.'):
                 continue
                 
@@ -64,7 +67,7 @@ class ServiceParser:
                 
             # Add service directory name
             metadata['directory'] = item.name
-            metadata['path'] = f"./{item.name}/"
+            metadata['path'] = f"./docker/{item.name}/"
             
             services.append(metadata)
         
