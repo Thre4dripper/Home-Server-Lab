@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aria2
+  namespace: downloads
+  labels:
+    app: aria2
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: aria2
+  template:
+    metadata:
+      labels:
+        app: aria2
+    spec:
+      containers:
+        - name: aria2
+          image: hurlenko/aria2-ariang:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: TZ
+              value: "America/New_York"
+          volumeMounts:
+            - name: downloads
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+      volumes:
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: aria2-downloads
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aria2-downloads
+  namespace: downloads
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aria2
+  namespace: downloads
+spec:
+  selector:
+    app: aria2
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aria2
+  namespace: downloads
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  rules:
+    - host: aria2.lan
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aria2
+                port:
+                  number: 80
