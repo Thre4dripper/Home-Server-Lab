@@ -1,0 +1,49 @@
+# Traefik Helm values for Home Server Lab
+# Installed via: helm install traefik traefik/traefik -n traefik --create-namespace -f values.yaml
+
+# Use hostPort instead of ServiceLB — binds directly to Pi's 80/443
+ports:
+  web:
+    hostPort: 80
+  websecure:
+    hostPort: 443
+
+# Run on the control-plane node
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+# Single replica (single node cluster)
+deployment:
+  replicas: 1
+
+# Enable dashboard (accessible via port-forward or ingress)
+ingressRoute:
+  dashboard:
+    enabled: true
+    matchRule: Host(`traefik.lan`)
+    entryPoints:
+      - websecure
+
+# Enable access logs
+logs:
+  access:
+    enabled: true
+
+# Resource limits for Raspberry Pi
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+# Providers
+providers:
+  kubernetesIngress:
+    publishedService:
+      enabled: true
+  kubernetesCRD:
+    allowCrossNamespace: true
