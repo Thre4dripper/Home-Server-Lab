@@ -3,7 +3,6 @@ kind: Application
 metadata:
   name: home-assistant
   namespace: argocd
-  # Deleting this Application will also delete all managed resources
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -21,4 +20,12 @@ spec:
       selfHeal: true   # Revert manual kubectl changes back to git state
     syncOptions:
       - CreateNamespace=true
-      - RespectIgnoreDifferences=true
+      - ServerSideApply=true   # Use k8s field manager — ignores server-added fields
+                               # (clusterIP, nodePort, sessionAffinity, finalizers etc.)
+  # Ignore kubectl rollout restart annotation — it's written to cluster by our scripts
+  # but is not in git. Without this, every rollout restart would cause OutOfSync.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/template/metadata/annotations/kubectl.kubernetes.io~1restartedAt
