@@ -116,6 +116,14 @@ cmd_teardown() {
   local purge=false
   [[ "${1:-}" == "--purge" ]] && purge=true
 
+  # Warn if ArgoCD manages this app
+  if kubectl get application "$APP" -n argocd &>/dev/null; then
+    warn "ArgoCD manages '$APP' — selfHeal will recreate these resources!"
+    info "To pause:   ./setup.sh disable   (sets replicas: 0 in git)"
+    info "To remove:  comment out in applicationset.yaml, commit & push"
+    echo ""
+  fi
+
   if $purge; then
     echo -e "\n${RED}${BOLD}⚠ WARNING: --purge will permanently delete PVCs and all stored data!${NC}"
     read -r -p "  Type 'yes' to confirm: " confirm
@@ -123,7 +131,7 @@ cmd_teardown() {
     echo ""
   fi
 
-  info "Removing $APP from $NAMESPACE..."
+  info "Removing $APP resources from cluster..."
   _delete_ordered
 
   if $purge && ${HAS_PVC:-false}; then
@@ -136,6 +144,7 @@ cmd_teardown() {
   fi
 
   ok "Teardown complete"
+  echo ""
 }
 
 cmd_status() {
@@ -396,6 +405,47 @@ cmd_diff() {
   info "Hint: for full diff, use ArgoCD UI → $APP → Diff tab (http://argocd.lan)"
 }
 
+cmd_disable() {
+  header "Disabling $APP"
+  local deploy_file="$DEPLOY_DIR/deployment.yaml"
+  if [[ ! -f "$deploy_file" ]]; then
+    err "No deployment.yaml found at $DEPLOY_DIR"; return 1
+  fi
+
+  local current
+  current=$(grep -E '^\s+replicas:' "$deploy_file" | awk '{print $2}' | head -1)
+  if [[ "$current" == "0" ]]; then
+    warn "$APP is already disabled (replicas: 0)"; return 0
+  fi
+
+  sed -i 's/^\(\s*replicas:\s*\)[0-9]*/\10/' "$deploy_file"
+  ok "Set replicas: 0 in deployment.yaml"
+  echo ""
+  info "Commit & push to apply — ArgoCD will scale down automatically"
+  echo ""
+}
+
+cmd_enable() {
+  header "Enabling $APP"
+  local deploy_file="$DEPLOY_DIR/deployment.yaml"
+  if [[ ! -f "$deploy_file" ]]; then
+    err "No deployment.yaml found at $DEPLOY_DIR"; return 1
+  fi
+
+  local replicas="${1:-1}"
+  local current
+  current=$(grep -E '^\s+replicas:' "$deploy_file" | awk '{print $2}' | head -1)
+  if [[ "$current" != "0" ]]; then
+    warn "$APP is already enabled (replicas: $current)"; return 0
+  fi
+
+  sed -i "s/^\(\s*replicas:\s*\)[0-9]*/\1${replicas}/" "$deploy_file"
+  ok "Set replicas: $replicas in deployment.yaml"
+  echo ""
+  info "Commit & push to apply — ArgoCD will start the pod automatically"
+  echo ""
+}
+
 cmd_seal() {
   if ! ${HAS_SECRET:-false}; then
     info "$APP has no secret to seal"; return
@@ -424,9 +474,11 @@ _show_usage() {
 
   echo -e "${CYAN}Deployment:${NC}"
   echo "  deploy                Apply all manifests in correct order"
-  echo "  teardown              Remove all k8s resources (data preserved on host)"
-  echo "  teardown --purge      Remove resources AND delete PVCs/PVs (destroys data!)"
-  echo "  scale <n>             Scale to N replicas (0 = stop, 1 = start)"
+  echo "  teardown              Remove all k8s resources (warns if ArgoCD-managed)"
+  echo "  teardown --purge      Same + delete PVCs/PVs (destroys data!)"
+  echo "  scale <n>             Scale to N replicas (cluster-only, ArgoCD may revert)"
+  echo "  disable               Set replicas: 0 in git (ArgoCD-safe pause)"
+  echo "  enable                Set replicas: 1 in git (ArgoCD-safe resume)"
   echo ""
 
   echo -e "${CYAN}Monitoring (k8s-native):${NC}"
@@ -480,6 +532,8 @@ main() {
     history)   cmd_history ;;
     update)    cmd_update "${2:-}" ;;
     scale)     cmd_scale "${2:-}" ;;
+    disable)   cmd_disable ;;
+    enable)    cmd_enable "${2:-}" ;;
     events)    cmd_events ;;
     resources) cmd_resources ;;
     describe)  cmd_describe ;;
