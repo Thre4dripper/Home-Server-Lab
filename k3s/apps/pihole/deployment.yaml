@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pihole
+  namespace: dashboard-network
+  labels:
+    app: pihole
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pihole
+  template:
+    metadata:
+      labels:
+        app: pihole
+    spec:
+      containers:
+        - name: pihole
+          image: pihole/pihole:latest
+          ports:
+            - containerPort: 53
+              hostPort: 53
+              protocol: TCP
+            - containerPort: 53
+              hostPort: 53
+              protocol: UDP
+            - containerPort: 80
+              name: web
+          envFrom:
+            - configMapRef:
+                name: pihole-env
+            - secretRef:
+                name: pihole-secret
+          volumeMounts:
+            - name: config
+              mountPath: /etc/pihole
+            - name: dnsmasq
+              mountPath: /etc/dnsmasq.d
+          resources:
+            requests:
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          - "127.0.0.1"
+          - "1.1.1.1"
+          - "1.0.0.1"
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: pihole-config
+        - name: dnsmasq
+          persistentVolumeClaim:
+            claimName: pihole-dnsmasq

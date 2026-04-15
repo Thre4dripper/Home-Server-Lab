@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: filebrowser
+  namespace: file-management
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`files.lan`)
+      kind: Rule
+      services:
+        - name: filebrowser
+          port: 8300

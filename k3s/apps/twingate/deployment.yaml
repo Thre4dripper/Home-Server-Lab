@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: twingate
+  namespace: dashboard-network
+  labels:
+    app: twingate
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: twingate
+  template:
+    metadata:
+      labels:
+        app: twingate
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: twingate
+          image: twingate/connector:1
+          envFrom:
+            - secretRef:
+                name: twingate-secret
+          resources:
+            requests:
+              memory: 64Mi
+            limits:
+              memory: 256Mi
