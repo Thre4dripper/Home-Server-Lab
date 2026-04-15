@@ -328,6 +328,74 @@ cmd_pvc() {
   done
 }
 
+# ─── ArgoCD integration ──────────────────────────────────────────────────────
+
+# Find the REPO_ROOT (the directory that contains k3s/)
+_find_repo_root() {
+  local d="$1"
+  while [[ "$d" != "/" ]]; do
+    [[ -d "$d/k3s" && -d "$d/k3s/apps" ]] && echo "$d" && return
+    d="$(dirname "$d")"
+  done
+  echo ""
+}
+
+cmd_sync() {
+  header "ArgoCD Sync — $APP"
+  if ! kubectl get application "$APP" -n argocd &>/dev/null; then
+    warn "No ArgoCD Application named '$APP' found in argocd namespace"
+    info "Register it first: kubectl apply -f k3s/infra/argocd/applications/$APP.yaml"
+    return 1
+  fi
+  info "Triggering sync for $APP..."
+  kubectl annotate application "$APP" -n argocd \
+    argocd.argoproj.io/refresh=hard --overwrite > /dev/null
+  # Wait a moment then show status
+  sleep 2
+  kubectl get application "$APP" -n argocd \
+    -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,REVISION:.status.sync.revision' \
+    2>/dev/null
+}
+
+cmd_argocd_status() {
+  header "ArgoCD Application — $APP"
+  if ! kubectl get application "$APP" -n argocd &>/dev/null; then
+    warn "No ArgoCD Application named '$APP' — not yet registered with ArgoCD"
+    local repo_root; repo_root="$(_find_repo_root "$DEPLOY_DIR")"
+    local app_yaml="$repo_root/k3s/infra/argocd/applications/$APP.yaml"
+    if [[ -f "$app_yaml" ]]; then
+      info "Application YAML exists: $app_yaml"
+      info "Apply it with: kubectl apply -f $app_yaml"
+    fi
+    return 0
+  fi
+  kubectl get application "$APP" -n argocd \
+    -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,REVISION:.status.sync.revision' \
+    2>/dev/null
+  echo ""
+  # Show any sync errors
+  local conditions
+  conditions=$(kubectl get application "$APP" -n argocd \
+    -o jsonpath='{.status.conditions[*].message}' 2>/dev/null)
+  [[ -n "$conditions" ]] && warn "Conditions: $conditions"
+  # Resources managed by ArgoCD
+  header "Managed Resources"
+  kubectl get application "$APP" -n argocd \
+    -o jsonpath='{range .status.resources[*]}  {.kind}/{.name}  ({.health.status}){"\n"}{end}' \
+    2>/dev/null || echo "  (none)"
+}
+
+cmd_diff() {
+  header "ArgoCD Diff — $APP (live vs git)"
+  if ! kubectl get application "$APP" -n argocd &>/dev/null; then
+    warn "No ArgoCD Application named '$APP'"; return 1
+  fi
+  # Use kubectl to trigger a diff via ArgoCD's refresh
+  kubectl get application "$APP" -n argocd -o yaml 2>/dev/null | \
+    grep -A5 "targetRevision\|syncStatus\|source:" | head -30
+  info "Hint: for full diff, use ArgoCD UI → $APP → Diff tab (http://argocd.lan)"
+}
+
 cmd_seal() {
   if ! ${HAS_SECRET:-false}; then
     info "$APP has no secret to seal"; return
@@ -386,6 +454,12 @@ _show_usage() {
     echo ""
   fi
 
+  echo -e "${CYAN}GitOps (ArgoCD):${NC}"
+  echo "  argocd-status         ArgoCD sync/health status + managed resources"
+  echo "  sync                  Trigger hard refresh + sync from git"
+  echo "  diff                  Show drift between live cluster and git"
+  echo ""
+
   echo -e "${CYAN}Access:${NC}"
   [[ -n "${DOMAIN:-}" ]] && echo "  http://$DOMAIN  (via Traefik DNS)"
   [[ -n "${EXTERNAL_PORT:-}" ]] && echo "  http://${NODE_IP:-192.168.0.108}:$EXTERNAL_PORT  (direct IP)"
@@ -410,7 +484,10 @@ main() {
     resources) cmd_resources ;;
     describe)  cmd_describe ;;
     pvc)       cmd_pvc ;;
-    seal)      cmd_seal ;;
+    seal)          cmd_seal ;;
+    argocd-status) cmd_argocd_status ;;
+    sync)          cmd_sync ;;
+    diff)          cmd_diff ;;
     help|--help|-h) _show_usage ;;
     *)
       err "Unknown command: $1"
