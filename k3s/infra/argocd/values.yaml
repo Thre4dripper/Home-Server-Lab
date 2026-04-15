@@ -1,0 +1,64 @@
+# ArgoCD Helm values — Home Server Lab (Raspberry Pi 5 / ARM64)
+# Installed via: helm install argocd argo/argo-cd -n argocd --create-namespace -f values.yaml
+
+global:
+  # ARM64 images are available by default in the official ArgoCD distribution
+  domain: argocd.lan
+
+# Serve over HTTP — Traefik handles routing; no end-to-end TLS needed in LAN
+configs:
+  params:
+    server.insecure: true
+
+# Disable components we don't need to save RAM on the Pi
+dex:
+  enabled: false
+
+notifications:
+  enabled: false
+
+# ── Resource limits tuned for Raspberry Pi 5 (7.8Gi RAM, ~1.5Gi headroom) ───
+server:
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 25m
+    limits:
+      memory: 256Mi
+      cpu: 200m
+
+repoServer:
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 25m
+    limits:
+      memory: 256Mi
+      cpu: 200m
+
+applicationSet:
+  resources:
+    requests:
+      memory: 32Mi
+      cpu: 10m
+    limits:
+      memory: 128Mi
+      cpu: 100m
+
+controller:
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 50m
+    limits:
+      memory: 512Mi
+      cpu: 300m
+
+redis:
+  resources:
+    requests:
+      memory: 16Mi
+      cpu: 10m
+    limits:
+      memory: 64Mi
+      cpu: 100m
