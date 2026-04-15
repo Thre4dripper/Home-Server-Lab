@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jellyfin
+  namespace: argocd
+  # Deleting this Application will also delete all managed resources
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Thre4dripper/Home-Server-Lab.git
+    targetRevision: HEAD
+    path: k3s/apps/jellyfin
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true      # Remove resources deleted from git
+      selfHeal: true   # Revert manual kubectl changes back to git state
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true

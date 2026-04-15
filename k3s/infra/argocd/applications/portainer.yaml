@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portainer
+  namespace: argocd
+  # Deleting this Application will also delete all managed resources
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Thre4dripper/Home-Server-Lab.git
+    targetRevision: HEAD
+    path: k3s/apps/portainer
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true      # Remove resources deleted from git
+      selfHeal: true   # Revert manual kubectl changes back to git state
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
