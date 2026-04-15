@@ -31,6 +31,15 @@ spec:
               value: "1000"
             - name: NMBD
               value: "true"
+            - name: SAMBA_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: samba-secret
+                  key: SAMBA_PASS
+            # dperson/samba reads USER="username;password" to create the OS user
+            # and register with smbpasswd on every container start
+            - name: USER
+              value: "pi;$(SAMBA_PASS)"
           volumeMounts:
             - name: smb-conf
               mountPath: /etc/samba/smb.conf
@@ -57,13 +66,13 @@ spec:
           emptyDir: {}
         - name: public
           hostPath:
-            path: /home/pi/shared
+            path: /home/pi/pendrive/downloads
             type: DirectoryOrCreate
         - name: media
           hostPath:
-            path: /home/pi/media
+            path: /home/pi/pendrive/media
             type: DirectoryOrCreate
         - name: documents
           hostPath:
-            path: /home/pi/documents
+            path: /home/pi/pendrive
             type: DirectoryOrCreate
