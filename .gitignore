@@ -6,6 +6,11 @@
 **/.env.production
 **/.env.staging
 
+# Kubernetes plain secrets — use sealedsecret.yaml instead (git-safe)
+# Keep secret.yaml locally for reference/re-sealing, never commit it
+k3s/apps/**/secret.yaml
+k3s/infra/**/secret.yaml
+
 # Database data directories
 **/mysql_data/
 **/postgres_data/
