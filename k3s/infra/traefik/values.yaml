@@ -1,12 +1,12 @@
 # Traefik Helm values for Home Server Lab
 # Installed via: helm install traefik traefik/traefik -n traefik --create-namespace -f values.yaml
 
-# Use hostPort instead of ServiceLB — binds directly to Pi's 80/443
+# ServiceLB (Klipper) handles external port binding — no hostPort needed
 ports:
   web:
-    hostPort: 80
+    hostPort: null
   websecure:
-    hostPort: 443
+    hostPort: null
 
 # Run on the control-plane node
 tolerations:
