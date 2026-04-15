@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: homelab
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          # ── Monitoring ─────────────────────────────────────
+          - name: dashdot
+            namespace: monitoring
+            path: k3s/apps/dashdot
+          - name: portainer
+            namespace: monitoring
+            path: k3s/apps/portainer
+
+          # ── Dashboard / Network ────────────────────────────
+          - name: homarr
+            namespace: dashboard-network
+            path: k3s/apps/homarr
+          - name: pihole
+            namespace: dashboard-network
+            path: k3s/apps/pihole
+          - name: twingate
+            namespace: dashboard-network
+            path: k3s/apps/twingate
+
+          # ── Media ──────────────────────────────────────────
+          - name: jellyfin
+            namespace: media
+            path: k3s/apps/jellyfin
+
+          # ── File Management ────────────────────────────────
+          - name: filebrowser
+            namespace: file-management
+            path: k3s/apps/filebrowser
+          - name: samba
+            namespace: file-management
+            path: k3s/apps/samba
+
+          # ── Automation ─────────────────────────────────────
+          - name: home-assistant
+            namespace: automation
+            path: k3s/apps/home-assistant
+          - name: n8n
+            namespace: automation
+            path: k3s/apps/n8n
+
+          # ── Databases ──────────────────────────────────────
+          - name: mongodb
+            namespace: databases
+            path: k3s/apps/databases/mongodb
+          - name: postgres
+            namespace: databases
+            path: k3s/apps/databases/postgres
+          - name: redis
+            namespace: databases
+            path: k3s/apps/databases/redis
+
+  template:
+    metadata:
+      name: "{{ .name }}"
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/Thre4dripper/Home-Server-Lab.git
+        targetRevision: HEAD
+        path: "{{ .path }}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .namespace }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/template/metadata/annotations/kubectl.kubernetes.io~1restartedAt
