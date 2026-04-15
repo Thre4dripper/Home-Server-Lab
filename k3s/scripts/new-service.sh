@@ -258,39 +258,33 @@ YAML
 }
 
 gen_argocd_application() {
-  local argocd_apps_dir="$REPO_ROOT/infra/argocd/applications"
-  mkdir -p "$argocd_apps_dir"
-  cat > "$argocd_apps_dir/${APP}.yaml" << YAML
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: ${APP}
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/Thre4dripper/Home-Server-Lab.git
-    targetRevision: HEAD
-    path: k3s/apps/${APP}
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: ${NAMESPACE}
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-  ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      jsonPointers:
-        - /spec/template/metadata/annotations/kubectl.kubernetes.io~1restartedAt
-YAML
-  ok "infra/argocd/applications/${APP}.yaml  (ArgoCD Application)"
+  local appset_file="$REPO_ROOT/infra/argocd/applicationset.yaml"
+  if [[ ! -f "$appset_file" ]]; then
+    warn "ApplicationSet not found at $appset_file — skipping ArgoCD registration"
+    return
+  fi
+
+  # Determine the git path relative to repo root
+  local app_path="k3s/apps/${APP}"
+  # For apps nested under a category (e.g. databases), adjust the path
+  [[ -d "$OUT_DIR" ]] && app_path="k3s/apps/$(realpath --relative-to="$APPS_DIR" "$OUT_DIR")"
+
+  # Build the new entry
+  local entry
+  entry=$(printf '          - name: %s\n            namespace: %s\n            path: %s' "$APP" "$NAMESPACE" "$app_path")
+
+  # Insert before the last blank line in the elements list (just before 'template:')
+  # Find the line number of '  template:' and insert before it
+  local insert_line
+  insert_line=$(grep -n '^  template:' "$appset_file" | head -1 | cut -d: -f1)
+  if [[ -z "$insert_line" ]]; then
+    warn "Could not find template: section in ApplicationSet — add entry manually"
+    return
+  fi
+
+  # Insert the entry (with a blank line before for readability)
+  sed -i "${insert_line}i\\\n${entry}" "$appset_file"
+  ok "Added ${APP} to infra/argocd/applicationset.yaml"
 }
 
 gen_setup_sh() {
@@ -474,8 +468,7 @@ fi
 
 echo ""
 echo "  + Register with ArgoCD (GitOps):"
-echo "    git add k3s/apps/$APP k3s/infra/argocd/applications/$APP.yaml"
-echo "    git commit -m 'feat: add $APP service'"
+  echo "    git add k3s/apps/$APP k3s/infra/argocd/applicationset.yaml"
 echo "    git push"
 echo "    # ArgoCD picks it up automatically within ~3 minutes (polling interval)"
 echo "    # Or trigger immediately: cd k3s/apps/$APP && ./setup.sh sync"
