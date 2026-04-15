@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pihole-env
+  namespace: dashboard-network
+data:
+  SERVERIP: "192.168.0.108"
+  PIHOLE_DNS_: "1.1.1.1;1.0.0.1"
+  DNSMASQ_LISTENING: "all"
+  VIRTUAL_HOST: "pihole.lan"
+  FTLCONF_LOCAL_IPV4: "192.168.0.108"
+  FTLCONF_dns_listeningMode: "ALL"
+  REV_SERVER: "true"
+  REV_SERVER_DOMAIN: "local"
+  REV_SERVER_TARGET: "192.168.0.1"
+  REV_SERVER_CIDR: "192.168.0.0/24"
+  PIHOLE_UID: "1000"
+  PIHOLE_GID: "1000"
+  TZ: "Etc/UTC"

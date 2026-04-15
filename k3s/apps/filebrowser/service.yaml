@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: filebrowser
+  namespace: file-management
+spec:
+  type: LoadBalancer
+  selector:
+    app: filebrowser
+  ports:
+    - name: web
+      port: 8300
+      targetPort: 80
+      protocol: TCP

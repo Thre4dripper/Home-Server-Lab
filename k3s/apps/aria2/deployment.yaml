@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aria2
+  namespace: downloads
+  labels:
+    app: aria2
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: aria2
+  template:
+    metadata:
+      labels:
+        app: aria2
+    spec:
+      containers:
+        - name: aria2
+          image: hurlenko/aria2-ariang
+          ports:
+            - containerPort: 8080
+              name: web
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1004"
+            - name: ARIA2RPCPORT
+              value: "443"
+            - name: EMBED_RPC_SECRET
+              value: "false"
+          volumeMounts:
+            - name: downloads
+              mountPath: /aria2/data
+            - name: config
+              mountPath: /aria2/conf
+          resources:
+            requests:
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+      volumes:
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: aria2-downloads
+        - name: config
+          persistentVolumeClaim:
+            claimName: aria2-config

@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: samba-config
+  namespace: file-management
+data:
+  smb.conf: |
+    [global]
+        workgroup = WORKGROUP
+        server string = Raspberry Pi Samba Server
+        netbios name = PISERVER
+        security = user
+        map to guest = Bad User
+        guest account = nobody
+        server min protocol = SMB2
+        server max protocol = SMB3
+        server signing = auto
+        client signing = auto
+        socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=65536 SO_SNDBUF=65536
+        read raw = yes
+        write raw = yes
+        max xmit = 65535
+        dead time = 15
+        getwd cache = yes
+        log file = /var/log/samba/log.%m
+        max log size = 50
+        log level = 1
+        load printers = no
+        printing = bsd
+        printcap name = /dev/null
+        disable spoolss = yes
+        vfs objects = fruit streams_xattr
+        fruit:metadata = stream
+        fruit:model = MacSamba
+        fruit:posix_rename = yes
+        fruit:veto_appledouble = no
+        fruit:nfs_aces = no
+        fruit:wipe_intentionally_left_blank_rfork = yes
+        fruit:delete_empty_adfiles = yes
+        multicast dns register = yes
+
+    [Public]
+        comment = Public Share - Guest Access
+        path = /shares/public
+        browseable = yes
+        read only = no
+        guest ok = yes
+        create mask = 0775
+        directory mask = 0775
+        force user = nobody
+        force group = nogroup
+
+    [Media]
+        comment = Media Files - Movies, Music, Photos
+        path = /shares/media
+        browseable = yes
+        read only = yes
+        guest ok = yes
+        write list = pi
+        create mask = 0775
+        directory mask = 0775
+
+    [Documents]
+        comment = Personal Documents - Authenticated Users Only
+        path = /shares/documents
+        browseable = yes
+        read only = no
+        guest ok = no
+        valid users = pi
+        create mask = 0770
+        directory mask = 0770

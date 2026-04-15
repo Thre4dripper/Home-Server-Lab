@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashdot
+  namespace: monitoring
+  labels:
+    app: dashdot
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: dashdot
+  template:
+    metadata:
+      labels:
+        app: dashdot
+    spec:
+      containers:
+        - name: dashdot
+          image: mauricenino/dashdot:latest
+          ports:
+            - containerPort: 3001
+              name: web
+          env:
+            - name: DASHDOT_PORT
+              value: "3001"
+            - name: DASHDOT_WIDGET_LIST
+              value: "os,cpu,storage,ram,network"
+            - name: DASHDOT_ENABLE_CPU_TEMPS
+              value: "true"
+            - name: DASHDOT_ALWAYS_SHOW_PERCENTAGES
+              value: "true"
+            - name: TZ
+              value: "UTC"
+          volumeMounts:
+            - name: host-root
+              mountPath: /mnt/host
+              readOnly: true
+          resources:
+            requests:
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            privileged: true
+      volumes:
+        - name: host-root
+          hostPath:
+            path: /
+            type: Directory

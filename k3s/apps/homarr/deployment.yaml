@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homarr
+  namespace: dashboard-network
+  labels:
+    app: homarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: homarr
+  template:
+    metadata:
+      labels:
+        app: homarr
+    spec:
+      containers:
+        - name: homarr
+          image: ghcr.io/homarr-labs/homarr:latest
+          ports:
+            - containerPort: 7575
+              name: web
+          env:
+            - name: SECRET_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homarr-secret
+                  key: SECRET_ENCRYPTION_KEY
+            - name: NODE_ENV
+              value: "production"
+            - name: TZ
+              value: "UTC"
+            - name: DB_DIALECT
+              value: "sqlite"
+            - name: DB_DRIVER
+              value: "better-sqlite3"
+            - name: DB_URL
+              value: "/appdata/db/db.sqlite"
+            - name: AUTH_PROVIDERS
+              value: "credentials"
+            - name: LOG_LEVEL
+              value: "info"
+          volumeMounts:
+            - name: appdata
+              mountPath: /appdata
+          resources:
+            requests:
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: appdata
+          persistentVolumeClaim:
+            claimName: homarr-appdata

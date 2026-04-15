@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: aria2
+  namespace: downloads
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`aria2.lan`)
+      kind: Rule
+      services:
+        - name: aria2
+          port: 8080
