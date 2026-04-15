@@ -257,6 +257,37 @@ YAML
   warn "New namespace — add to k3s/base/namespaces/namespaces.yaml (see patch file)"
 }
 
+gen_argocd_application() {
+  local argocd_apps_dir="$REPO_ROOT/infra/argocd/applications"
+  mkdir -p "$argocd_apps_dir"
+  cat > "$argocd_apps_dir/${APP}.yaml" << YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${APP}
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Thre4dripper/Home-Server-Lab.git
+    targetRevision: HEAD
+    path: k3s/apps/${APP}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${NAMESPACE}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+YAML
+  ok "infra/argocd/applications/${APP}.yaml  (ArgoCD Application)"
+}
+
 gen_setup_sh() {
   local has_pvc="$1" has_secret="$2" has_ingress="$3" has_cm="$4" has_rbac="$5"
   # Depth from APPS_DIR determines relative path to scripts/
@@ -406,6 +437,7 @@ $NAMESPACE_IS_NEW && gen_namespace
 gen_setup_sh "$HAS_PVC" "$HAS_SECRET" \
   "$([[ -n "$DOMAIN" ]] && echo true || echo false)" \
   "false" "false"
+gen_argocd_application
 
 chmod +x "$OUT_DIR/setup.sh"
 
@@ -434,6 +466,14 @@ if [[ -n "$DOMAIN" ]]; then
   echo "  + Add DNS in Pi-hole admin → Local DNS:"
   echo "    IP: 192.168.0.108   Domain: $DOMAIN"
 fi
+
+echo ""
+echo "  + Register with ArgoCD (GitOps):"
+echo "    git add k3s/apps/$APP k3s/infra/argocd/applications/$APP.yaml"
+echo "    git commit -m 'feat: add $APP service'"
+echo "    git push"
+echo "    # ArgoCD picks it up automatically within ~3 minutes (polling interval)"
+echo "    # Or trigger immediately: cd k3s/apps/$APP && ./setup.sh sync"
 
 if $NAMESPACE_IS_NEW; then
   echo ""
