@@ -28,12 +28,15 @@ k3s/infra/**/secret.yaml
 **/data/
 **/home-assistant/config/
 
-# SSL certificates and keys
-**/*.pem
+# SSL certificates and keys (private — keep local)
 **/*.key
 **/*.crt
 **/*.p12
 **/certs/
+# Private keys and CA certs
+**/*.pem
+# Exception: Sealed Secrets public cert is safe to commit (public key only)
+!k3s/infra/sealed-secrets/public-cert.pem
 
 # Backup files
 **/*.sql
