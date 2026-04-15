@@ -412,16 +412,16 @@ cmd_disable() {
     err "No deployment.yaml found at $DEPLOY_DIR"; return 1
   fi
 
-  local current
-  current=$(grep -E '^\s+replicas:' "$deploy_file" | awk '{print $2}' | head -1)
-  if [[ "$current" == "0" ]]; then
-    warn "$APP is already disabled (replicas: 0)"; return 0
+  if grep -q '^\s*paused:\s*true' "$deploy_file"; then
+    warn "$APP is already disabled"; return 0
   fi
 
   sed -i 's/^\(\s*replicas:\s*\)[0-9]*/\10/' "$deploy_file"
-  ok "Set replicas: 0 in deployment.yaml"
+  # Add paused: true after replicas line (same indent level)
+  sed -i '/^\s*replicas:/a\  paused: true' "$deploy_file"
+  ok "Set replicas: 0 and paused: true in deployment.yaml"
   echo ""
-  info "Commit & push to apply — ArgoCD will scale down automatically"
+  info "Commit & push to apply — ArgoCD will show Suspended status"
   echo ""
 }
 
@@ -433,14 +433,13 @@ cmd_enable() {
   fi
 
   local replicas="${1:-1}"
-  local current
-  current=$(grep -E '^\s+replicas:' "$deploy_file" | awk '{print $2}' | head -1)
-  if [[ "$current" != "0" ]]; then
-    warn "$APP is already enabled (replicas: $current)"; return 0
+  if ! grep -q '^\s*paused:\s*true' "$deploy_file"; then
+    warn "$APP is already enabled"; return 0
   fi
 
   sed -i "s/^\(\s*replicas:\s*\)[0-9]*/\1${replicas}/" "$deploy_file"
-  ok "Set replicas: $replicas in deployment.yaml"
+  sed -i '/^\s*paused:\s*true/d' "$deploy_file"
+  ok "Set replicas: $replicas and removed paused in deployment.yaml"
   echo ""
   info "Commit & push to apply — ArgoCD will start the pod automatically"
   echo ""

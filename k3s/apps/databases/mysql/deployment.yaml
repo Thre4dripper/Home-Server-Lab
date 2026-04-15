@@ -6,7 +6,8 @@ metadata:
   labels:
     app: mysql
 spec:
-  replicas: 0
+  replicas: 1
+  paused: true
   strategy:
     type: Recreate
   selector:
