@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: databases
+data:
+  redis.conf: |
+    # Memory
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+
+    # Persistence (AOF for reliability)
+    appendonly yes
+    appendfsync everysec
+
+    # Disable default unauthenticated user
+    # Per-service ACL users — each with their own password
+    # n8n: full access to keys prefixed with n8n:
+    # nextcloud: full access to keys prefixed with nc:
+    # homarr: full access to keys prefixed with homarr:
+    # homeassistant: full access to keys prefixed with ha:
+    aclfile /etc/redis/users.acl
+
+    # Bind to all interfaces inside the pod
+    bind 0.0.0.0
+    protected-mode no
+    port 6379
+
+    # Tuning for Raspberry Pi
+    hz 10
+    dynamic-hz yes
+    lazyfree-lazy-eviction yes
+    lazyfree-lazy-expire yes
+
+  users.acl: |
+    user default off
+    user n8n on >n8nRedis2024! ~n8n:* &* +@all
+    user nextcloud on >nextcloudRedis2024! ~nc:* &* +@all
+    user homarr on >homarrRedis2024! ~homarr:* &* +@all
+    user homeassistant on >haRedis2024! ~ha:* &* +@all

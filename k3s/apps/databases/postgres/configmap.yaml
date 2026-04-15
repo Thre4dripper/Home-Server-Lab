@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: databases
+data:
+  01-init.sql: |
+    -- Per-service roles and databases
+    -- Each role can ONLY connect to their own database
+
+    CREATE ROLE n8n WITH LOGIN PASSWORD 'n8nPostgres2024!';
+    CREATE DATABASE n8n OWNER n8n;
+    GRANT ALL PRIVILEGES ON DATABASE n8n TO n8n;
+
+    CREATE ROLE homarr WITH LOGIN PASSWORD 'homarrPostgres2024!';
+    CREATE DATABASE homarr OWNER homarr;
+    GRANT ALL PRIVILEGES ON DATABASE homarr TO homarr;
+
+    CREATE ROLE gitea WITH LOGIN PASSWORD 'giteaPostgres2024!';
+    CREATE DATABASE gitea OWNER gitea;
+    GRANT ALL PRIVILEGES ON DATABASE gitea TO gitea;
+
+    CREATE ROLE nextcloud WITH LOGIN PASSWORD 'nextcloudPostgres2024!';
+    CREATE DATABASE nextcloud OWNER nextcloud;
+    GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextcloud;
+
+    CREATE ROLE homeassistant WITH LOGIN PASSWORD 'haPostgres2024!';
+    CREATE DATABASE homeassistant OWNER homeassistant;
+    GRANT ALL PRIVILEGES ON DATABASE homeassistant TO homeassistant;
+
+  postgresql.conf: |
+    # Memory tuning for Raspberry Pi 5
+    shared_buffers                  = 64MB
+    effective_cache_size            = 256MB
+    maintenance_work_mem            = 32MB
+    work_mem                        = 4MB
+    max_connections                 = 50
+    wal_buffers                     = 4MB
+    checkpoint_completion_target    = 0.9
+    random_page_cost                = 1.1
+    effective_io_concurrency        = 200
+    # Logging
+    log_min_duration_statement      = 1000
+    log_timezone                    = 'UTC'
+    # Connections
+    listen_addresses                = '*'
