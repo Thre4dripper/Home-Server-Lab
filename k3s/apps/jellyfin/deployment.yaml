@@ -41,7 +41,7 @@ spec:
             requests:
               memory: 256Mi
             limits:
-              memory: 2Gi
+              memory: 1Gi
       volumes:
         - name: config
           persistentVolumeClaim:
