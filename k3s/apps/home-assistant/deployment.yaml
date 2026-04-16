@@ -34,9 +34,9 @@ spec:
               readOnly: true
           resources:
             requests:
-              memory: 256Mi
+              memory: 320Mi
             limits:
-              memory: 1Gi
+              memory: 768Mi
           securityContext:
             privileged: true
       volumes:

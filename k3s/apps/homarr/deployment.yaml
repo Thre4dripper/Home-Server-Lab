@@ -48,9 +48,9 @@ spec:
               mountPath: /appdata
           resources:
             requests:
-              memory: 256Mi
+              memory: 384Mi
             limits:
-              memory: 1Gi
+              memory: 896Mi
       volumes:
         - name: appdata
           persistentVolumeClaim:
