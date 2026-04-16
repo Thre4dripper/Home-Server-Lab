@@ -18,8 +18,12 @@ tolerations:
 deployment:
   replicas: 1
 
-# Enable dashboard — served over HTTP (port 80) via Traefik's own routing.
-# websecure (443) requires TLS certs; we don't have them, so use web (80).
+# Enable dashboard via both:
+#   - IngressRoute on port 80 (Host: traefik.lan)
+#   - Direct IP on port 8090 (api.insecure exposes the traefik entrypoint)
+api:
+  insecure: true
+
 ingressRoute:
   dashboard:
     enabled: true
