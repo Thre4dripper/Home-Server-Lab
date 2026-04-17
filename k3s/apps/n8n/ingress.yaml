@@ -5,10 +5,12 @@ metadata:
   namespace: automation
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`n8n.lan`)
+    - match: Host(`n8n.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: n8n
           port: 8400
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

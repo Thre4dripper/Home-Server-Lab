@@ -5,10 +5,12 @@ metadata:
   namespace: downloads
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`aria2.lan`)
+    - match: Host(`aria2.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: aria2
           port: 8080
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

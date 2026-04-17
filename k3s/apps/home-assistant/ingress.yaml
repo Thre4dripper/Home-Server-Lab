@@ -5,10 +5,12 @@ metadata:
   namespace: automation
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`ha.lan`)
+    - match: Host(`ha.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: home-assistant
           port: 8123
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

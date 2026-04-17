@@ -5,10 +5,12 @@ metadata:
   namespace: monitoring
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`dashdot.lan`)
+    - match: Host(`dashdot.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: dashdot
           port: 8120
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

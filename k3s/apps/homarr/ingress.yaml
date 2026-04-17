@@ -5,10 +5,12 @@ metadata:
   namespace: dashboard-network
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`homarr.lan`)
+    - match: Host(`homarr.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: homarr
           port: 8100
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls
