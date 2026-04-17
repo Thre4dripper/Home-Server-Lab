@@ -39,7 +39,7 @@ data:
     lazyfree-lazy-expire yes
 
   users.acl: |
-    user default off
+    user default on nopass ~* resetchannels +ping +info
     user admin on >adminRedis2024! ~* &* +@all
     user n8n on >n8nRedis2024! ~* &* +@all
     user nextcloud on >nextcloudRedis2024! ~* &* +@all
