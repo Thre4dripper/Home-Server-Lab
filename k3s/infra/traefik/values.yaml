@@ -5,6 +5,12 @@
 ports:
   web:
     hostPort: null
+    # Redirect all HTTP to HTTPS
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
   websecure:
     hostPort: null
 
