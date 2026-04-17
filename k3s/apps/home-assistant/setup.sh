@@ -6,14 +6,14 @@ APP="home-assistant"
 NAMESPACE="automation"
 CONTAINER_PORT="8123"
 EXTERNAL_PORT="8123"
-DOMAIN="ha.lan"
+DOMAIN="ha.home.ijlalahmad.dev"
 DEFAULT_SHELL="bash"
 
 # Components this app uses
 HAS_PVC=true
 HAS_SECRET=false
 HAS_INGRESS=true
-HAS_CONFIGMAP=false
+HAS_CONFIGMAP=true
 HAS_RBAC=false
 
 # ─────────────────────────────────────────────────────────────────────────────
