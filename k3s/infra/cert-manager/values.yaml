@@ -1,0 +1,36 @@
+# cert-manager Helm values for Home Server Lab
+# Installed via: helm install cert-manager jetstack/cert-manager -n cert-manager --create-namespace -f values.yaml
+
+# Install CRDs with the chart
+crds:
+  enabled: true
+
+# Resource limits for Raspberry Pi
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+webhook:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi
+
+cainjector:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 50m
+      memory: 128Mi
+
+# Single replica (single node cluster)
+replicaCount: 1
