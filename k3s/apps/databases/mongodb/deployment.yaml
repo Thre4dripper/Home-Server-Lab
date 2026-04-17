@@ -49,10 +49,10 @@ spec:
               subPath: mongod.conf
           resources:
             requests:
-              memory: 192Mi
+              memory: 256Mi
               cpu: 100m
             limits:
-              memory: 384Mi
+              memory: 512Mi
               cpu: 500m
           livenessProbe:
             exec:
