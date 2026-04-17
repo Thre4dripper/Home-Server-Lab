@@ -5,10 +5,12 @@ metadata:
   namespace: file-management
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`files.lan`)
+    - match: Host(`files.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: filebrowser
           port: 8300
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

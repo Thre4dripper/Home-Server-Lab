@@ -33,9 +33,11 @@ api:
 ingressRoute:
   dashboard:
     enabled: true
-    matchRule: Host(`traefik.lan`)
+    matchRule: Host(`traefik.home.ijlalahmad.dev`)
     entryPoints:
-      - web
+      - websecure
+    tls:
+      secretName: wildcard-home-ijlalahmad-dev-tls
 
 # Enable access logs
 logs:

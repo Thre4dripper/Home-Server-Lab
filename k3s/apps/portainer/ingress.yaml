@@ -5,10 +5,12 @@ metadata:
   namespace: monitoring
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`portainer.lan`)
+    - match: Host(`portainer.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: portainer
           port: 8500
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

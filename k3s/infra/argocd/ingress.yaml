@@ -5,10 +5,12 @@ metadata:
   namespace: argocd
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`argocd.lan`)
+    - match: Host(`argocd.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: argocd-server
           port: 80
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

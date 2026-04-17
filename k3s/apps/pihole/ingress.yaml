@@ -5,10 +5,12 @@ metadata:
   namespace: dashboard-network
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`pihole.lan`)
+    - match: Host(`pihole.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: pihole
           port: 8110
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls
