@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitcomet
+  namespace: dashboard-network
+spec:
+  type: LoadBalancer
+  selector:
+    app: bitcomet
+  ports:
+    - name: web
+      port: 8700
+      targetPort: 8080
+      protocol: TCP
+    - name: bittorrent-tcp
+      port: 6882
+      targetPort: 6882
+      protocol: TCP
+    - name: bittorrent-udp
+      port: 6882
+      targetPort: 6882
+      protocol: UDP

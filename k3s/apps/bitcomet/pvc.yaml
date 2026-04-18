@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: bitcomet-config
+spec:
+  capacity:
+    storage: 500Mi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/pendrive/k3s-data/bitcomet/config
+    type: DirectoryOrCreate
+  claimRef:
+    name: bitcomet-config
+    namespace: dashboard-network
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcomet-config
+  namespace: dashboard-network
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: bitcomet-config
+  resources:
+    requests:
+      storage: 500Mi
+---
+# Downloads PV — capacity is just a label for hostPath, not enforced.
+# The actual limit is the pendrive's free space (~234GB).
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: bitcomet-downloads
+spec:
+  capacity:
+    storage: 200Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/pendrive/k3s-data/bitcomet/downloads
+    type: DirectoryOrCreate
+  claimRef:
+    name: bitcomet-downloads
+    namespace: dashboard-network
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcomet-downloads
+  namespace: dashboard-network
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: bitcomet-downloads
+  resources:
+    requests:
+      storage: 200Gi

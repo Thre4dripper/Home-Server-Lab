@@ -73,6 +73,10 @@ spec:
             category: databases
             path: k3s/apps/databases/redis
 
+          - name: bitcomet
+            namespace: dashboard-network
+            path: k3s/apps/bitcomet
+
   template:
     metadata:
       name: "{{ .name }}"
