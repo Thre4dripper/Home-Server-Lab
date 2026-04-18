@@ -1,0 +1,9 @@
+# BitComet data directories
+config/
+downloads/
+
+# Environment variables
+.env
+
+# Logs
+*.log
