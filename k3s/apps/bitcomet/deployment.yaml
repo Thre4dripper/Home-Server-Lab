@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitcomet
+  namespace: dashboard-network
+  labels:
+    app: bitcomet
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: bitcomet
+  template:
+    metadata:
+      labels:
+        app: bitcomet
+    spec:
+      containers:
+        - name: bitcomet
+          image: wxhere/bitcomet-webui:latest
+          ports:
+            - containerPort: 8080
+              name: web
+            - containerPort: 6882
+              name: bt-tcp
+              protocol: TCP
+            - containerPort: 6882
+              name: bt-udp
+              protocol: UDP
+          env:
+            - name: TZ
+              value: "Asia/Kolkata"
+            - name: BITCOMET_WEBUI_PORT
+              value: "8080"
+            - name: BITCOMET_BT_PORT
+              value: "6882"
+          envFrom:
+            - secretRef:
+                name: bitcomet-secret
+          volumeMounts:
+            - name: config
+              mountPath: /root/.config/BitComet
+            - name: downloads
+              mountPath: /root/Downloads
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: bitcomet-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: bitcomet-downloads
