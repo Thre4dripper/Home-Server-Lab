@@ -20,14 +20,14 @@ spec:
             path: k3s/apps/portainer
 
           # ── Dashboard / Network ────────────────────────────
-          # - name: homarr
-          #   namespace: dashboard-network
-          #   category: dashboard-network
-          #   path: k3s/apps/homarr
-          # - name: pihole
-          #   namespace: dashboard-network
-          #   category: dashboard-network
-          #   path: k3s/apps/pihole
+          - name: homarr
+            namespace: dashboard-network
+            category: dashboard-network
+            path: k3s/apps/homarr
+          - name: pihole
+            namespace: dashboard-network
+            category: dashboard-network
+            path: k3s/apps/pihole
           - name: twingate
             namespace: dashboard-network
             category: dashboard-network
