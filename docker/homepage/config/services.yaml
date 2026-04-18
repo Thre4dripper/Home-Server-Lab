@@ -1,0 +1,199 @@
+---
+- Monitoring & Calendar:
+    - Calendar:
+        icon: mdi-calendar-month
+        widget:
+          type: calendar
+          firstDayInWeek: sunday
+          view: monthly
+          maxEvents: 10
+          showTime: true
+          timezone: Asia/Kolkata
+    - Docker Containers:
+        icon: mdi-docker
+        description: Container overview
+        server: local
+        container: portainer
+        widget:
+          type: portainer
+          url: http://192.168.0.108:9000
+          env: 1
+          key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
+          fields: ["running", "stopped", "total"]
+    - System Resources:
+        icon: mdi-speedometer
+        description: Host performance
+        widget:
+          type: customapi
+          url: http://192.168.0.108:19999/api/v1/info
+          refreshInterval: 5000
+          mappings:
+            - field: os_name
+              label: OS
+            - field: os_version
+              label: Version
+
+- Infrastructure:
+    - Portainer:
+        icon: portainer
+        href: http://192.168.0.108:9000
+        description: Docker container management
+        server: local
+        container: portainer
+        widget:
+          type: portainer
+          url: http://192.168.0.108:9000
+          env: 1
+          key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
+    - Pi-hole:
+        icon: pi-hole
+        href: http://192.168.0.108:8080/admin
+        description: Network-wide ad blocker & DNS
+        server: local
+        container: pihole
+        widget:
+          type: pihole
+          url: http://192.168.0.108:8080
+          key: "{{HOMEPAGE_VAR_PIHOLE_KEY}}"
+    - Nginx:
+        icon: nginx-proxy-manager
+        href: http://192.168.0.108:81
+        description: Reverse proxy manager
+        server: local
+        container: nginx-proxy-manager
+    - Netdata:
+        icon: netdata
+        href: http://192.168.0.108:19999
+        description: Real-time performance monitoring
+        server: local
+        container: netdata
+        widget:
+          type: netdata
+          url: http://192.168.0.108:19999
+    - Home Assistant:
+        icon: home-assistant
+        href: http://192.168.0.108:8123
+        description: Smart home automation
+        server: local
+        container: homeassistant
+    - Dashdot:
+        icon: dashdot
+        href: http://192.168.0.108:3001
+        description: Server hardware monitoring
+        server: local
+        container: dashdot
+    - Homarr:
+        icon: homarr
+        href: http://192.168.0.108:7575
+        description: Alternative dashboard
+        server: local
+        container: homarr
+
+- Media & Downloads:
+    - Jellyfin:
+        icon: jellyfin
+        href: http://192.168.0.108:8096
+        description: Media streaming server
+        server: local
+        container: jellyfin
+        widget:
+          type: jellyfin
+          url: http://192.168.0.108:8096
+          key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
+          enableBlocks: true
+          enableNowPlaying: true
+    - Plex:
+        icon: plex
+        href: http://192.168.0.108:32400/web
+        description: Premium media streaming
+        server: local
+        container: plex
+        widget:
+          type: plex
+          url: http://192.168.0.108:32400
+          key: "{{HOMEPAGE_VAR_PLEX_KEY}}"
+    - qBittorrent:
+        icon: qbittorrent
+        href: http://192.168.0.108:8080
+        description: Torrent download client
+        server: local
+        container: qbittorrent
+        widget:
+          type: qbittorrent
+          url: http://192.168.0.108:8080
+          username: "{{HOMEPAGE_VAR_QBIT_USER}}"
+          password: "{{HOMEPAGE_VAR_QBIT_PASS}}"
+    - Deluge:
+        icon: deluge
+        href: http://192.168.0.108:8112
+        description: Lightweight torrent client
+        server: local
+        container: deluge
+        widget:
+          type: deluge
+          url: http://192.168.0.108:8112
+          password: "{{HOMEPAGE_VAR_DELUGE_PASS}}"
+    - Aria2:
+        icon: aria2
+        href: http://192.168.0.108:8080
+        description: Multi-protocol download manager
+        server: local
+        container: aria2-ui
+
+- Cloud & Files:
+    - Nextcloud:
+        icon: nextcloud
+        href: http://192.168.0.108:8081
+        description: Private cloud storage & collaboration
+        server: local
+        container: nextcloud-aio-mastercontainer
+    - File Browser:
+        icon: filebrowser
+        href: http://192.168.0.108:8080
+        description: Web-based file manager
+        server: local
+        container: filebrowser
+    - Seafile:
+        icon: seafile
+        href: http://192.168.0.108:8000
+        description: File sync and share
+        server: local
+        container: seafile
+    - Samba:
+        icon: mdi-folder-network
+        href: ""
+        description: Network file sharing (SMB)
+        server: local
+        container: samba
+    - Rclone:
+        icon: rclone
+        href: http://192.168.0.108:5572
+        description: Cloud storage management
+        server: local
+        container: rclone
+
+- Development & Tools:
+    - Gitea:
+        icon: gitea
+        href: http://192.168.0.108:3000
+        description: Self-hosted Git service
+        server: local
+        container: gitea-server
+    - n8n:
+        icon: n8n
+        href: http://192.168.0.108:5678
+        description: Workflow automation platform
+        server: local
+        container: n8n
+    - LocalStack:
+        icon: mdi-aws
+        href: http://192.168.0.108:4566
+        description: Local AWS cloud emulator
+        server: local
+        container: localstack-main
+    - GitLab:
+        icon: gitlab
+        href: http://192.168.0.108:8929
+        description: DevOps lifecycle platform
+        server: local
+        container: gitlab-server
