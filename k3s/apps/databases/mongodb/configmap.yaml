@@ -4,34 +4,6 @@ metadata:
   name: mongodb-init
   namespace: databases
 data:
-  01-init-users.js: |
-    // Switch to admin to create per-service users in their own databases
-    // Each user has readWrite access ONLY to their own database
-
-    db = db.getSiblingDB('n8n');
-    db.createUser({
-      user: 'n8n',
-      pwd: 'n8nMongo2024!',
-      roles: [{ role: 'readWrite', db: 'n8n' }]
-    });
-    db.createCollection('_init');
-
-    db = db.getSiblingDB('homarr');
-    db.createUser({
-      user: 'homarr',
-      pwd: 'homarrMongo2024!',
-      roles: [{ role: 'readWrite', db: 'homarr' }]
-    });
-    db.createCollection('_init');
-
-    db = db.getSiblingDB('homeassistant');
-    db.createUser({
-      user: 'homeassistant',
-      pwd: 'haMongo2024!',
-      roles: [{ role: 'readWrite', db: 'homeassistant' }]
-    });
-    db.createCollection('_init');
-
   mongod.conf: |
     storage:
       dbPath: /data/db

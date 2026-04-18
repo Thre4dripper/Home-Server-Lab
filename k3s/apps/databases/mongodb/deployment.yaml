@@ -42,8 +42,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data/db
-            - name: init-scripts
-              mountPath: /docker-entrypoint-initdb.d
             - name: mongo-config
               mountPath: /etc/mongo/mongod.conf
               subPath: mongod.conf
@@ -78,12 +76,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: mongodb-pvc
-        - name: init-scripts
-          configMap:
-            name: mongodb-init
-            items:
-              - key: 01-init-users.js
-                path: 01-init-users.js
         - name: mongo-config
           configMap:
             name: mongodb-init

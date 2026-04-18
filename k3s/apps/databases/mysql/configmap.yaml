@@ -4,38 +4,6 @@ metadata:
   name: mysql-init
   namespace: databases
 data:
-  01-create-databases.sql: |
-    -- Create per-service databases
-    CREATE DATABASE IF NOT EXISTS n8n
-      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    CREATE DATABASE IF NOT EXISTS nextcloud
-      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    CREATE DATABASE IF NOT EXISTS gitea
-      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    CREATE DATABASE IF NOT EXISTS homarr
-      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    CREATE DATABASE IF NOT EXISTS homeassistant
-      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-  02-create-users.sql: |
-    -- Each user can ONLY access their own database
-    CREATE USER IF NOT EXISTS 'n8n'@'%' IDENTIFIED BY 'n8nMySQL2024!';
-    GRANT ALL PRIVILEGES ON n8n.* TO 'n8n'@'%';
-
-    CREATE USER IF NOT EXISTS 'nextcloud'@'%' IDENTIFIED BY 'nextcloudMySQL2024!';
-    GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextcloud'@'%';
-
-    CREATE USER IF NOT EXISTS 'gitea'@'%' IDENTIFIED BY 'giteaMySQL2024!';
-    GRANT ALL PRIVILEGES ON gitea.* TO 'gitea'@'%';
-
-    CREATE USER IF NOT EXISTS 'homarr'@'%' IDENTIFIED BY 'homarrMySQL2024!';
-    GRANT ALL PRIVILEGES ON homarr.* TO 'homarr'@'%';
-
-    CREATE USER IF NOT EXISTS 'homeassistant'@'%' IDENTIFIED BY 'haMySQL2024!';
-    GRANT ALL PRIVILEGES ON homeassistant.* TO 'homeassistant'@'%';
-
-    FLUSH PRIVILEGES;
-
   03-mysql-tuning.cnf: |
     [mysqld]
     # Memory tuning for Raspberry Pi 5

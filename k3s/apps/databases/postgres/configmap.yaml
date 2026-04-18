@@ -5,28 +5,9 @@ metadata:
   namespace: databases
 data:
   01-init.sql: |
-    -- Per-service roles and databases
-    -- Each role can ONLY connect to their own database
-
-    CREATE ROLE n8n WITH LOGIN PASSWORD 'n8nPostgres2024!';
-    CREATE DATABASE n8n OWNER n8n;
-    GRANT ALL PRIVILEGES ON DATABASE n8n TO n8n;
-
-    CREATE ROLE homarr WITH LOGIN PASSWORD 'homarrPostgres2024!';
-    CREATE DATABASE homarr OWNER homarr;
-    GRANT ALL PRIVILEGES ON DATABASE homarr TO homarr;
-
-    CREATE ROLE gitea WITH LOGIN PASSWORD 'giteaPostgres2024!';
-    CREATE DATABASE gitea OWNER gitea;
-    GRANT ALL PRIVILEGES ON DATABASE gitea TO gitea;
-
-    CREATE ROLE nextcloud WITH LOGIN PASSWORD 'nextcloudPostgres2024!';
-    CREATE DATABASE nextcloud OWNER nextcloud;
-    GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextcloud;
-
-    CREATE ROLE homeassistant WITH LOGIN PASSWORD 'haPostgres2024!';
-    CREATE DATABASE homeassistant OWNER homeassistant;
-    GRANT ALL PRIVILEGES ON DATABASE homeassistant TO homeassistant;
+    -- Lock down default public privileges
+    -- New users cannot connect to other users' databases
+    REVOKE CONNECT ON DATABASE template1 FROM PUBLIC;
 
   postgresql.conf: |
     # Memory tuning for Raspberry Pi 5
