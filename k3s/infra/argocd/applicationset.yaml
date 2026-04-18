@@ -77,6 +77,10 @@ spec:
             namespace: dashboard-network
             category: dashboard-network
             path: k3s/apps/bitcomet
+          - name: homepage
+            namespace: dashboard-network
+            category: dashboard-network
+            path: k3s/apps/homepage
 
   template:
     metadata:
