@@ -1,0 +1,359 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+  namespace: dashboard-network
+  labels:
+    app: homepage
+data:
+  # ─── Settings ────────────────────────────────────────────────────────────────
+  settings.yaml: |
+    ---
+    title: Home Server Lab
+    favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homepage.png
+
+    theme: dark
+    color: slate
+    headerStyle: clean
+
+    fullWidth: true
+    maxGroupColumns: 6
+    useEqualHeights: true
+    showStats: true
+    statusStyle: dot
+
+    layout:
+      Kubernetes:
+        style: row
+        columns: 4
+        icon: mdi-kubernetes
+      Monitoring:
+        style: row
+        columns: 4
+        icon: mdi-chart-box
+      Infrastructure:
+        style: row
+        columns: 4
+        icon: mdi-server-network
+      Media & Downloads:
+        style: row
+        columns: 4
+        icon: mdi-multimedia
+      Files & Storage:
+        style: row
+        columns: 4
+        icon: mdi-cloud
+      Databases:
+        style: row
+        columns: 3
+        icon: mdi-database
+
+    providers:
+      finnhub: "{{HOMEPAGE_VAR_FINNHUB_KEY}}"
+
+  # ─── Top-bar Widgets ────────────────────────────────────────────────────────
+  widgets.yaml: |
+    ---
+    - logo:
+        icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homepage.png
+
+    - greeting:
+        text_size: xl
+        text: Home Server Lab
+
+    - datetime:
+        text_size: l
+        format:
+          dateStyle: long
+          timeStyle: short
+          hour12: true
+
+    - search:
+        provider: google
+        target: _blank
+
+    - openmeteo:
+        label: Delhi
+        latitude: 28.6139
+        longitude: 77.209
+        timezone: Asia/Kolkata
+        units: metric
+        cache: 15
+
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: k3s-cluster
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+
+    - resources:
+        cpu: true
+        memory: true
+        disk: /
+        cputemp: true
+        uptime: true
+        refresh: 3000
+
+    - stocks:
+        provider: finnhub
+        color: true
+        cache: 1
+        watchlist:
+          - NVDA
+          - GOOGL
+          - AAPL
+          - NFLX
+          - META
+          - AMZN
+          - TM
+          - TSLA
+
+    - stocks:
+        provider: finnhub
+        color: true
+        cache: 1
+        watchlist:
+          - TTWO
+          - EA
+
+  # ─── Service Tiles ─────────────────────────────────────────────────────────
+  services.yaml: |
+    ---
+    - Kubernetes:
+        - Cluster Status:
+            icon: mdi-kubernetes
+            description: Nodes, pods & workloads
+            widget:
+              type: kubernetes
+              cluster:
+                show: true
+                cpu: true
+                memory: true
+                showLabel: true
+                label: k3s-cluster
+              nodes:
+                show: true
+                cpu: true
+                memory: true
+                showLabel: true
+        - Calendar:
+            icon: mdi-calendar-month
+            widget:
+              type: calendar
+              firstDayInWeek: sunday
+              view: monthly
+              maxEvents: 10
+              showTime: true
+              timezone: Asia/Kolkata
+        - Traefik:
+            icon: traefik
+            href: https://traefik.home.ijlalahmad.dev
+            description: Ingress & reverse proxy
+            namespace: traefik
+            app: traefik
+        - ArgoCD:
+            icon: argocd
+            href: https://argocd.home.ijlalahmad.dev
+            description: GitOps continuous delivery
+            namespace: argocd
+            app: argocd-server
+
+    - Monitoring:
+        - Portainer:
+            icon: portainer
+            href: https://portainer.home.ijlalahmad.dev
+            description: Container management
+            namespace: monitoring
+            app: portainer
+            widget:
+              type: portainer
+              url: http://portainer.monitoring.svc.cluster.local:8500
+              env: 1
+              key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
+        - Dashdot:
+            icon: dashdot
+            href: https://dashdot.home.ijlalahmad.dev
+            description: Server hardware monitor
+            namespace: monitoring
+            app: dashdot
+        - Pi-hole:
+            icon: pi-hole
+            href: https://pihole.home.ijlalahmad.dev
+            description: DNS ad blocker
+            namespace: dashboard-network
+            app: pihole
+        - Homepage:
+            icon: homepage
+            href: https://homepage.home.ijlalahmad.dev
+            description: This dashboard
+            namespace: dashboard-network
+            app: homepage
+
+    - Infrastructure:
+        - Home Assistant:
+            icon: home-assistant
+            href: https://ha.home.ijlalahmad.dev
+            description: Smart home automation
+            namespace: automation
+            app: home-assistant
+        - Twingate:
+            icon: twingate
+            href: https://www.twingate.com
+            description: Zero-trust VPN
+            namespace: dashboard-network
+            app: twingate
+        - Cert Manager:
+            icon: mdi-certificate
+            description: Let's Encrypt TLS certs
+            namespace: cert-manager
+            app: cert-manager
+        - Homarr:
+            icon: homarr
+            href: https://homarr.home.ijlalahmad.dev
+            description: Alternative dashboard
+            namespace: dashboard-network
+            app: homarr
+
+    - Media & Downloads:
+        - Jellyfin:
+            icon: jellyfin
+            href: https://jellyfin.home.ijlalahmad.dev
+            description: Media streaming server
+            namespace: media
+            app: jellyfin
+            widget:
+              type: jellyfin
+              url: http://jellyfin.media.svc.cluster.local:8200
+              key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
+              enableBlocks: true
+              enableNowPlaying: true
+        - Aria2:
+            icon: aria2
+            href: https://aria2.home.ijlalahmad.dev
+            description: Multi-protocol downloader
+            namespace: downloads
+            app: aria2
+        - BitComet:
+            icon: mdi-star-shooting
+            href: https://bitcomet.home.ijlalahmad.dev/panel/
+            description: BitTorrent client
+            namespace: dashboard-network
+            app: bitcomet
+        - n8n:
+            icon: n8n
+            href: https://n8n.home.ijlalahmad.dev
+            description: Workflow automation
+            namespace: automation
+            app: n8n
+
+    - Files & Storage:
+        - File Browser:
+            icon: filebrowser
+            href: https://files.home.ijlalahmad.dev
+            description: Web file manager
+            namespace: file-management
+            app: filebrowser
+        - Samba:
+            icon: mdi-folder-network
+            description: Network file sharing (SMB)
+            namespace: file-management
+            app: samba
+
+    - Databases:
+        - MongoDB:
+            icon: mongodb
+            description: Document database
+            namespace: databases
+            app: mongodb
+            widget:
+              type: customapi
+              url: http://mongodb.databases.svc.cluster.local:27017
+              refreshInterval: 30000
+              mappings:
+                - field: ok
+                  label: Status
+                  format: text
+        - PostgreSQL:
+            icon: postgres
+            description: Relational database
+            namespace: databases
+            app: postgres
+        - Redis:
+            icon: redis
+            description: In-memory cache & store
+            namespace: databases
+            app: redis
+
+  # ─── Bookmarks ─────────────────────────────────────────────────────────────
+  bookmarks.yaml: |
+    ---
+    - Developer:
+        - GitHub:
+            - abbr: GH
+              icon: github
+              href: https://github.com/
+        - Stack Overflow:
+            - abbr: SO
+              icon: stackoverflow
+              href: https://stackoverflow.com/
+        - Docker Hub:
+            - abbr: DH
+              icon: docker
+              href: https://hub.docker.com/
+
+    - Social:
+        - Reddit:
+            - abbr: RE
+              icon: reddit
+              href: https://reddit.com/r/selfhosted
+        - Twitter / X:
+            - abbr: X
+              icon: x
+              href: https://x.com/
+
+    - Homelab:
+        - Awesome Selfhosted:
+            - abbr: AS
+              icon: mdi-star
+              href: https://awesome-selfhosted.net/
+        - Selfhosted Wiki:
+            - abbr: SH
+              icon: mdi-book-open-variant
+              href: https://wiki.selfhosted.show/
+        - Homepage Docs:
+            - abbr: HP
+              icon: homepage
+              href: https://gethomepage.dev/
+
+  # ─── Kubernetes Discovery ──────────────────────────────────────────────────
+  kubernetes.yaml: |
+    ---
+    mode: cluster
+
+  # ─── Custom CSS ─────────────────────────────────────────────────────────────
+  custom.css: |
+    /* Ultrawide (21:9) full-width support */
+    #page_container {
+      max-width: 100% !important;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+    #information-widgets {
+      max-width: 100% !important;
+    }
+    @media (min-width: 2560px) {
+      #page_container {
+        padding-left: 2rem;
+        padding-right: 2rem;
+      }
+    }
+
+  custom.js: ""
+  docker.yaml: ""
