@@ -283,7 +283,12 @@ gen_argocd_application() {
   fi
 
   # Insert the entry (with a blank line before for readability)
-  sed -i "${insert_line}i\\\n${entry}" "$appset_file"
+  {
+    head -n "$(( insert_line - 1 ))" "$appset_file"
+    echo ""
+    echo "$entry"
+    tail -n +"$insert_line" "$appset_file"
+  } > "${appset_file}.tmp" && mv "${appset_file}.tmp" "$appset_file"
   ok "Added ${APP} to infra/argocd/applicationset.yaml"
 }
 
@@ -385,7 +390,7 @@ if ask_yn "Does this app need persistent storage?" "y"; then
   echo "    1) pendrive  — /home/pi/pendrive/k3s-data  (exFAT, 234GB)"
   echo "    2) ext4      — /home/pi/db-data            (ext4, for databases only)"
   prompt "Pick [1/2]: "
-  local choice; IFS= read -r choice
+  choice=""; IFS= read -r choice
   case "$choice" in
     2) STORAGE_PATH="/home/pi/db-data" ;;
     *) STORAGE_PATH="/home/pi/pendrive/k3s-data" ;;
