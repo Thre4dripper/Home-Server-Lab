@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: bitcomet
-  namespace: dashboard-network
+  namespace: downloads
 spec:
   type: LoadBalancer
   selector:
