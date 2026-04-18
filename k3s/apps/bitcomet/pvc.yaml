@@ -14,13 +14,13 @@ spec:
     type: DirectoryOrCreate
   claimRef:
     name: bitcomet-config
-    namespace: dashboard-network
+    namespace: downloads
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: bitcomet-config
-  namespace: dashboard-network
+  namespace: downloads
 spec:
   accessModes:
     - ReadWriteOnce
@@ -48,13 +48,13 @@ spec:
     type: DirectoryOrCreate
   claimRef:
     name: bitcomet-downloads
-    namespace: dashboard-network
+    namespace: downloads
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: bitcomet-downloads
-  namespace: dashboard-network
+  namespace: downloads
 spec:
   accessModes:
     - ReadWriteOnce

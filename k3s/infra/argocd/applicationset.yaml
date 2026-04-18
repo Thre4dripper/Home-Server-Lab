@@ -77,9 +77,14 @@ spec:
             category: databases
             path: k3s/apps/databases/redis
 
+          # ── Downloads ──────────────────────────────────────
+          - name: aria2
+            namespace: downloads
+            category: downloads
+            path: k3s/apps/aria2
           - name: bitcomet
-            namespace: dashboard-network
-            category: dashboard-network
+            namespace: downloads
+            category: downloads
             path: k3s/apps/bitcomet
 
   template:
