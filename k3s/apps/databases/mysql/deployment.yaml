@@ -35,8 +35,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/mysql
-            - name: init-scripts
-              mountPath: /docker-entrypoint-initdb.d
             - name: tuning-config
               mountPath: /etc/mysql/conf.d/tuning.cnf
               subPath: 03-mysql-tuning.cnf
@@ -73,14 +71,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: mysql-pvc
-        - name: init-scripts
-          configMap:
-            name: mysql-init
-            items:
-              - key: 01-create-databases.sql
-                path: 01-create-databases.sql
-              - key: 02-create-users.sql
-                path: 02-create-users.sql
         - name: tuning-config
           configMap:
             name: mysql-init

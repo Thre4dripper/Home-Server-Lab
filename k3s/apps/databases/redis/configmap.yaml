@@ -13,15 +13,8 @@ data:
     appendonly yes
     appendfsync everysec
 
-    # Enable 16 logical databases (SELECT 0 through SELECT 15)
-    # Convention:
-    #   0  = default / shared
-    #   1  = n8n
-    #   2  = homarr
-    #   3  = homeassistant
-    #   4  = nextcloud
-    #   5-9  = dev projects
-    #   10-15 = staging / testing
+    # 16 logical databases available (SELECT 0 through SELECT 15)
+    # Create users via ACL to isolate access per application
     databases 16
 
     # ACL — per-service users with full access to all databases
@@ -41,7 +34,3 @@ data:
   users.acl: |
     user default on nopass ~* resetchannels +ping +info
     user admin on >adminRedis2024! ~* &* +@all
-    user n8n on >n8nRedis2024! ~* &* +@all
-    user nextcloud on >nextcloudRedis2024! ~* &* +@all
-    user homarr on >homarrRedis2024! ~* &* +@all
-    user homeassistant on >haRedis2024! ~* &* +@all
