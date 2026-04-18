@@ -75,6 +75,7 @@ spec:
 
           - name: bitcomet
             namespace: dashboard-network
+            category: dashboard-network
             path: k3s/apps/bitcomet
 
   template:

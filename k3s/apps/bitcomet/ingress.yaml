@@ -5,10 +5,12 @@ metadata:
   namespace: dashboard-network
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
     - match: Host(`bitcomet.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: bitcomet
           port: 8700
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls
