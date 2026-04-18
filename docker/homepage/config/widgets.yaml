@@ -1,0 +1,56 @@
+---
+- logo:
+    icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homepage.png
+
+- greeting:
+    text_size: xl
+    text: Home Server Lab
+
+- datetime:
+    text_size: l
+    format:
+      dateStyle: long
+      timeStyle: short
+      hour12: true
+
+- search:
+    provider: google
+    target: _blank
+
+- openmeteo:
+    label: Delhi
+    latitude: 28.6139
+    longitude: 77.209
+    timezone: Asia/Kolkata
+    units: metric
+    cache: 15
+
+- resources:
+    cpu: true
+    memory: true
+    disk: /
+    cputemp: true
+    uptime: true
+    refresh: 3000
+
+- stocks:
+    provider: finnhub
+    color: true
+    cache: 1
+    watchlist:
+      - NVDA
+      - GOOGL
+      - AAPL
+      - NFLX
+      - META
+      - AMZN
+      - TM
+      - TSLA
+
+- stocks:
+    provider: finnhub
+    color: true
+    cache: 1
+    watchlist:
+      - TTWO
+      - EA

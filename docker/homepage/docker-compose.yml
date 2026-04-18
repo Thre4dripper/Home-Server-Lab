@@ -1,0 +1,22 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:${HOMEPAGE_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-homepage}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    ports:
+      - "${HOMEPAGE_PORT:-3000}:3000"
+    volumes:
+      - ./config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      TZ: ${TIMEZONE:-Asia/Kolkata}
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:-*}
+      LOG_TARGETS: stdout
+      # Widget API keys (referenced in services.yaml as {{HOMEPAGE_VAR_*}})
+      HOMEPAGE_VAR_PORTAINER_KEY: ${HOMEPAGE_VAR_PORTAINER_KEY:-}
+      HOMEPAGE_VAR_PIHOLE_KEY: ${HOMEPAGE_VAR_PIHOLE_KEY:-}
+      HOMEPAGE_VAR_JELLYFIN_KEY: ${HOMEPAGE_VAR_JELLYFIN_KEY:-}
+      HOMEPAGE_VAR_PLEX_KEY: ${HOMEPAGE_VAR_PLEX_KEY:-}
+      HOMEPAGE_VAR_QBIT_USER: ${HOMEPAGE_VAR_QBIT_USER:-admin}
+      HOMEPAGE_VAR_QBIT_PASS: ${HOMEPAGE_VAR_QBIT_PASS:-adminadmin}
+      HOMEPAGE_VAR_DELUGE_PASS: ${HOMEPAGE_VAR_DELUGE_PASS:-deluge}

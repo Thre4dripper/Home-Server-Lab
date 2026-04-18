@@ -1,0 +1,19 @@
+/* Ultrawide (21:9) full-width support */
+#page_container {
+  max-width: 100% !important;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* Ensure widgets bar stretches full width */
+#information-widgets {
+  max-width: 100% !important;
+}
+
+/* Give service cards more breathing room on ultrawide */
+@media (min-width: 2560px) {
+  #page_container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
