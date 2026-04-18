@@ -19,6 +19,18 @@ spec:
     spec:
       serviceAccountName: homepage
       automountServiceAccountToken: true
+      initContainers:
+        - name: copy-config
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - cp /config-source/* /app/config/
+          volumeMounts:
+            - name: config-source
+              mountPath: /config-source
+            - name: config
+              mountPath: /app/config
       containers:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:latest
@@ -77,6 +89,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
       volumes:
-        - name: config
+        - name: config-source
           configMap:
             name: homepage-config
+        - name: config
+          emptyDir: {}
