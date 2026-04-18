@@ -139,6 +139,12 @@
         description: Multi-protocol download manager
         server: local
         container: aria2-ui
+    - BitComet:
+        icon: mdi-star-shooting
+        href: http://192.168.0.108:6080
+        description: BitTorrent client with web UI
+        server: local
+        container: bitcomet
 
 - Cloud & Files:
     - Nextcloud:
