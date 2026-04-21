@@ -1,19 +1,130 @@
-/* Ultrawide (21:9) full-width support */
+/* ═══════════════════════════════════════════════════
+       HOME SERVER LAB — Glassmorphism Dark Theme
+       4-column layout for ultrawide
+       ═══════════════════════════════════════════════════ */
+
+/* ─── Full-Width Layout ─── */
 #page_container {
   max-width: 100% !important;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+  padding: 0.75rem 1.5rem !important;
 }
-
-/* Ensure widgets bar stretches full width */
 #information-widgets {
   max-width: 100% !important;
 }
 
-/* Give service cards more breathing room on ultrawide */
+/* ─── Status Bar (Top Widget Strip) ─── */
+#information-widgets {
+  border-bottom: 1px solid rgba(71, 85, 105, 0.3) !important;
+  padding: 0.4rem 1rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* ─── Group Headers — Minimal Labels ─── */
+section h2 {
+  font-size: 0.7rem !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  opacity: 0.85;
+}
+
+/* ─── Service Cards — Glass Panels ─── */
+li article {
+  border: 1px solid rgba(71, 85, 105, 0.12) !important;
+  transition: all 0.2s ease !important;
+}
+li article:hover {
+  border-color: rgba(100, 116, 139, 0.4) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-1px);
+}
+
+/* ─── Bookmarks — Subtle Footer ─── */
+#bookmarks {
+  border-top: 1px solid rgba(71, 85, 105, 0.2) !important;
+  margin-top: 0.75rem !important;
+  padding-top: 0.75rem !important;
+}
+
+/* ─── Thin Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+/* ─── Ultrawide Breakpoints ─── */
 @media (min-width: 2560px) {
   #page_container {
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding: 0.75rem 3rem !important;
   }
+}
+@media (min-width: 3440px) {
+  #page_container {
+    padding: 1rem 5rem !important;
+  }
+}
+
+/* ─── TradingView Chart Iframes ─── */
+iframe {
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+}
+
+/* ─── Uneven Column Widths (5 columns for ultrawide) ─── */
+@media (min-width: 1280px) {
+  #layout-groups > .services-group:nth-child(1) {
+    flex: 0 0 22% !important;
+    max-width: 22% !important;
+  }
+  #layout-groups > .services-group:nth-child(2) {
+    flex: 0 0 20% !important;
+    max-width: 20% !important;
+  }
+  #layout-groups > .services-group:nth-child(3) {
+    flex: 0 0 20% !important;
+    max-width: 20% !important;
+  }
+  #layout-groups > .services-group:nth-child(4) {
+    flex: 0 0 20% !important;
+    max-width: 20% !important;
+  }
+  #layout-groups > .services-group:nth-child(5) {
+    flex: 0 0 18% !important;
+    max-width: 18% !important;
+  }
+}
+
+/* ─── Markets Column: Compact stock cards, chart-only ─── */
+#layout-groups > .services-group:nth-child(1) .service-card {
+  margin-bottom: 2px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+#layout-groups > .services-group:nth-child(1) .service-title {
+  display: none !important;
+}
+#layout-groups > .services-group:nth-child(1) .service-block {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+#layout-groups > .services-group:nth-child(1) iframe {
+  border-radius: 4px !important;
+}
+
+/* ─── Calendar: fill its (now narrow) column ─── */
+#layout-groups > .services-group:nth-child(4) ul > li:first-child article {
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
