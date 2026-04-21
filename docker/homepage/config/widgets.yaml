@@ -10,19 +10,6 @@
     provider: google
     target: _blank
 
-- kubernetes:
-    cluster:
-        show: true
-        cpu: true
-        memory: true
-        showLabel: true
-        label: "k3s"
-    nodes:
-        show: true
-        cpu: true
-        memory: true
-        showLabel: true
-
 - resources:
     cpu: true
     memory: true

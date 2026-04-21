@@ -1,3 +1,2 @@
 ---
-mode: default
-ingress: false
+# sample kubernetes config
