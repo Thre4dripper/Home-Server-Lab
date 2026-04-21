@@ -10,6 +10,6 @@ spec:
   selector:
     app: homepage
   ports:
-    - port: 8600
+    - port: 8800
       targetPort: 3000
       protocol: TCP

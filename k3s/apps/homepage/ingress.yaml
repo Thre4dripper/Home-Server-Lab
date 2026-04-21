@@ -23,4 +23,4 @@ spec:
               service:
                 name: homepage
                 port:
-                  number: 8600
+                  number: 8800
