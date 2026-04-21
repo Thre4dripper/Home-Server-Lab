@@ -3,41 +3,46 @@ title: Home Server Lab
 favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homepage.png
 
 theme: dark
-color: slate
+color: sky
+headerStyle: boxed
+iconStyle: theme
 
-headerStyle: clean
+background:
+  image: https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=3440&q=80
+  blur: sm
+  saturate: 50
+  brightness: 50
+  opacity: 50
+cardBlur: sm
 
-# Full-width layout for ultrawide (21:9) monitors
 fullWidth: true
-maxGroupColumns: 8
+maxGroupColumns: 5
 useEqualHeights: true
 showStats: true
-statusStyle: dot
+statusStyle: basic
+disableCollapse: true
+hideVersion: true
 
 layout:
-  Monitoring & Calendar:
+  Markets:
+    icon: mdi-chart-line
     style: row
-    columns: 3
-    icon: mdi-chart-box
-    useEqualHeights: true
+    columns: 2
+  Services:
+    icon: mdi-server
   Infrastructure:
-    style: row
-    columns: 5
-    icon: mdi-server-network
-  Media & Downloads:
-    style: row
-    columns: 5
-    icon: mdi-multimedia
-  Cloud & Files:
-    style: row
-    columns: 5
-    icon: mdi-cloud
-  Development & Tools:
-    style: row
-    columns: 4
-    icon: mdi-code-braces
+    icon: mdi-kubernetes
+  System & Info:
+    icon: mdi-monitor-dashboard
+  Links:
+    icon: mdi-link-variant
+
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: false
+  showSearchSuggestions: true
+  provider: google
 
 providers:
-  openweathermap: openweathermapapikey
-  weatherapi: weatherapiapikey
-  finnhub: yourfinnhubapikeyhere
+  openweathermap: {{HOMEPAGE_VAR_OPENWEATHER_KEY}}
+  finnhub: {{HOMEPAGE_VAR_FINNHUB_KEY}}
