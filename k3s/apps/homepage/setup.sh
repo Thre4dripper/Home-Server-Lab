@@ -5,7 +5,7 @@ set -euo pipefail
 APP="homepage"
 NAMESPACE="dashboard-network"
 CONTAINER_PORT="3000"
-EXTERNAL_PORT="8600"
+EXTERNAL_PORT="8800"
 DOMAIN="homepage.home.ijlalahmad.dev"
 DEFAULT_SHELL="sh"
 
