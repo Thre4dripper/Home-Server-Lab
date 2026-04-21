@@ -7,12 +7,18 @@ services:
       - "${HOMEPAGE_PORT:-3000}:3000"
     volumes:
       - ./config:/app/config
+      - ./widgets:/app/public/widgets:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /home/pi/kubeconfig-homepage.yaml:/app/config/kubeconfig:ro
+      - /home/pi/pendrive:/pendrive:ro
     environment:
+      KUBECONFIG: /app/config/kubeconfig
       TZ: ${TIMEZONE:-Asia/Kolkata}
       HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:-*}
       LOG_TARGETS: stdout
       # Widget API keys (referenced in services.yaml as {{HOMEPAGE_VAR_*}})
+      HOMEPAGE_VAR_FINNHUB_KEY: ${HOMEPAGE_VAR_FINNHUB_KEY:-}
+      HOMEPAGE_VAR_OPENWEATHER_KEY: ${HOMEPAGE_VAR_OPENWEATHER_KEY:-}
       HOMEPAGE_VAR_PORTAINER_KEY: ${HOMEPAGE_VAR_PORTAINER_KEY:-}
       HOMEPAGE_VAR_PIHOLE_KEY: ${HOMEPAGE_VAR_PIHOLE_KEY:-}
       HOMEPAGE_VAR_JELLYFIN_KEY: ${HOMEPAGE_VAR_JELLYFIN_KEY:-}
@@ -20,3 +26,6 @@ services:
       HOMEPAGE_VAR_QBIT_USER: ${HOMEPAGE_VAR_QBIT_USER:-admin}
       HOMEPAGE_VAR_QBIT_PASS: ${HOMEPAGE_VAR_QBIT_PASS:-adminadmin}
       HOMEPAGE_VAR_DELUGE_PASS: ${HOMEPAGE_VAR_DELUGE_PASS:-deluge}
+      HOMEPAGE_VAR_ARGOCD_KEY: ${HOMEPAGE_VAR_ARGOCD_KEY:-}
+      HOMEPAGE_VAR_BITCOMET_TOKEN: ${HOMEPAGE_VAR_BITCOMET_TOKEN:-}
+      HOMEPAGE_VAR_CALENDAR_ICAL: ${HOMEPAGE_VAR_CALENDAR_ICAL:-}
