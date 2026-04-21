@@ -1,21 +1,37 @@
 ---
-- logo:
-    icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homepage.png
-
-- greeting:
-    text_size: xl
-    text: Home Server Lab
-
 - datetime:
     text_size: l
     format:
-      dateStyle: long
-      timeStyle: short
-      hour12: true
+        dateStyle: long
+        timeStyle: short
+        hour12: true
 
 - search:
     provider: google
     target: _blank
+
+- kubernetes:
+    cluster:
+        show: true
+        cpu: true
+        memory: true
+        showLabel: true
+        label: "k3s"
+    nodes:
+        show: true
+        cpu: true
+        memory: true
+        showLabel: true
+
+- resources:
+    cpu: true
+    memory: true
+    disk:
+      - /
+      - /pendrive
+    cputemp: true
+    uptime: true
+    refresh: 3000
 
 - openmeteo:
     label: Delhi
@@ -24,33 +40,3 @@
     timezone: Asia/Kolkata
     units: metric
     cache: 15
-
-- resources:
-    cpu: true
-    memory: true
-    disk: /
-    cputemp: true
-    uptime: true
-    refresh: 3000
-
-- stocks:
-    provider: finnhub
-    color: true
-    cache: 1
-    watchlist:
-      - NVDA
-      - GOOGL
-      - AAPL
-      - NFLX
-      - META
-      - AMZN
-      - TM
-      - TSLA
-
-- stocks:
-    provider: finnhub
-    color: true
-    cache: 1
-    watchlist:
-      - TTWO
-      - EA
