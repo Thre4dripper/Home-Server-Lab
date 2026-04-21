@@ -16,6 +16,9 @@ spec:
     metadata:
       labels:
         app: homepage
+      annotations:
+        # Force pod restart when configmaps/secrets change (manual: bump these)
+        config/checksum: "v1"
     spec:
       serviceAccountName: homepage
       automountServiceAccountToken: true
@@ -48,6 +51,11 @@ spec:
                 secretKeyRef:
                   name: homepage-secret
                   key: HOMEPAGE_VAR_FINNHUB_KEY
+            - name: HOMEPAGE_VAR_OPENWEATHER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secret
+                  key: HOMEPAGE_VAR_OPENWEATHER_KEY
             - name: HOMEPAGE_VAR_PORTAINER_KEY
               valueFrom:
                 secretKeyRef:
@@ -58,9 +66,32 @@ spec:
                 secretKeyRef:
                   name: homepage-secret
                   key: HOMEPAGE_VAR_JELLYFIN_KEY
+            - name: HOMEPAGE_VAR_ARGOCD_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secret
+                  key: HOMEPAGE_VAR_ARGOCD_KEY
+            - name: HOMEPAGE_VAR_BITCOMET_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secret
+                  key: HOMEPAGE_VAR_BITCOMET_TOKEN
+            - name: HOMEPAGE_VAR_CALENDAR_ICAL
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secret
+                  key: HOMEPAGE_VAR_CALENDAR_ICAL
+            - name: HOMEPAGE_VAR_FILEBROWSER_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secret
+                  key: HOMEPAGE_VAR_FILEBROWSER_PASS
           volumeMounts:
             - name: config
               mountPath: /app/config
+            - name: widgets
+              mountPath: /app/public/widgets
+              readOnly: true
           resources:
             requests:
               memory: 128Mi
@@ -94,3 +125,6 @@ spec:
             name: homepage-config
         - name: config
           emptyDir: {}
+        - name: widgets
+          configMap:
+            name: homepage-widgets
