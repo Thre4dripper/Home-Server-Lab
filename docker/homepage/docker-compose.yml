@@ -9,10 +9,8 @@ services:
       - ./config:/app/config
       - ./widgets:/app/public/widgets:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /home/pi/kubeconfig-homepage.yaml:/app/config/kubeconfig:ro
       - /home/pi/pendrive:/pendrive:ro
     environment:
-      KUBECONFIG: /app/config/kubeconfig
       TZ: ${TIMEZONE:-Asia/Kolkata}
       HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:-*}
       LOG_TARGETS: stdout

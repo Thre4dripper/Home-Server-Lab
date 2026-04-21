@@ -71,70 +71,38 @@
         href: https://portainer.home.ijlalahmad.dev
         siteMonitor: https://portainer.home.ijlalahmad.dev
         description: Container management
-        namespace: monitoring
-        app: portainer
-        podSelector: "app=portainer"
-        showStats: true
     - Jellyfin:
         icon: jellyfin
         href: https://jellyfin.home.ijlalahmad.dev
         siteMonitor: https://jellyfin.home.ijlalahmad.dev
         description: Media streaming
-        namespace: media
-        app: jellyfin
-        podSelector: "app=jellyfin"
-        showStats: true
     - Dashdot:
         icon: dashdot
         href: https://dashdot.home.ijlalahmad.dev
         siteMonitor: https://dashdot.home.ijlalahmad.dev
         description: Hardware monitor
-        namespace: monitoring
-        app: dashdot
-        podSelector: "app=dashdot"
-        showStats: true
     - Home Assistant:
         icon: home-assistant
         href: https://ha.home.ijlalahmad.dev
         siteMonitor: https://ha.home.ijlalahmad.dev
         description: Smart home hub
-        namespace: automation
-        app: home-assistant
-        podSelector: "app=home-assistant"
-        showStats: true
     - BitComet:
         icon: mdi-star-shooting
         href: https://bitcomet.home.ijlalahmad.dev/webui/
         siteMonitor: https://bitcomet.home.ijlalahmad.dev
         description: BitTorrent client
-        namespace: downloads
-        app: bitcomet
-        podSelector: "app=bitcomet"
-        showStats: true
     - File Browser:
         icon: filebrowser
         href: https://files.home.ijlalahmad.dev
         siteMonitor: https://files.home.ijlalahmad.dev
         description: Web file manager
-        namespace: file-management
-        app: filebrowser
-        podSelector: "app=filebrowser"
-        showStats: true
     - Samba:
         icon: mdi-folder-network
         description: Network shares (SMB)
-        namespace: file-management
-        app: samba
-        podSelector: "app=samba"
-        showStats: true
     - Twingate:
         icon: twingate
         href: https://www.twingate.com
         description: Zero-trust VPN
-        namespace: dashboard-network
-        app: twingate
-        podSelector: "app=twingate"
-        showStats: true
 
 - Infrastructure:
     - ArgoCD:
@@ -142,9 +110,6 @@
         href: https://argocd.home.ijlalahmad.dev
         siteMonitor: https://argocd.home.ijlalahmad.dev
         description: GitOps delivery
-        namespace: argocd
-        app: argocd-server
-        showStats: true
         widget:
             type: argocd
             url: https://argocd.home.ijlalahmad.dev
@@ -155,40 +120,22 @@
         href: https://traefik.home.ijlalahmad.dev
         siteMonitor: https://traefik.home.ijlalahmad.dev
         description: Ingress proxy
-        namespace: traefik
-        app: traefik
-        showStats: true
         widget:
             type: traefik
             url: https://traefik.home.ijlalahmad.dev
     - Cert Manager:
         icon: mdi-certificate
         description: TLS automation
-        namespace: cert-manager
-        app: cert-manager
-        showStats: true
     - Databases:
         - MongoDB:
             icon: mongodb
             description: Document database
-            namespace: databases
-            app: mongodb
-            podSelector: "app=mongodb"
-            showStats: true
         - PostgreSQL:
             icon: postgres
             description: Relational database
-            namespace: databases
-            app: postgres
-            podSelector: "app=postgres"
-            showStats: true
         - Redis:
             icon: redis
             description: In-memory store
-            namespace: databases
-            app: redis
-            podSelector: "app=redis"
-            showStats: true
 
 - System & Info:
     - Calendar:
