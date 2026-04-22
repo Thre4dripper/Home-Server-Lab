@@ -67,53 +67,114 @@ Every choice is benchmarked for an **8 GB Raspberry Pi 5**. Everything is reprod
 
 ## 🏗️ Architecture at a glance
 
+The big picture: **two deployment paths** (manual `compose up` / GitOps), **two ingress paths** (LAN via Pi-hole DNS / WAN via Twingate or Cloudflare), and **one Pi** running everything. No port-forwarding, no SaaS in the critical path.
+
+<!-- AUTOGEN:GLOBAL_DIAGRAM -->
 ```mermaid
-graph LR
-    Internet[🌐 Internet]
-    Twingate[🛡️ Twingate Edge]
-    Router[🏠 Home Router]
-    Pi[🍓 Raspberry Pi 5]
+graph TB
+    %% ─── HEADERS (rendered as banner nodes) ─────────────────────────────
+    H1>"<b>① WHO USES IT</b>"]
+    H2>"<b>② INTERNET SERVICES</b>"]
+    H3>"<b>③ HOME EDGE</b>     ·     no inbound port-forward, ever"]
+    H4>"<b>④ THE PI</b>     ·     two stacks, one box"]
+    H5>"<b>⑤ SELF-HOSTED WORKLOADS</b>"]
 
-    subgraph Stacks["🧪 Two Parallel Stacks"]
-        direction TB
-        Docker[🐳 Docker<br/>compose]
-        K3s[☸️ k3s<br/>cluster]
-        ArgoCD[🚀 ArgoCD<br/>GitOps]
-        K3s --> ArgoCD
-    end
+    %% ─── TIER 1 · users ─────────────────────────────────────────────────
+    Dev[👨‍💻 <b>Developer</b><br/>writes manifests<br/>+ compose files]
+    Remote[📱 <b>Remote user</b><br/>phone · laptop<br/>any network]
+    LAN[🏠 <b>LAN user</b><br/>desktop · TV · IoT<br/>same Wi-Fi]
 
-    subgraph Edge["🚪 Edge Services"]
-        direction TB
-        Pihole[🛡️ Pi-hole DNS]
-        Traefik[🛣️ Traefik Ingress]
-    end
+    %% ─── TIER 2 · internet services ─────────────────────────────────────
+    Repo[(🐙 <b>GitHub repo</b><br/>source of truth)]
+    Actions[⚙️ <b>GitHub Actions</b><br/>regenerate READMEs<br/>validate frontmatter]
+    CF[(☁️ <b>Cloudflare DNS</b><br/>your-domain.tld<br/>→ Twingate edge)]
+    TGEdge[🛡️ <b>Twingate Edge</b><br/>identity-aware proxy<br/>no open inbound port]
 
-    subgraph Workloads["📦 Self-hosted Workloads"]
-        direction TB
-        Dash[🏡 Dashboards<br/>Homepage · Homarr]
-        Media[🎬 Media<br/>Jellyfin · Plex]
-        Files[📁 Files<br/>FileBrowser · Samba · Nextcloud]
-        Auto[🤖 Automation<br/>HA · n8n]
-        DL[🧲 Downloads<br/>Aria2 · BitComet · qBittorrent]
-        Mon[📊 Monitoring<br/>Dashdot · Netdata · Portainer]
-        Dev[🛠️ Dev<br/>Gitea · GitLab · LocalStack]
-    end
+    %% ─── TIER 3 · home edge ─────────────────────────────────────────────
+    Router[🏠 <b>Home Router</b><br/>NAT · DHCP only]
+    TGConn[🛡️ <b>Twingate Connector</b><br/>outbound TCP/443 only<br/>punches no holes]
+    Pihole[🛡️ <b>Pi-hole</b><br/>LAN DNS · ad-block<br/>*.lan → 192.168.x.x]
 
-    Internet --> Twingate --> Pi
-    Internet --> Router --> Pi
-    Pi --> Docker
-    Pi --> K3s
-    Docker --> Edge
-    K3s --> Edge
-    Edge --> Workloads
+    %% ─── TIER 4 · the Pi ────────────────────────────────────────────────
+    Docker[🐳 <b>Docker stack</b><br/>27 services · prototyping<br/>docker compose + setup.sh<br/>NPM for TLS / reverse-proxy]
+    Argo[🚀 <b>ArgoCD</b><br/>GitOps controller<br/>pulls main every 3 min]
+    K3s[☸️ <b>k3s cluster</b><br/>15 apps · production<br/>Traefik IngressRoute<br/>cert-manager · SealedSecrets]
 
-    classDef core fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000
-    classDef stack fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
-    class Internet,Twingate,Router,Pi core
-    class Docker,K3s,ArgoCD stack
+
+    %% ─── TIER 5 · self-hosted workloads (auto-generated) ────────────────
+    W1[🎬 <b>Media</b><br/>Jellyfin · Plex]
+    W2[🏡 <b>Dashboards</b><br/>Dashy · Homarr · Homepage]
+    W3[🤖 <b>Automation</b><br/>Home Assistant · n8n]
+    W4[📁 <b>Files &amp; Sync</b><br/>FileBrowser · Nextcloud · ownCloud · Pydio · Rclone · +2 more]
+    W5[🧲 <b>Downloads</b><br/>Aria2 · BitComet · Deluge · qBittorrent]
+    W6[📊 <b>Monitoring</b><br/>Dashdot · Netdata · Portainer]
+    W7[🛠️ <b>Dev tooling</b><br/>Gitea · GitLab · LocalStack]
+    W8[🗄️ <b>Databases</b><br/>Databases]
+
+    %% ─── HEADER ANCHORS (invisible) ─────────────────────────────────────
+    H1 ~~~ Dev
+    H2 ~~~ Repo
+    H3 ~~~ Router
+    H4 ~~~ Docker
+    H5 ~~~ W1
+
+    %% ─── FLOWS · GitOps lane (purple, thick) ────────────────────────────
+    Dev      == "git push" ==> Repo
+    Repo     -- webhook --> Actions
+    Actions -. "auto-commit<br/>regenerated docs" .-> Repo
+    Repo     == "pull every 3 min" ==> Argo
+    Argo     == "kubectl apply" ==> K3s
+
+    %% ─── FLOWS · manual Docker deploy ───────────────────────────────────
+    Dev -. "ssh + ./setup.sh" .-> Docker
+
+    %% ─── FLOWS · remote access lane (orange) ────────────────────────────
+    Remote --> CF --> TGEdge
+    TGEdge -. "encrypted tunnel" .-> TGConn
+    TGConn --> Docker
+    TGConn --> K3s
+
+    %% ─── FLOWS · LAN access lane (green) ────────────────────────────────
+    LAN --> Router --> Pihole
+    Pihole --> Docker
+    Pihole --> K3s
+
+    %% ─── FLOWS · stacks → workloads ─────────────────────────────────────
+    Docker --> W1 & W2 & W3 & W4 & W5 & W6 & W7 & W8
+    K3s    --> W1 & W2 & W3 & W4 & W5 & W6 & W7 & W8
+
+    %% ─── STYLES ─────────────────────────────────────────────────────────
+    classDef header   fill:#263238,stroke:#263238,color:#ffffff,font-size:18px,font-weight:bold
+    classDef user     fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef internet fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    classDef edge     fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    classDef stack    fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
+    classDef gitops   fill:#f3e5f5,stroke:#6a1b9a,stroke-width:3px,color:#000
+    classDef workload fill:#fffde7,stroke:#f9a825,stroke-width:2px,color:#000
+
+    class H1,H2,H3,H4,H5 header
+    class Dev,Remote,LAN user
+    class Repo,Actions,CF,TGEdge internet
+    class Router,TGConn,Pihole edge
+    class Docker,K3s stack
+    class Argo gitops
+    class W1,W2,W3,W4,W5,W6,W7,W8 workload
 ```
 
-A single Pi sits behind a normal home router. **No port forwarding** is required — remote access flows through the Twingate connector, while the LAN gets DNS-level ad blocking and an internal `*.home.ijlalahmad.dev` domain served by Traefik (k3s) or Nginx Proxy Manager (Docker).
+**How to read this diagram:**
+
+| Path | Color | What flows |
+|------|-------|------------|
+| **🟣 GitOps** (purple, thick) | `Dev → GitHub → ArgoCD → k3s` | A `git push` reconciles into the cluster automatically — no SSH, no `kubectl` |
+| **🟠 Remote access** (orange) | `Remote → Cloudflare → Twingate edge ⇢ Twingate connector → stack` | Identity-aware, outbound-only, works behind CGNAT |
+| **🟢 LAN access** (green) | `LAN → Pi-hole → stack` | Pure-DNS routing — no router config, no certs needed for `*.lan` |
+| **🔵 The Pi** (blue) | hosts both stacks side-by-side | Docker for tinkering, k3s for production — same workloads, different lifecycles |
+
+<!-- /AUTOGEN:GLOBAL_DIAGRAM -->
+
+A single Pi sits behind a normal home router. **No port forwarding** is required — remote access flows through the Twingate connector, while the LAN gets DNS-level ad blocking and an internal `*.home.your-domain.tld` domain served by Traefik (k3s) or Nginx Proxy Manager (Docker).
+
+> 📖 **New to all this?** Jump to **[🌐 DNS & TLS — beginner to pro](#-dns--tls--beginner-to-pro)** for a step-by-step walkthrough of *how* to actually point a hostname at your Pi: from `/etc/hosts` on a single laptop, to LAN-wide Pi-hole, to a real Cloudflare A-record pointing at a private IP, to mkcert and finally Let's Encrypt with the DNS-01 challenge.
 
 ---
 
