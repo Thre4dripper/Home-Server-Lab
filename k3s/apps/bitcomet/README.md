@@ -32,7 +32,7 @@ Runs the BitComet desktop client in a Pod that publishes a noVNC session to the 
 - **Live stats**: JSON task API consumed by the Homepage widget
 - **Persistent**: torrents, downloads and BitComet config live on a PVC
 - **Authenticated**: API token stored as a SealedSecret in this repo
-- **Resource-friendly**: ~250 MB RAM idle on a Pi 5
+- **Resource-friendly**: ~250 MB RAM idle on most servers
 
 ## Kubernetes Architecture
 

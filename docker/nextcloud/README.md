@@ -211,7 +211,7 @@ Nextcloud AIO includes many pre-configured apps:
 
 ## Performance Tuning
 
-### For Raspberry Pi Optimization
+### For Low-Resource Systems like Raspberry Pi:
 - Start with minimal apps enabled
 - Monitor memory usage
 - Use external storage for large file libraries
@@ -270,7 +270,7 @@ docker compose up -d
    - Check domain validation in AIO logs
 
 3. **Slow Performance**
-   - Check Raspberry Pi resource usage
+   - Check server resource usage
    - Reduce enabled apps
    - Use external storage for large files
    - Enable caching and optimization
@@ -391,7 +391,7 @@ docker compose up -d
 - **GitHub Issues**: https://github.com/nextcloud/all-in-one/issues
 - **Configuration Help**: Check AIO interface logs and documentation
 
-## Raspberry Pi Specific Notes
+## Low-Resource System Notes
 
 - **Memory**: Monitor RAM usage, especially with many users
 - **Storage**: Use external USB drives for large file storage

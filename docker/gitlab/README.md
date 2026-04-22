@@ -310,7 +310,7 @@ sudo rm -rf config logs data backups
 
 ## Performance Optimization
 
-### For Raspberry Pi / Low-Resource Systems
+### For Single-Board / Low-Resource Systems
 Add these to your GITLAB_OMNIBUS_CONFIG in docker-compose.yml:
 
 ```ruby

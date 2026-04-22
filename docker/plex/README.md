@@ -11,15 +11,15 @@ features:
 resource_usage: "~1GB RAM"
 ---
 
-# Plex Media Server - Raspberry Pi Docker Setup
+# Plex Media Server - Docker Setup
 
-Plex Media Server organizes your video, music, and photo collections and streams them to all of your devices. This setup is optimized for Raspberry Pi with Docker.
+Plex Media Server organizes your video, music, and photo collections and streams them to all of your devices. This setup works on any multi-arch Linux server, including single-board computers like Raspberry Pis.
 
 ## Features
 
 - **Media Streaming**: Stream your personal media collection anywhere
 - **Cross-Platform**: Access from any device (phones, tablets, smart TVs, etc.)
-- **Hardware Optimized**: Configured for Raspberry Pi ARM architecture
+- **Hardware Optimized**: Multi-arch support with hardware transcoding where available
 - **Auto-Discovery**: Automatic media library scanning and metadata fetching
 - **Remote Access**: Access your media from anywhere (with Plex Pass)
 - **Transcoding**: Real-time media transcoding for optimal playback
@@ -118,7 +118,7 @@ media/
 
 ## Hardware Transcoding (Plex Pass)
 
-For Raspberry Pi 4 with hardware acceleration:
+For servers with GPU support, including single-board computers like Raspberry Pis:
 
 1. **Check GPU Support**:
    ```bash
@@ -182,11 +182,11 @@ For external access outside your home network:
 
 ## Performance Optimization
 
-### Raspberry Pi Specific
-- **Memory**: Limit container memory to prevent system instability
-- **Storage**: Use fast storage (SSD) for Plex database
-- **Network**: Use wired connection for better streaming performance
-- **Cooling**: Ensure adequate cooling for sustained transcoding
+### Hardware Considerations
+- **Memory**: Limit container memory to prevent system instability on lower-spec servers like Raspberry Pis
+- **Storage**: Use fast storage (SSD/NVMe) for Plex database and metadata
+- **Network**: Use wired Ethernet for better streaming performance
+- **Cooling**: Ensure adequate cooling for sustained transcoding workloads
 
 ### Transcoding Settings
 - Direct Play: No CPU usage (preferred)

@@ -2,7 +2,7 @@
 name: "Dashdot"
 category: "📊 Monitoring & Stats"
 purpose: "Host Resource Dashboard"
-description: "Real-time CPU, RAM, storage, network and GPU dashboard for the underlying Raspberry Pi host, exposed as a stateless Deployment that mounts /proc and /sys read-only."
+description: "Real-time CPU, RAM, storage, network and GPU dashboard for the underlying host server, exposed as a stateless Deployment that mounts /proc and /sys read-only."
 icon: "📊"
 namespace: "monitoring"
 external_port: "8120"

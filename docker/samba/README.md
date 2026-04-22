@@ -13,7 +13,7 @@ resource_usage: "~50MB RAM"
 
 # Samba Server - Docker Setup
 
-Samba provides SMB/CIFS file sharing, allowing you to access files on your Raspberry Pi from Windows, macOS, and Linux devices on your network. This setup uses a configuration file-driven approach for easy customization.
+Samba provides SMB/CIFS file sharing, allowing you to access files on your homelab server from Windows, macOS, and Linux devices on your network. This setup uses a configuration file-driven approach for easy customization.
 
 ## Features
 - **Cross-platform** - Works with Windows, macOS, and Linux

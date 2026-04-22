@@ -27,7 +27,7 @@ This deployment consists of a single container:
 
 - **✨ Real-time Monitoring**: Get live updates on your server's vital statistics.
 - **🖌️ Customizable Widgets**: Arrange and configure widgets to display the information most important to you.
-- **🚀 Lightweight**: Designed to be resource-efficient, perfect for home servers and Raspberry Pis.
+- **🚀 Lightweight**: Designed to be resource-efficient, perfect for home servers and single-board computers like Raspberry Pis.
 - **📱 Responsive Design**: Access your dashboard from any device.
 
 ## Quick Start

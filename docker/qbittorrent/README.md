@@ -13,7 +13,7 @@ resource_usage: "~500MB RAM"
 
 # qBittorrent - Docker Setup
 
-qBittorrent is a free and open-source BitTorrent client with a feature-rich web interface. Perfect for managing torrent downloads remotely on your Raspberry Pi.
+qBittorrent is a free and open-source BitTorrent client with a feature-rich web interface. Perfect for managing torrent downloads remotely on your homelab server.
 
 ## Features
 - **Web UI** - Access from any device on your network
