@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
 Validate service README metadata before committing.
-Usage: python3 .github/scripts/validate-service.py <service-directory>
+
+Usage:
+  python3 .github/scripts/validate-service.py <service-directory>
+
+The stack is auto-detected from the path:
+  - docker/<svc>/  → docker schema
+  - k3s/apps/<svc>/ → k3s schema
 """
 
 import sys
@@ -9,11 +15,48 @@ import re
 import yaml
 from pathlib import Path
 
+DOCKER_REQUIRED = ['name', 'category', 'purpose', 'description', 'icon', 'features', 'resource_usage']
+K3S_REQUIRED = ['name', 'category', 'purpose', 'description', 'icon', 'namespace', 'components', 'features', 'resource_usage']
+
+DOCKER_CATEGORIES = [
+    '📊 Monitoring & Stats',
+    '🧲 Download Managers',
+    '🎬 Media & Entertainment',
+    '📁 File Management & Collaboration',
+    '🏠 Smart Home Automation & Workflow',
+    '🛠️ Development & DevOps',
+    '🏡 Dashboard & Network Services',
+    '🚀 Backend Services',
+]
+
+K3S_CATEGORIES = [
+    '🛠️ Infra & GitOps',
+    '🌐 Network & Ingress',
+    '📊 Monitoring & Stats',
+    '🏡 Dashboards',
+    '🤖 Automation',
+    '🎬 Media & Entertainment',
+    '📁 Files & Storage',
+    '🧲 Downloads',
+    '🗄️ Databases',
+]
+
+
+def detect_stack(service_dir: Path) -> str:
+    parts = service_dir.resolve().parts
+    if 'k3s' in parts and 'apps' in parts:
+        return 'k3s'
+    return 'docker'
+
+
 def validate_service_metadata(service_dir: str) -> bool:
     """Validate a single service's README metadata."""
     service_path = Path(service_dir)
     readme_path = service_path / 'README.md'
-    
+    stack = detect_stack(service_path)
+    required_fields = K3S_REQUIRED if stack == 'k3s' else DOCKER_REQUIRED
+    valid_categories = K3S_CATEGORIES if stack == 'k3s' else DOCKER_CATEGORIES
+
     if not readme_path.exists():
         print(f"❌ No README.md found in {service_dir}")
         return False
@@ -48,25 +91,13 @@ def validate_service_metadata(service_dir: str) -> bool:
         return False
     
     # Required fields
-    required_fields = ['name', 'category', 'purpose', 'description', 'icon', 'features', 'resource_usage']
-    missing_fields = []
-    
-    for field in required_fields:
-        if field not in metadata:
-            missing_fields.append(field)
+    missing_fields = [f for f in required_fields if f not in metadata]
     
     if missing_fields:
-        print(f"❌ Missing required fields in {readme_path}: {', '.join(missing_fields)}")
+        print(f"❌ Missing required fields in {readme_path} ({stack} schema): {', '.join(missing_fields)}")
         return False
     
     # Validate categories
-    valid_categories = [
-        '📊 Infrastructure & Monitoring',
-        '🛠️ Development & DevOps',
-        '📁 File Management & Collaboration',
-        '🎬 Media & Entertainment',
-        '🏡 Dashboard & Network Services'
-    ]
     
     if metadata['category'] not in valid_categories:
         print(f"⚠️  Unknown category '{metadata['category']}' in {readme_path}")
@@ -80,10 +111,13 @@ def validate_service_metadata(service_dir: str) -> bool:
     if len(metadata['features']) < 2:
         print(f"⚠️  Consider adding more features (current: {len(metadata['features'])}) in {readme_path}")
     
-    print(f"✅ {service_dir} metadata is valid")
+    print(f"✅ {service_dir} metadata is valid ({stack})")
     print(f"   Name: {metadata['name']}")
     print(f"   Category: {metadata['category']}")
     print(f"   Purpose: {metadata['purpose']}")
+    if stack == 'k3s':
+        print(f"   Namespace: {metadata['namespace']}")
+        print(f"   Components: {len(metadata.get('components') or [])} listed")
     print(f"   Features: {len(metadata['features'])} listed")
     print(f"   Resource Usage: {metadata['resource_usage']}")
     
