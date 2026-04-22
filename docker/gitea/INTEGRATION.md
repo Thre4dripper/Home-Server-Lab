@@ -6,7 +6,7 @@ This Gitea setup is designed to work seamlessly with other services in your Home
 
 ### Current Services
 1. **Pi-hole DNS** (Port 5300) - DNS filtering and resolution
-2. **n8n Workflows** (Port 5678) - Automation and workflows  
+2. **n8n Workflows** (Port 5678) - Automation and workflows
 3. **Pydio Cells** (Port 8081) - File sharing and collaboration
 4. **Gitea Git Service** (Port 3000) - Git repository hosting ← **You are here**
 
@@ -22,7 +22,7 @@ All services share the `pi-services` Docker network for:
 Configure custom DNS entries in Pi-hole for clean URLs:
 ```
 192.168.0.108  git.homelab.local
-192.168.0.108  files.homelab.local  
+192.168.0.108  files.homelab.local
 192.168.0.108  automation.homelab.local
 ```
 

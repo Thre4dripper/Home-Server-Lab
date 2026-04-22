@@ -39,13 +39,13 @@
     msg: |
       ✅ Homelab repository ready
       Location: {{ homelab_repo_dest }}
-      
+
       Next steps:
         cd {{ homelab_repo_dest }}
-        
+
         For Docker services:
           cd docker/<service> && ./setup.sh
-        
+
         For k3s cluster:
           cd k3s
           kubectl apply -f base/namespaces/

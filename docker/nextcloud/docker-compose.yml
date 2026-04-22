@@ -10,7 +10,7 @@ services:
     ports:
       # Port for the AIO setup interface. Default: 8081
       - "${AIO_PORT:-8081}:8080"
-    
+
     # THIS IS THE CRITICAL LINE THAT WAS MISSING.
     # It tells Docker Compose to load all the variables from your .env file.
     env_file:

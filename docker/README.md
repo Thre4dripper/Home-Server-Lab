@@ -34,12 +34,12 @@ graph LR
     Router[🏠 Home Router]
     RPI[🍓 Raspberry Pi]
     Docker[🐳 Docker]
-    
+
     Internet --> Twingate_Connector
     Twingate_Connector --> Router
     Router --> RPI
     RPI --> Docker
-    
+
     %% Core Infrastructure
     subgraph Core["🏗️ Core Infrastructure"]
         direction TB
@@ -157,7 +157,7 @@ graph LR
     classDef automationNode fill:#e0f2f1,stroke:#009688,stroke-width:2px,color:#000000
     classDef devNode fill:#fff8e1,stroke:#ff9800,stroke-width:2px,color:#000000
     classDef dashNode fill:#f9fbe7,stroke:#8bc34a,stroke-width:2px,color:#000000
-    
+
     class Internet,Twingate_Connector,Router,RPI,Docker coreInfra
     class Jellyfin,Plex mediaNode
     class Homeassistant,N8N automationNode

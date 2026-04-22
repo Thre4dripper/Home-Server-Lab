@@ -201,7 +201,7 @@ For external access outside your home network:
    ```bash
    # Check if container is running
    docker compose ps
-   
+
    # Check logs
    docker compose logs plex
    ```
@@ -222,10 +222,10 @@ For external access outside your home network:
    ```bash
    # Stop Plex
    docker compose down
-   
+
    # Backup database
    cp -r ./config ./config.backup
-   
+
    # Start Plex (it will rebuild if needed)
    docker compose up -d
    ```

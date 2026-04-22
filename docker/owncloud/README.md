@@ -33,7 +33,7 @@ ownCloud provides a secure, self-hosted file sync and share solution. Access you
    cp .env.example .env
    nano .env
    ```
-   
+
    **Required Settings:**
    - `OWNCLOUD_DOMAIN`: Your server IP with port (e.g., 192.168.0.108:8080)
    - `OWNCLOUD_TRUSTED_DOMAINS`: Network access configuration
@@ -213,7 +213,7 @@ tar -czf owncloud-full-backup-$(date +%Y%m%d).tar.gz files/ mysql/ redis/
    ```bash
    # Check firewall
    sudo ufw allow 8080
-   
+
    # Verify service is running
    ./setup.sh status
    ```
@@ -222,7 +222,7 @@ tar -czf owncloud-full-backup-$(date +%Y%m%d).tar.gz files/ mysql/ redis/
    ```bash
    # Check database logs
    docker compose logs mariadb
-   
+
    # Restart services
    ./setup.sh restart
    ```
@@ -231,7 +231,7 @@ tar -czf owncloud-full-backup-$(date +%Y%m%d).tar.gz files/ mysql/ redis/
    ```bash
    # Check disk space
    df -h
-   
+
    # Check upload limits in admin settings
    ```
 

@@ -8,25 +8,25 @@ services:
     environment:
       # Pydio Cells configuration via environment variables
       - CELLS_MINIO_ALLOW_CROSSMOUNT=${CELLS_MINIO_ALLOW_CROSSMOUNT}
-      
+
       # Install configuration - enables automatic setup
       - CELLS_INSTALL_YAML=/pydio/config/install.yml
-      
+
       # Database configuration
       - CELLS_DATABASE_DSN=${DB_TCP_USER}:${DB_TCP_PASSWORD}@tcp(${DB_TCP_HOSTNAME}:${DB_TCP_PORT})/${DB_TCP_NAME}
-      
-      # Server configuration  
+
+      # Server configuration
       - CELLS_BIND=0.0.0.0:8080
       - CELLS_EXTERNAL=http://${PYDIO_HOST}:${PYDIO_PORT}
       - CELLS_NO_TLS=1
-      
+
       # Admin user (will be created on first run)
       - CELLS_ADMIN_LOGIN=${FRONTEND_LOGIN}
       - CELLS_ADMIN_PASSWORD=${FRONTEND_PASSWORD}
-      
+
       # Storage configuration
       - CELLS_DATA_ROOT=/var/cells/data
-    volumes: 
+    volumes:
       - ./cellsdir:/var/cells
       - ./install.yml:/pydio/config/install.yml:ro
       - ${EXTERNAL_STORAGE_PATH}:/var/cells/data/external-storage

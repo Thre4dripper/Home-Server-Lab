@@ -14,14 +14,14 @@
         url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
         dest: /tmp/get-helm.sh
         mode: '0755'
-    
+
     - name: Run Helm installation script
       environment:
         DESIRED_VERSION: "v{{ helm_version }}"
       command: sh /tmp/get-helm.sh
       args:
         creates: /usr/local/bin/helm
-    
+
     - name: Remove Helm installation script
       file:
         path: /tmp/get-helm.sh

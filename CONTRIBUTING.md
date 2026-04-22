@@ -296,7 +296,7 @@ Brief description of what the service does.
 Document the following for each service:
 
 - **Startup Time**: Time from `docker compose up` to healthy
-- **Memory Usage**: RAM consumption during normal operation  
+- **Memory Usage**: RAM consumption during normal operation
 - **CPU Usage**: Average CPU utilization
 - **Disk Usage**: Storage requirements for application and data
 - **Network Usage**: Bandwidth requirements (if significant)
@@ -324,9 +324,9 @@ Brief description of changes made.
 - [ ] Documentation update
 
 ## Service Information
-- **Service Name**: 
-- **Official Image**: 
-- **Resource Requirements**: 
+- **Service Name**:
+- **Official Image**:
+- **Resource Requirements**:
 - **Tested On**: [Hardware/OS]
 
 ## Testing
@@ -417,7 +417,7 @@ Each service README **must** include YAML frontmatter at the top:
 ---
 name: "Service Name"
 category: "📊 Infrastructure & Monitoring"
-purpose: "Brief Purpose Description" 
+purpose: "Brief Purpose Description"
 description: "Longer description for main README"
 icon: "🔧"
 features:

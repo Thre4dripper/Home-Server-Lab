@@ -123,7 +123,7 @@ docker exec pihole pihole -t
 # Add domain to whitelist
 docker exec pihole pihole -w example.com
 
-# Add domain to blacklist  
+# Add domain to blacklist
 docker exec pihole pihole -b example.com
 ```
 
@@ -176,7 +176,7 @@ If you need to change ports, edit `docker-compose.yml`:
 ```yaml
 ports:
   - "5353:53/tcp"      # Change DNS port
-  - "5353:53/udp"      # Change DNS port  
+  - "5353:53/udp"      # Change DNS port
   - "8081:80/tcp"      # Change web interface port
 ```
 

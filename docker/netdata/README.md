@@ -214,10 +214,10 @@ nano config/health.d/cpu.conf
 environment:
   # Reduce memory usage
   - NETDATA_EXTRA_DEB_PACKAGES=
-  
+
   # Disable features if not needed
   - NETDATA_DISABLE_CLOUD=1
-  
+
   # Adjust update frequency
   - NETDATA_UPDATE_EVERY=2  # 2-second intervals
 ```
@@ -236,7 +236,7 @@ environment:
    ```bash
    # Check what's using port 19999
    netstat -tulpn | grep 19999
-   
+
    # Change port in .env file
    NETDATA_PORT=20000
    ```
@@ -245,7 +245,7 @@ environment:
    ```bash
    # Reduce memory limit
    MEMORY_LIMIT=128M
-   
+
    # Disable some collectors
    echo "python.d = no" > config/python.d.conf
    ```
@@ -254,7 +254,7 @@ environment:
    ```bash
    # Check logs
    ./setup.sh logs
-   
+
    # Verify Docker permissions
    docker info
    ```

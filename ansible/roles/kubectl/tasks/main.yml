@@ -14,7 +14,7 @@
         url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}/kubectl"
         dest: /usr/local/bin/kubectl
         mode: '0755'
-    
+
     - name: Verify kubectl installation
       command: kubectl version --client
       register: kubectl_verify

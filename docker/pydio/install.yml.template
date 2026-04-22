@@ -24,7 +24,7 @@ datasources:
     driver: "mysql"
     dsn: "${DB_TCP_USER}:${DB_TCP_PASSWORD}@tcp(${DB_TCP_HOSTNAME}:${DB_TCP_PORT})/${DB_TCP_NAME}"
 
-# Default workspace configuration  
+# Default workspace configuration
 workspaces:
   - name: "Common Files"
     label: "Common Files"
