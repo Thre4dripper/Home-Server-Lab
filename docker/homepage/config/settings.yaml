@@ -44,5 +44,5 @@ quicklaunch:
   provider: google
 
 providers:
-  openweathermap: {{HOMEPAGE_VAR_OPENWEATHER_KEY}}
-  finnhub: {{HOMEPAGE_VAR_FINNHUB_KEY}}
+  openweathermap: "{{HOMEPAGE_VAR_OPENWEATHER_KEY}}"
+  finnhub: "{{HOMEPAGE_VAR_FINNHUB_KEY}}"
