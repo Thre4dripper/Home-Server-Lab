@@ -1,0 +1,76 @@
+---
+# Docker installation role
+
+- name: Check if Docker is already installed
+  command: docker --version
+  register: docker_installed
+  failed_when: false
+  changed_when: false
+
+- name: Install Docker using official script
+  block:
+    - name: Download Docker installation script
+      get_url:
+        url: https://get.docker.com
+        dest: /tmp/get-docker.sh
+        mode: '0755'
+    
+    - name: Run Docker installation script
+      command: sh /tmp/get-docker.sh
+      args:
+        creates: /usr/bin/docker
+    
+    - name: Remove installation script
+      file:
+        path: /tmp/get-docker.sh
+        state: absent
+  when: docker_installed.rc != 0
+
+- name: Add users to docker group
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes
+  loop: "{{ docker_users }}"
+
+- name: Ensure Docker service is enabled and started
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create Docker data directory (if custom path)
+  file:
+    path: "{{ docker_data_root }}"
+    state: directory
+    mode: '0755'
+  when: docker_data_root != "/var/lib/docker"
+
+- name: Configure Docker daemon.json (custom data-root)
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "data-root": "{{ docker_data_root }}",
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "10m",
+          "max-file": "3"
+        }
+      }
+    mode: '0644'
+  when: docker_data_root != "/var/lib/docker"
+  notify: restart docker
+
+- name: Verify Docker Compose is installed
+  command: docker compose version
+  register: compose_version
+  changed_when: false
+  failed_when: false
+
+- name: Display Docker installation status
+  debug:
+    msg: |
+      ✅ Docker installed successfully
+      Docker version: {{ docker_installed.stdout | default('') }}
+      Compose version: {{ compose_version.stdout | default('') }}

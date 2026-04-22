@@ -1,0 +1,71 @@
+---
+# k3s installation role
+
+- name: Check if k3s is already installed
+  stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
+- name: Install k3s
+  block:
+    - name: Create k3s data directory (if custom path)
+      file:
+        path: "{{ k3s_data_dir }}"
+        state: directory
+        mode: '0755'
+      when: k3s_data_dir != "/var/lib/rancher/k3s"
+    
+    - name: Download and install k3s
+      shell: |
+        curl -sfL {{ k3s_install_script_url }} | \
+        INSTALL_K3S_VERSION="{{ k3s_version }}" \
+        {% if k3s_data_dir != "/var/lib/rancher/k3s" %}K3S_DATA_DIR="{{ k3s_data_dir }}"{% endif %} \
+        sh -
+      args:
+        creates: /usr/local/bin/k3s
+  when: not k3s_binary.stat.exists
+
+- name: Ensure k3s service is enabled and started
+  service:
+    name: k3s
+    state: started
+    enabled: yes
+
+- name: Wait for k3s to be ready
+  command: k3s kubectl get nodes
+  register: k3s_ready
+  until: k3s_ready.rc == 0
+  retries: 12
+  delay: 5
+  changed_when: false
+
+- name: Create .kube directory for homelab user
+  file:
+    path: "/home/{{ homelab_user }}/.kube"
+    state: directory
+    owner: "{{ homelab_user }}"
+    group: "{{ homelab_user }}"
+    mode: '0755'
+
+- name: Copy k3s kubeconfig to user directory
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "/home/{{ homelab_user }}/.kube/config"
+    remote_src: yes
+    owner: "{{ homelab_user }}"
+    group: "{{ homelab_user }}"
+    mode: '0600'
+
+- name: Update kubeconfig server address
+  replace:
+    path: "/home/{{ homelab_user }}/.kube/config"
+    regexp: 'https://127.0.0.1:6443'
+    replace: "https://{{ ansible_default_ipv4.address }}:6443"
+
+- name: Display k3s status
+  debug:
+    msg: |
+      ✅ k3s installed and running
+      Version: {{ k3s_version }}
+      Data dir: {{ k3s_data_dir }}
+      Kubeconfig: /home/{{ homelab_user }}/.kube/config

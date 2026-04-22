@@ -1,0 +1,67 @@
+---
+# site.yml — Main playbook to provision a homelab server from scratch
+#
+# Usage:
+#   Full provision:   ansible-playbook site.yml
+#   Specific role:    ansible-playbook site.yml --tags docker
+#   Skip k3s:         ansible-playbook site.yml --skip-tags k3s
+#   Dry run:          ansible-playbook site.yml --check --diff
+#
+# Tags available: base, docker, k3s, kubectl, kubeseal, helm, homelab, tools
+
+- name: Provision Homelab Server
+  hosts: homelab_servers
+  become: true
+  gather_facts: true
+  
+  pre_tasks:
+    - name: Validate OS family
+      assert:
+        that:
+          - ansible_os_family in ['Debian', 'RedHat']
+        fail_msg: "Unsupported OS: {{ ansible_os_family }}. This playbook supports Debian/Ubuntu and RHEL/CentOS/Fedora."
+    
+    - name: Display target information
+      debug:
+        msg: |
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          🏗️  HOMELAB PROVISIONING
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          Target:      {{ inventory_hostname }}
+          OS:          {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Arch:        {{ ansible_architecture }}
+          User:        {{ homelab_user }}
+          Repo:        {{ homelab_repo_dest }}
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  
+  roles:
+    - { role: base, tags: ['base', 'always'] }
+    - { role: docker, tags: ['docker'] }
+    - { role: kubectl, tags: ['kubectl', 'k3s'] }
+    - { role: k3s, tags: ['k3s'] }
+    - { role: kubeseal, tags: ['kubeseal', 'k3s'] }
+    - { role: helm, tags: ['helm', 'k3s'] }
+    - { role: homelab, tags: ['homelab'] }
+  
+  post_tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          ✅ PROVISIONING COMPLETE
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          Next steps:
+            1. Review the homelab repo at {{ homelab_repo_dest }}
+            2. For Docker services: cd {{ homelab_repo_dest }}/docker/<service> && ./setup.sh
+            3. For k3s cluster:     cd {{ homelab_repo_dest }}/k3s && kubectl apply -f infra/
+          
+          Verify installations:
+            docker --version
+            docker compose version
+            kubectl version --client
+            k3s --version
+            kubeseal --version
+            helm version
+          
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
