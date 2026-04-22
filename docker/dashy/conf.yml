@@ -52,7 +52,7 @@ sections:
         url: http://192.168.0.108:9000
         target: newtab
         statusCheck: true
-        
+
       - title: Homarr
         description: Modern dashboard with integrations
         icon: hl-homarr
@@ -79,7 +79,7 @@ sections:
         url: http://192.168.0.108:4566
         target: newtab
         statusCheck: true
-        
+
       - title: n8n
         description: Workflow automation
         icon: si-n8n
@@ -96,7 +96,7 @@ sections:
         url: http://192.168.0.108:8080
         target: newtab
         statusCheck: false
-        
+
       - title: Router Admin
         description: Network router configuration
         icon: fas fa-wifi
@@ -113,14 +113,14 @@ sections:
         url: https://github.com/Thre4dripper/Home-Server-Lab
         target: newtab
         statusCheck: false
-        
+
       - title: Raspberry Pi Foundation
         description: Official Raspberry Pi website
         icon: fab fa-raspberry-pi
         url: https://www.raspberrypi.org/
         target: newtab
         statusCheck: false
-        
+
       - title: Docker Hub
         description: Container image registry
         icon: fab fa-docker

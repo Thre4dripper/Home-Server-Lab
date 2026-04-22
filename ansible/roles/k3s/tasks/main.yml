@@ -14,7 +14,7 @@
         state: directory
         mode: '0755'
       when: k3s_data_dir != "/var/lib/rancher/k3s"
-    
+
     - name: Download and install k3s
       shell: |
         curl -sfL {{ k3s_install_script_url }} | \

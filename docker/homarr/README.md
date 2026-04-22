@@ -19,7 +19,7 @@ Homarr is a sleek, modern dashboard that brings all of your self-hosted services
 
 This deployment defaults to a single **Homarr** container with SQLite. For production/high-performance, you can enable additional containers:
 - **🗄️ PostgreSQL 16**: Robust database backend with ACID compliance (Optional, for production)
-- **🚀 Redis 7**: High-performance caching and session storage (Optional, for production)  
+- **🚀 Redis 7**: High-performance caching and session storage (Optional, for production)
 - **🎛️ Homarr**: Modern dashboard frontend with extensive integrations
 
 ## Features
@@ -287,10 +287,10 @@ When migrating Homarr installations:
    ```bash
    # Check if container is running
    docker compose ps
-   
+
    # Check logs for errors
    docker compose logs homarr
-   
+
    # Verify port binding
    netstat -tulpn | grep 7575
    ```
@@ -299,7 +299,7 @@ When migrating Homarr installations:
    ```bash
    # Check API connectivity
    curl -I http://service-url/api/endpoint
-   
+
    # Verify API keys in logs
    docker compose logs homarr | grep -i "api\|auth\|error"
    ```
@@ -308,7 +308,7 @@ When migrating Homarr installations:
    ```bash
    # Check database file permissions
    ls -la ./homarr_data/db/
-   
+
    # Backup and recreate if corrupted
    cp ./homarr_data/db/db.sqlite ./db.backup
    ```
@@ -375,10 +375,10 @@ For SSL termination and advanced routing:
 server {
     listen 443 ssl;
     server_name homarr.yourdomain.com;
-    
+
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
-    
+
     location / {
         proxy_pass http://localhost:7575;
         proxy_set_header Host $host;

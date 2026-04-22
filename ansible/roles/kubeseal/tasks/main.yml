@@ -14,19 +14,19 @@
         url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ kubeseal_version }}/kubeseal-{{ kubeseal_version }}-linux-{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}.tar.gz"
         dest: /tmp/kubeseal.tar.gz
         mode: '0644'
-    
+
     - name: Extract kubeseal
       unarchive:
         src: /tmp/kubeseal.tar.gz
         dest: /usr/local/bin
         remote_src: yes
         extra_opts: ['kubeseal']
-    
+
     - name: Make kubeseal executable
       file:
         path: /usr/local/bin/kubeseal
         mode: '0755'
-    
+
     - name: Clean up kubeseal tarball
       file:
         path: /tmp/kubeseal.tar.gz

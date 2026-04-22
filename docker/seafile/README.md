@@ -23,7 +23,7 @@ This is the **official Seafile Pro Edition setup** with enterprise features, fre
 
 - **Seafile Pro Server**: Main application with enterprise features
 - **MariaDB**: MySQL-compatible database for metadata
-- **Elasticsearch**: Full-text search and indexing  
+- **Elasticsearch**: Full-text search and indexing
 - **Memcached**: Performance caching layer
 - **SeaDoc**: Online document editor integration
 
@@ -35,10 +35,10 @@ This is the **official Seafile Pro Edition setup** with enterprise features, fre
    cp .env.example .env
    nano .env
    ```
-   
+
    **Required Settings:**
    - `SEAFILE_MYSQL_DB_PASSWORD`: Database user password
-   - `INIT_SEAFILE_MYSQL_ROOT_PASSWORD`: MySQL root password  
+   - `INIT_SEAFILE_MYSQL_ROOT_PASSWORD`: MySQL root password
    - `INIT_SEAFILE_ADMIN_PASSWORD`: Admin login password
    - `JWT_PRIVATE_KEY`: Random secure key for JWT tokens
    - `SEAFILE_SERVER_HOSTNAME`: Your server IP:8000 (e.g., 192.168.0.108:8000)
@@ -61,7 +61,7 @@ This is the **official Seafile Pro Edition setup** with enterprise features, fre
 - **Audit Logs**: Complete activity tracking
 - **LDAP/AD Integration**: Enterprise authentication
 
-### Document Collaboration  
+### Document Collaboration
 - **SeaDoc**: Online editing for Office documents
 - **Real-time Collaboration**: Multiple users, live editing
 - **Version Control**: Advanced file history and rollback
@@ -78,7 +78,7 @@ This is the **official Seafile Pro Edition setup** with enterprise features, fre
 seafile/
 ├── data/                    # All persistent data (bind mounted)
 │   ├── seafile/            # Main application data
-│   ├── mysql/              # Database files  
+│   ├── mysql/              # Database files
 │   ├── elasticsearch/      # Search index
 │   ├── seadoc/            # Document editor data
 │   ├── notification/       # Push notifications
@@ -119,7 +119,7 @@ seafile/
 ### Built-in Security
 - **Two-Factor Authentication**: TOTP support
 - **Password Policies**: Configurable requirements
-- **Session Management**: Advanced login controls  
+- **Session Management**: Advanced login controls
 - **File Encryption**: Client-side encryption option
 - **Audit Trail**: Complete user activity logs
 
@@ -146,7 +146,7 @@ seafile/
 ### Web Interface
 - **File Management**: Upload, download, organize
 - **Document Preview**: View files in browser
-- **Online Editing**: SeaDoc integration  
+- **Online Editing**: SeaDoc integration
 - **Sharing**: Public links, user/group sharing
 
 ## Management
@@ -156,7 +156,7 @@ seafile/
 # View service logs
 docker compose logs -f seafile
 
-# Restart all services  
+# Restart all services
 docker compose restart
 
 # Stop everything
@@ -225,7 +225,7 @@ cp .env .env.backup
 
 ### vs Nextcloud
 - ✅ Better sync performance for large files
-- ✅ Superior mobile applications  
+- ✅ Superior mobile applications
 - ✅ Enterprise features included (free tier)
 - ✅ More stable sync client
 - ❌ Smaller third-party app ecosystem
@@ -233,7 +233,7 @@ cp .env .env.backup
 ### vs Dropbox Business
 - ✅ Self-hosted (data sovereignty)
 - ✅ No monthly subscription costs
-- ✅ Advanced enterprise features  
+- ✅ Advanced enterprise features
 - ✅ Unlimited storage (your hardware)
 - ❌ Requires technical setup/maintenance
 
@@ -249,7 +249,7 @@ cp .env .env.backup
 
 ### Resource Requirements
 - **Minimum**: 4GB RAM, 2 CPU cores
-- **Recommended**: 8GB+ RAM, 4+ CPU cores  
+- **Recommended**: 8GB+ RAM, 4+ CPU cores
 - **Storage**: SSD recommended for database/search
 
 ### Upgrade Path

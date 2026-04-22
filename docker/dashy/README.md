@@ -433,7 +433,7 @@ widgets:
 appConfig:
   statusCheck: true
   statusCheckInterval: 300  # Increase interval for better performance
-  
+
 # Disable for external services to reduce load
 items:
   - title: External Service
@@ -449,7 +449,7 @@ items:
    ```bash
    # Check configuration syntax
    docker compose exec dashy yarn validate-config
-   
+
    # Check file permissions
    ls -la ./user-data/
    ```
@@ -458,7 +458,7 @@ items:
    ```bash
    # Test connectivity from container
    docker compose exec dashy wget -qO- http://service-url
-   
+
    # Check network connectivity
    docker compose exec dashy nslookup service-hostname
    ```
@@ -467,7 +467,7 @@ items:
    ```bash
    # Check icon cache
    docker compose exec dashy ls -la /app/public/item-icons/
-   
+
    # Clear icon cache
    docker compose exec dashy rm -rf /app/public/item-icons/cache
    ```
@@ -476,7 +476,7 @@ items:
    ```bash
    # Monitor resource usage
    docker stats dashy
-   
+
    # Check container logs
    docker compose logs dashy | grep -i error
    ```

@@ -13,14 +13,14 @@
   hosts: homelab_servers
   become: true
   gather_facts: true
-  
+
   pre_tasks:
     - name: Validate OS family
       assert:
         that:
           - ansible_os_family in ['Debian', 'RedHat']
         fail_msg: "Unsupported OS: {{ ansible_os_family }}. This playbook supports Debian/Ubuntu and RHEL/CentOS/Fedora."
-    
+
     - name: Display target information
       debug:
         msg: |
@@ -33,7 +33,7 @@
           User:        {{ homelab_user }}
           Repo:        {{ homelab_repo_dest }}
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  
+
   roles:
     - { role: base, tags: ['base', 'always'] }
     - { role: docker, tags: ['docker'] }
@@ -42,7 +42,7 @@
     - { role: kubeseal, tags: ['kubeseal', 'k3s'] }
     - { role: helm, tags: ['helm', 'k3s'] }
     - { role: homelab, tags: ['homelab'] }
-  
+
   post_tasks:
     - name: Display completion message
       debug:
@@ -50,12 +50,12 @@
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           ✅ PROVISIONING COMPLETE
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          
+
           Next steps:
             1. Review the homelab repo at {{ homelab_repo_dest }}
             2. For Docker services: cd {{ homelab_repo_dest }}/docker/<service> && ./setup.sh
             3. For k3s cluster:     cd {{ homelab_repo_dest }}/k3s && kubectl apply -f infra/
-          
+
           Verify installations:
             docker --version
             docker compose version
@@ -63,5 +63,5 @@
             k3s --version
             kubeseal --version
             helm version
-          
+
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

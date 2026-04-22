@@ -1,4 +1,4 @@
-# For simple/personal use, you can run Homarr with just SQLite (no Postgres/Redis). 
+# For simple/personal use, you can run Homarr with just SQLite (no Postgres/Redis).
 # Uncomment the postgres and redis sections below for high-performance/production setups.
 
 services:
@@ -59,7 +59,7 @@ services:
           memory: ${HOMARR_MEMORY_LIMIT:-1G}
         reservations:
           memory: ${HOMARR_MEMORY_RESERVATION:-256M}
-  
+
   # ---
   # The following services are recommended for high-performance/production setups only.
   # Uncomment to enable PostgreSQL and Redis for Homarr:

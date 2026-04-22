@@ -3,11 +3,11 @@ services:
     image: jellyfin/jellyfin:${JELLYFIN_TAG:-latest}
     container_name: ${CONTAINER_NAME:-jellyfin}
     restart: ${RESTART_POLICY:-unless-stopped}
-    
+
     ports:
       - "${JELLYFIN_HTTP_PORT:-8096}:8096"
       - "${JELLYFIN_HTTPS_PORT:-8920}:8920" # if TLS is enabled in Jellyfin
-    
+
     environment:
       - TZ=${TIMEZONE:-UTC}
       - JELLYFIN_PublishedServerUrl=${PUBLISHED_SERVER_URL:-}

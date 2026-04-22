@@ -14,15 +14,15 @@ services:
     volumes:
       # Samba configuration (read-only)
       - ./smb.conf:/etc/samba/smb.conf:ro
-      
+
       # Persistent Samba password database (users persist here)
       - ./samba_private:/var/lib/samba/private
-      
+
       # Shared directories - customize in .env
       - ${SHARE_PATH_1:-/home/pi/shared}:/shares/public
       - ${SHARE_PATH_2:-/home/pi/media}:/shares/media
       - ${SHARE_PATH_3:-/home/pi/documents}:/shares/documents
-      
+
       # Optional: external storage
       # - /mnt/external:/shares/external
     deploy:

@@ -16,22 +16,22 @@ all:
         #   ansible_user: pi
         #   ansible_become_password: !vault |
         #     $ANSIBLE_VAULT;...
-        
+
         # Or use localhost for the current machine:
         localhost:
           ansible_connection: local
           ansible_python_interpreter: /usr/bin/python3
-      
+
       vars:
         # Homelab-specific config (override in group_vars/all.yml or host_vars/)
         homelab_user: "{{ ansible_user }}"
         homelab_repo_url: "https://github.com/Thre4dripper/Home-Server-Lab.git"
         homelab_repo_dest: "/home/{{ homelab_user }}/Home-Server-Lab"
-        
+
         # k3s config
         k3s_version: "v1.34.6+k3s1"
         k3s_install_script_url: "https://get.k3s.io"
-        
+
         # Docker config
         docker_install_compose: true
         docker_users:

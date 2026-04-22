@@ -149,10 +149,10 @@ docker compose ps
    ```bash
    # Check if container is running
    docker compose ps
-   
+
    # Check logs for errors
    docker compose logs dashdot
-   
+
    # Verify port binding
    netstat -tulpn | grep 3001
    ```

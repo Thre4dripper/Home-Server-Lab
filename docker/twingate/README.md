@@ -81,14 +81,14 @@ The connector runs in `network_mode: host`, so there are no exposed ports. Conne
 
 ## Troubleshooting
 
-1. **Connector stuck provisioning**  
-   - Verify the host clock is in sync (NTP).  
+1. **Connector stuck provisioning**
+   - Verify the host clock is in sync (NTP).
    - Confirm outbound TLS (TCP 443) is allowed.
-2. **`setup.sh` refuses to start**  
-   - Ensure `.env` values are not empty or placeholder text.  
+2. **`setup.sh` refuses to start**
+   - Ensure `.env` values are not empty or placeholder text.
    - Run `docker info` to confirm Docker is healthy.
-3. **Connector offline in admin console**  
-   - Run `./setup.sh logs` and look for authentication errors.  
+3. **Connector offline in admin console**
+   - Run `./setup.sh logs` and look for authentication errors.
    - Regenerate the access/refresh token pair and update `.env`.
 
 ## Links

@@ -3,13 +3,13 @@ services:
     image: jc21/nginx-proxy-manager:${NPM_TAG:-latest}
     container_name: ${CONTAINER_NAME:-nginx-proxy-manager}
     restart: ${RESTART_POLICY:-unless-stopped}
-    
+
     # Network ports
     ports:
       - "${HTTP_PORT:-80}:80"      # Public HTTP
       - "${HTTPS_PORT:-443}:443"   # Public HTTPS
       - "${ADMIN_PORT:-81}:81"     # Admin Web UI
-    
+
     # Uncomment for PostgreSQL (see db service below)
     # environment:
     #   DB_POSTGRES_HOST: ${DB_HOST:-db}
@@ -18,54 +18,54 @@ services:
     #   DB_POSTGRES_PASSWORD: ${DB_PASSWORD:-npm_secure_password}
     #   DB_POSTGRES_NAME: ${DB_NAME:-npm}
     #   # DISABLE_IPV6: 'true'
-    
+
     volumes:
       # Data and configuration
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
-    
+
     # Uncomment if using PostgreSQL
     # depends_on:
     #   db:
     #     condition: service_healthy
-    
+
     healthcheck:
       test: ["CMD", "/bin/check-health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-    
+
     deploy:
       resources:
         limits:
           memory: ${MEMORY_LIMIT:-512M}
         reservations:
           memory: ${MEMORY_RESERVATION:-128M}
-  
+
   # Optional PostgreSQL database (for larger deployments)
   # Uncomment this service and the environment section above to use PostgreSQL instead of SQLite
   # db:
   #   image: postgres:${POSTGRES_TAG:-15-alpine}
   #   container_name: ${DB_CONTAINER_NAME:-nginx-proxy-manager-db}
   #   restart: ${RESTART_POLICY:-unless-stopped}
-  #   
+  #
   #   environment:
   #     POSTGRES_USER: ${DB_USER:-npm}
   #     POSTGRES_PASSWORD: ${DB_PASSWORD:-npm_secure_password}
   #     POSTGRES_DB: ${DB_NAME:-npm}
   #     POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
-  #   
+  #
   #   volumes:
   #     - ./postgres:/var/lib/postgresql/data
-  #   
+  #
   #   healthcheck:
   #     test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-npm}"]
   #     interval: 10s
   #     timeout: 5s
   #     retries: 5
   #     start_period: 30s
-  #   
+  #
   #   deploy:
   #     resources:
   #       limits:
