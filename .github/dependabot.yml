@@ -1,0 +1,49 @@
+version: 2
+
+# Dependabot keeps versioned dependencies fresh.
+# Renovate (renovate.json) handles Docker image tags + Helm charts,
+# Dependabot handles GitHub Actions + pip + a few Dockerfiles.
+#
+# Docs: https://docs.github.com/en/code-security/dependabot
+
+updates:
+  # ─── GitHub Actions in our workflows ──────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # ─── Python deps used by autogen scripts ──────────────────────
+  - package-ecosystem: "pip"
+    directory: "/.github/scripts"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "deps(scripts)"
+    labels:
+      - "dependencies"
+      - "python"
+
+  # ─── Dockerfiles (only services that ship a Dockerfile) ───────
+  - package-ecosystem: "docker"
+    directory: "/docker/n8n"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps(n8n)"
+    labels:
+      - "dependencies"
+      - "docker"

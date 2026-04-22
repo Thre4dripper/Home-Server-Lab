@@ -1,0 +1,51 @@
+# Pre-commit hooks for Home-Server-Lab
+# Install:  pip install pre-commit && pre-commit install
+# Update:   pre-commit autoupdate
+# Run all:  pre-commit run --all-files
+
+repos:
+  # ─── Secret scanning ──────────────────────────────────────────────
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        name: 🔐 gitleaks (block committed secrets)
+
+  # ─── Generic hygiene ──────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-yaml
+        args: ["--allow-multiple-documents"]
+        exclude: '^(k3s/.*|ansible/.*\.j2)$'   # k8s manifests use custom tags
+      - id: check-json
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  # ─── YAML lint (Ansible + k8s) ────────────────────────────────────
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ["-d", "{extends: relaxed, rules: {line-length: disable}}"]
+        exclude: '^(.github/workflows/.*|k3s/.*\.yaml)$'
+
+  # ─── Shell scripts ────────────────────────────────────────────────
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ["-x", "-e", "SC1091,SC2086,SC2034,SC2015,SC2155,SC2028,SC2119,SC2120,SC2001"]
+        # SC2034: config vars at top of setup.sh are metadata (not unused — false positive)
+        # SC2015: A&&B||C pattern used intentionally in one-liners
+        # SC2155: declare+assign in one line — cosmetic, not a bug in these scripts
+        # SC2028: echo escape sequences — output is intentional for humans reading the terminal
+        # SC2119/SC2120: wait_for_service helper called without args intentionally
+        # SC2001: sed preferred over ${var//s/r} — readability preference in these scripts
+
