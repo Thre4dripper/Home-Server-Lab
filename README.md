@@ -2,15 +2,15 @@
 
 # 🏠 Home Server Lab
 
-### **Two ways to run a real homelab on a single Raspberry Pi.**
+### **Two ways to run a real homelab on a single server.**
 ### **🐳 Docker for prototyping. ☸️ k3s + ArgoCD for production.**
 
-*A complete, opinionated, two-stack homelab — DNS · ad-blocking · media · torrents · smart home · automation · dashboards · file sharing · zero-trust remote access — all self-hosted, all in one repo, all on one Pi.*
+*A complete, opinionated, two-stack homelab — DNS · ad-blocking · media · torrents · smart home · automation · dashboards · file sharing · zero-trust remote access — all self-hosted, all in one repo, designed for any Linux server.*
 
 ---
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-5-C51A4A?style=for-the-badge&logo=raspberry-pi&logoColor=white)](https://www.raspberrypi.org/)
+[![Multi-Arch](https://img.shields.io/badge/Multi--Arch-amd64%20%7C%20arm64-blue?style=for-the-badge&logo=linux&logoColor=white)](https://docs.docker.com/build/building/multi-platform/)
 [![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Awesome-7289DA?style=for-the-badge)](https://github.com/awesome-selfhosted/awesome-selfhosted)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](./CONTRIBUTING.md)
 
@@ -40,7 +40,7 @@ Most homelab projects pick a side: either "here's my `docker-compose.yml` collec
 
 So this repo gives you both, side-by-side, with the **same set of services modelled twice** — once the easy way, once the production way. Pick a service, prototype it in `docker/`, then promote the working configuration to `k3s/` once you trust it.
 
-Every choice is benchmarked for an **8 GB Raspberry Pi 5**. Everything is reproducible from a clean `git clone`. Nothing depends on a SaaS, a paid plan, or an undocumented click in someone's WebUI.
+Every choice is benchmarked for an **8 GB homelab server** (tested on Raspberry Pi 5, x86_64 mini-PCs, and cloud VMs). Everything is reproducible from a clean `git clone`. Nothing depends on a SaaS, a paid plan, or an undocumented click in someone's WebUI.
 
 ---
 
@@ -172,9 +172,9 @@ graph TB
 
 <!-- /AUTOGEN:GLOBAL_DIAGRAM -->
 
-A single Pi sits behind a normal home router. **No port forwarding** is required — remote access flows through the Twingate connector, while the LAN gets DNS-level ad blocking and an internal `*.home.your-domain.tld` domain served by Traefik (k3s) or Nginx Proxy Manager (Docker).
+A single server sits behind a normal home router. **No port forwarding** is required — remote access flows through the Twingate connector, while the LAN gets DNS-level ad blocking and an internal `*.home.your-domain.tld` domain served by Traefik (k3s) or Nginx Proxy Manager (Docker).
 
-> 📖 **New to all this?** Jump to **[🌐 DNS & TLS — beginner to pro](#-dns--tls--beginner-to-pro)** for a step-by-step walkthrough of *how* to actually point a hostname at your Pi: from `/etc/hosts` on a single laptop, to LAN-wide Pi-hole, to a real Cloudflare A-record pointing at a private IP, to mkcert and finally Let's Encrypt with the DNS-01 challenge.
+> 📖 **New to all this?** Jump to **[🌐 DNS & TLS — beginner to pro](#-dns--tls--beginner-to-pro)** for a step-by-step walkthrough of *how* to actually point a hostname at your server: from `/etc/hosts` on a single laptop, to LAN-wide Pi-hole, to a real Cloudflare A-record pointing at a private IP, to mkcert and finally Let's Encrypt with the DNS-01 challenge.
 
 ---
 
@@ -243,7 +243,7 @@ Both pages **regenerate automatically** from per-service `README.md` frontmatter
 
 - **🔒 Privacy first** — Your data, your hardware, your rules. No SaaS dependencies, no telemetry, no third-party clouds in the critical path.
 - **🏗️ Production-grade patterns** — Real ingress, real secrets management, real GitOps — *even on a Pi*. The k3s stack is structured exactly the way you'd structure a small production cluster.
-- **📦 Single-board friendly** — Every service has a benchmarked RAM/CPU footprint. The full Docker catalog runs comfortably on an 8 GB Pi 5.
+- **📦 Resource-efficient** — Every service has a benchmarked RAM/CPU footprint. The full Docker catalog runs comfortably on an 8 GB server (single-board, mini-PC, or VM).
 - **🧪 Reproducible from zero** — `git clone` → bootstrap → working homelab. No undocumented manual clicks. No "oh, you also need to…".
 - **📖 Self-documenting** — Every service carries machine-readable YAML frontmatter. The catalog pages, mermaid diagrams and category tables are derived from that frontmatter, so they cannot drift out of sync with reality.
 - **🎓 Educational** — Each per-service README is structured to teach: *Why this service · How it's wired · What can go wrong · How to fix it.*
@@ -286,15 +286,15 @@ Both pages **regenerate automatically** from per-service `README.md` frontmatter
 
 ## 💻 System requirements
 
-The reference deployment is a **Raspberry Pi 5 (8 GB) with an external SSD over USB 3** running Raspberry Pi OS Bookworm 64-bit.
+The reference deployment is an **8 GB homelab server with SSD storage** running Debian 12 / Ubuntu 22.04+ (64-bit). Tested on Raspberry Pi 5, Intel NUC, and Hetzner cloud VMs.
 
 | Component | Minimum | Recommended | Notes |
 |-----------|---------|-------------|-------|
-| **CPU** | ARM64 quad-core 1.5 GHz | Pi 5 / x86_64 4-core | Both stacks are arch-agnostic where the underlying images are |
+| **CPU** | Quad-core 1.5 GHz (ARM64 or x86_64) | 4-core 2.0 GHz+ | Both stacks are multi-arch where underlying images support it |
 | **RAM** | 4 GB | 8 GB | k3s adds ~500 MB baseline; full Docker catalog needs 6 GB+ |
-| **Storage** | 32 GB SD card | 256 GB+ NVMe / SSD | Move `/var/lib/{docker,rancher}` to SSD for sane I/O |
-| **Network** | 100 Mbit Ethernet | Gigabit Ethernet | Multicast / Wi-Fi is hostile to Home Assistant discovery |
-| **Power** | 3 A USB-C | Official Pi 5 PSU | SD-card corruption on under-volt is a common Pi pitfall |
+| **Storage** | 32 GB | 256 GB+ NVMe / SSD | SSD strongly recommended — move `/var/lib/{docker,rancher}` for best I/O |
+| **Network** | 100 Mbit Ethernet | Gigabit Ethernet | Wired strongly recommended for Home Assistant / multicast discovery |
+| **Power** | Stable power supply | UPS recommended | Sudden power loss can corrupt Docker overlays / k3s etcd |
 
 ### Resource planning by use case
 
@@ -347,7 +347,7 @@ Now `http://jellyfin.lan:8096` works **on that one machine**.
 
 ### 🐥 Level 2 — Pi-hole local DNS (LAN-wide friendly names)
 
-Run [`docker/pihole`](./docker/pihole/) (or [`k3s/apps/pihole`](./k3s/apps/pihole/)), then point your **router's DHCP** at the Pi's IP as the network DNS server. Now every device on your LAN — phone, TV, IoT, guests — resolves the names you define.
+Run [`docker/pihole`](./docker/pihole/) (or [`k3s/apps/pihole`](./k3s/apps/pihole/)), then point your **router's DHCP** at the server's IP as the network DNS server. Now every device on your LAN — phone, TV, IoT, guests — resolves the names you define.
 
 In `dns-entries.conf` (already wired into the Pi-hole compose file):
 
@@ -393,7 +393,7 @@ Yes — a public DNS record pointing at `192.168.1.42`. From the public internet
 Now you have nice names, but browsers still complain. The cheapest fix is [`mkcert`](https://github.com/FiloSottile/mkcert) — it generates a local certificate authority and installs it into your OS trust store. Certs signed by it are trusted **on the machines where you ran `mkcert -install`**.
 
 ```bash
-# On the Pi, once
+# On the server, once
 mkcert -install
 mkcert "*.home.your-domain.tld" home.your-domain.tld
 # → home.your-domain.tld+1.pem  +  home.your-domain.tld+1-key.pem
@@ -448,9 +448,9 @@ DNS + TLS solves "what name and what cert," not "how do bytes get from the coffe
 
 | Option | How it works | Trade-off |
 |--------|--------------|-----------|
-| **Port-forward + Let's Encrypt HTTP-01** | Open 80/443 on the router, point them at the Pi | Simple, but exposes the Pi directly to the internet. Don't unless you know what you're doing. |
-| **Cloudflare Tunnel** | Daemon on the Pi makes outbound connection to Cloudflare; CF terminates TLS and proxies in | Free tier, no router config, but all traffic flows through Cloudflare |
-| **Twingate / Tailscale / Headscale** | Identity-aware mesh VPN; outbound-only connector on the Pi | What this repo uses. No port forwarding, no SaaS in the *data* path (only signaling) |
+| **Port-forward + Let's Encrypt HTTP-01** | Open 80/443 on the router, point them at the server | Simple, but exposes the server directly to the internet. Don't unless you know what you're doing. |
+| **Cloudflare Tunnel** | Daemon on the server makes outbound connection to Cloudflare; CF terminates TLS and proxies in | Free tier, no router config, but all traffic flows through Cloudflare |
+| **Twingate / Tailscale / Headscale** | Identity-aware mesh VPN; outbound-only connector on the server | What this repo uses. No port forwarding, no SaaS in the *data* path (only signaling) |
 
 This repo ships [`docker/twingate`](./docker/twingate/) and [`k3s/apps/twingate`](./k3s/apps/twingate/) precisely because Twingate's connector model composes cleanly with the Level 3 + Level 5 setup above: same hostname, real cert, no inbound port, identity-checked at the edge.
 
@@ -553,7 +553,7 @@ k3s is full Kubernetes — same APIs, same `kubectl`, same manifests. It just sh
 <details>
 <summary><b>Can I run this on x86_64 / Intel / AMD?</b></summary>
 
-Yes. Every image used here ships multi-arch manifests (`linux/amd64` + `linux/arm64`). The Pi 5 is the reference platform, but nothing forces it.
+Yes. Every image used here ships multi-arch manifests (`linux/amd64` + `linux/arm64`). Tested on Raspberry Pi 5, Intel NUCs, and x86_64 VMs — nothing forces a specific architecture.
 
 </details>
 
@@ -644,7 +644,7 @@ Built on the shoulders of giants:
 - **[Bitnami SealedSecrets](https://github.com/bitnami-labs/sealed-secrets)** — for letting secrets live in git, safely
 - **[Traefik](https://traefik.io/)** + **[cert-manager](https://cert-manager.io/)** — for ingress that just works
 - **[Twingate](https://www.twingate.com/)** — for zero-trust remote access without port forwarding
-- **[Raspberry Pi Foundation](https://www.raspberrypi.org/)** — for affordable, capable hardware
+- **[Raspberry Pi Foundation](https://www.raspberrypi.org/)** — for affordable, capable single-board computers that started the homelab revolution
 - And every open-source project listed in the catalogs — none of this exists without them
 
 ---

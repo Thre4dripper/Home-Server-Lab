@@ -2,7 +2,7 @@
 
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Services-green)](https://github.com/awesome-selfhosted/awesome-selfhosted)
-[![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-Compatible-C51A4A?logo=raspberry-pi)](https://www.raspberrypi.org/)
+[![Multi-Arch](https://img.shields.io/badge/Multi--Arch-Compatible-blue?logo=linux)](https://docs.docker.com/build/building/multi-platform/)
 
 > **27 production-ready Docker Compose stacks for your homelab — one folder per service, one `setup.sh` to bring it up, one `README.md` to explain it.**
 
@@ -173,6 +173,7 @@ graph LR
 
 
 
+
 ## 🚀 **Available Services**
 
 > **📝 Note:** This section is automatically generated from individual service README.md files. To update service information, edit the respective service's README.md file and the changes will be reflected here automatically.
@@ -240,12 +241,12 @@ graph LR
 | [**Twingate Connector**](./twingate/) | Zero-Trust Remote Access | Outbound-only connector for safe remote access, Automatic labeling for auditi... | ~75MB RAM |
 
 
-## 🚀 **Quick Start**
+## 🏠 **Quick Start**
 
 ### Prerequisites
 
-- **Hardware**: Raspberry Pi 4 (4GB+ RAM recommended) or any Linux server
-- **OS**: Ubuntu 20.04+ / Raspberry Pi OS / any Docker-compatible Linux
+- **Hardware**: Any Linux server with 4GB+ RAM (tested on Raspberry Pi 4/5, Intel NUC, x86_64 VMs)
+- **OS**: Ubuntu 20.04+ / Debian 11+ / Raspberry Pi OS / any Docker-compatible Linux
 - **Software**: Docker Engine + Docker Compose v2
 
 ```bash
@@ -284,7 +285,7 @@ For TLS-terminated friendly hostnames (`jellyfin.home.local`), use the **Nginx P
 
 ## 📋 **Resource Planning (Docker stack)**
 
-The full Docker catalog runs on an 8 GB Pi 5 with breathing room. Per-service footprints are listed in each catalog table below. Approximate combined budgets:
+The full Docker catalog runs on an 8 GB server with breathing room. Per-service footprints are listed in each catalog table below. Approximate combined budgets:
 
 | Profile | Services | Total RAM | Storage |
 |---------|----------|-----------|---------|

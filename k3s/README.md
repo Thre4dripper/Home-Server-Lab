@@ -4,9 +4,8 @@
 [![ArgoCD](https://img.shields.io/badge/GitOps-ArgoCD-EF7B4D?logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
 [![Traefik](https://img.shields.io/badge/Ingress-Traefik-24A1C1?logo=traefikproxy&logoColor=white)](https://traefik.io/)
 [![Sealed Secrets](https://img.shields.io/badge/Secrets-SealedSecrets-2E7D32?logo=bitwarden&logoColor=white)](https://github.com/bitnami-labs/sealed-secrets)
-[![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-5-C51A4A?logo=raspberry-pi)](https://www.raspberrypi.org/)
 
-> **The production half of Home Server Lab — a single-node k3s cluster on a Raspberry Pi 5, fully driven by GitOps via ArgoCD, with sealed secrets in git and Traefik ingress on a private domain.**
+> **The production half of Home Server Lab — a single-node k3s cluster on any Linux server, fully driven by GitOps via ArgoCD, with sealed secrets in git and Traefik ingress on a private domain.**
 
 This directory holds every Kubernetes manifest the cluster runs. After bootstrap, `git push` is the only deployment mechanism — ArgoCD reconciles the rest.
 
@@ -16,7 +15,7 @@ This directory holds every Kubernetes manifest the cluster runs. After bootstrap
 
 - **GitOps Everything**: Every workload, secret, ingress and config lives in this repo. The cluster is reproducible from a single `git clone`.
 - **Secrets Stay in Git**: SealedSecrets means even credentials are committed safely — only the cluster's private key can decrypt them.
-- **One Pi, Real Workloads**: Designed for a single Raspberry Pi 5, no separate control plane node, no cloud dependencies.
+- **One Server, Real Workloads**: Designed for a single homelab server, no separate control plane node, no cloud dependencies.
 - **Convention Over Configuration**: Every app follows the same `setup.sh` + `*.yaml` pattern, generated from a shared scaffold.
 - **Self-Documenting**: Each app's `README.md` carries YAML frontmatter that drives this very page.
 
