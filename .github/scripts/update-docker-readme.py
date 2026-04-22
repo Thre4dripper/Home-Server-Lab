@@ -67,7 +67,7 @@ class ServiceParser:
                 
             # Add service directory name
             metadata['directory'] = item.name
-            metadata['path'] = f"./docker/{item.name}/"
+            metadata['path'] = f"./{item.name}/"
             
             services.append(metadata)
         
@@ -271,8 +271,8 @@ graph LR
         return diagram
     
     def update_readme(self, services: List[Dict]):
-        """Update the main README.md file."""
-        readme_path = self.repo_root / 'README.md'
+        """Update the docker/README.md file."""
+        readme_path = self.repo_root / 'docker' / 'README.md'
         
         with open(readme_path, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -384,7 +384,7 @@ graph LR
         with open(readme_path, 'w', encoding='utf-8') as f:
             f.write(new_content)
         
-        print(f"✅ Updated README.md with {len(services)} services across {len(categories)} categories")
+        print(f"✅ Updated docker/README.md with {len(services)} services across {len(categories)} categories")
         return True
 
 def main():
@@ -402,9 +402,9 @@ def main():
         print(f"  - {service.get('name', service['directory'])} ({service.get('category', 'No category')})")
     
     if parser.update_readme(services):
-        print("✅ README.md updated successfully")
+        print("✅ docker/README.md updated successfully")
     else:
-        print("❌ Failed to update README.md")
+        print("❌ Failed to update docker/README.md")
         sys.exit(1)
 
 if __name__ == '__main__':
