@@ -173,17 +173,21 @@ def render_mermaid(services: List[Dict[str, Any]]) -> str:
 
     lines: List[str] = ["```mermaid", "graph LR"]
     lines += [
+        "    %% ── Access path (user → service) ───────────────────────────",
         "    Internet[🌐 Internet]",
         "    Twingate[🛡️ Twingate Edge]",
         "    Router[🏠 Home Router]",
         "    Pi[🍓 Raspberry Pi 5]",
         "    K3s[☸️ k3s Cluster]",
-        "    ArgoCD[🚀 ArgoCD]",
         "",
-        "    Internet --> Twingate",
-        "    Internet --> Router --> Pi --> K3s",
-        "    Twingate --> Pi",
-        "    K3s --> ArgoCD",
+        "    Internet --> Twingate --> Router",
+        "    Internet --> Router",
+        "    Router --> Pi --> K3s",
+        "",
+        "    %% ── GitOps deployment branch (parallel to access path) ────",
+        "    GitHub[🐙 GitHub<br/>repo]",
+        "    ArgoCD[🚀 ArgoCD<br/>GitOps]",
+        "    GitHub ==> ArgoCD ==> K3s",
         "",
     ]
 
@@ -200,12 +204,16 @@ def render_mermaid(services: List[Dict[str, Any]]) -> str:
             lines.append(f"        {ids[i]} --- {ids[i + 1]}")
         lines.append("    end")
         for sid in ids:
-            lines.append(f"    ArgoCD -.-> {sid}")
+            lines.append(f"    K3s --> {sid}")
         lines.append("")
 
     lines += [
         "    classDef coreInfra fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000000",
-        "    class Internet,Twingate,Router,Pi,K3s,ArgoCD coreInfra",
+        "    classDef gitops fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000000",
+        "    class Internet,Twingate,Router,Pi,K3s coreInfra",
+        "    class GitHub,ArgoCD gitops",
+        "    linkStyle 4 stroke:#ef6c00,stroke-width:3px",
+        "    linkStyle 5 stroke:#ef6c00,stroke-width:3px",
         "```",
     ]
     return "\n".join(lines)

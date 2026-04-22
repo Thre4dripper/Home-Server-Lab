@@ -78,23 +78,27 @@ k3s/
 
 ```mermaid
 graph LR
+    %% ── Access path (user → service) ───────────────────────────
     Internet[🌐 Internet]
     Twingate[🛡️ Twingate Edge]
     Router[🏠 Home Router]
     Pi[🍓 Raspberry Pi 5]
     K3s[☸️ k3s Cluster]
-    ArgoCD[🚀 ArgoCD]
 
-    Internet --> Twingate
-    Internet --> Router --> Pi --> K3s
-    Twingate --> Pi
-    K3s --> ArgoCD
+    Internet --> Twingate --> Router
+    Internet --> Router
+    Router --> Pi --> K3s
+
+    %% ── GitOps deployment branch (parallel to access path) ────
+    GitHub[🐙 GitHub<br/>repo]
+    ArgoCD[🚀 ArgoCD<br/>GitOps]
+    GitHub ==> ArgoCD ==> K3s
 
     subgraph InfraGitOps["🛠️ Infra & GitOps"]
         direction TB
         argocd[🚀<br/>ArgoCD]
     end
-    ArgoCD -.-> argocd
+    K3s --> argocd
 
     subgraph NetworkIngress["🌐 Network & Ingress"]
         direction TB
@@ -102,8 +106,8 @@ graph LR
         twingate[🛡️<br/>Twingate Connector]
         pihole --- twingate
     end
-    ArgoCD -.-> pihole
-    ArgoCD -.-> twingate
+    K3s --> pihole
+    K3s --> twingate
 
     subgraph MonitoringStats["📊 Monitoring & Stats"]
         direction TB
@@ -111,8 +115,8 @@ graph LR
         portainer[🐳<br/>Portainer]
         dashdot --- portainer
     end
-    ArgoCD -.-> dashdot
-    ArgoCD -.-> portainer
+    K3s --> dashdot
+    K3s --> portainer
 
     subgraph Dashboards["🏡 Dashboards"]
         direction TB
@@ -120,8 +124,8 @@ graph LR
         homepage[🏠<br/>Homepage]
         homarr --- homepage
     end
-    ArgoCD -.-> homarr
-    ArgoCD -.-> homepage
+    K3s --> homarr
+    K3s --> homepage
 
     subgraph Automation["🤖 Automation"]
         direction TB
@@ -129,14 +133,14 @@ graph LR
         n8n[🔄<br/>n8n]
         homeassistant --- n8n
     end
-    ArgoCD -.-> homeassistant
-    ArgoCD -.-> n8n
+    K3s --> homeassistant
+    K3s --> n8n
 
     subgraph MediaEntertainment["🎬 Media & Entertainment"]
         direction TB
         jellyfin[🎬<br/>Jellyfin]
     end
-    ArgoCD -.-> jellyfin
+    K3s --> jellyfin
 
     subgraph FilesStorage["📁 Files & Storage"]
         direction TB
@@ -144,8 +148,8 @@ graph LR
         samba[🗂️<br/>Samba]
         filebrowser --- samba
     end
-    ArgoCD -.-> filebrowser
-    ArgoCD -.-> samba
+    K3s --> filebrowser
+    K3s --> samba
 
     subgraph Downloads["🧲 Downloads"]
         direction TB
@@ -153,17 +157,21 @@ graph LR
         bitcomet[🧲<br/>BitComet]
         aria2 --- bitcomet
     end
-    ArgoCD -.-> aria2
-    ArgoCD -.-> bitcomet
+    K3s --> aria2
+    K3s --> bitcomet
 
     subgraph Databases["🗄️ Databases"]
         direction TB
         databases[🗄️<br/>Databases]
     end
-    ArgoCD -.-> databases
+    K3s --> databases
 
     classDef coreInfra fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000000
-    class Internet,Twingate,Router,Pi,K3s,ArgoCD coreInfra
+    classDef gitops fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000000
+    class Internet,Twingate,Router,Pi,K3s coreInfra
+    class GitHub,ArgoCD gitops
+    linkStyle 4 stroke:#ef6c00,stroke-width:3px
+    linkStyle 5 stroke:#ef6c00,stroke-width:3px
 ```
 <!-- AUTOGEN:DIAGRAM:END -->
 
