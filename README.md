@@ -1,408 +1,441 @@
+<div align="center">
+
 # 🏠 Home Server Lab
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docs.docker.com/compose/)
-[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Services-green)](https://github.com/awesome-selfhosted/awesome-selfhosted)
-[![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-Compatible-C51A4A?logo=raspberry-pi)](https://www.raspberrypi.org/)
+### **Two ways to run a real homelab on a single Raspberry Pi.**
+### **🐳 Docker for prototyping. ☸️ k3s + ArgoCD for production.**
 
-> **A comprehensive collection of self-hosted services for your home lab, optimized for Raspberry Pi and other single-board computers.**
+*A complete, opinionated, two-stack homelab — DNS · ad-blocking · media · torrents · smart home · automation · dashboards · file sharing · zero-trust remote access — all self-hosted, all in one repo, all on one Pi.*
 
-Transform your home network into a powerful, privacy-focused digital ecosystem with enterprise-grade services running on your own hardware. This repository provides battle-tested Docker configurations for essential self-hosted applications.
+---
 
-## 🎯 **Project Philosophy**
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-5-C51A4A?style=for-the-badge&logo=raspberry-pi&logoColor=white)](https://www.raspberrypi.org/)
+[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Awesome-7289DA?style=for-the-badge)](https://github.com/awesome-selfhosted/awesome-selfhosted)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](./CONTRIBUTING.md)
 
-- **Privacy First**: Keep your data under your control
-- **Production Ready**: Enterprise-grade configurations optimized for home use  
-- **Resource Efficient**: Designed for single-board computers like Raspberry Pi
-- **Easy Deployment**: One-command setup with comprehensive documentation
-- **Security Focused**: Secure defaults with optional hardening guides
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](./docker/README.md)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-k3s-326CE5?logo=kubernetes&logoColor=white)](./k3s/README.md)
+[![ArgoCD](https://img.shields.io/badge/GitOps-ArgoCD-EF7B4D?logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
+[![Traefik](https://img.shields.io/badge/Ingress-Traefik-24A1C1?logo=traefikproxy&logoColor=white)](https://traefik.io/)
+[![Sealed Secrets](https://img.shields.io/badge/Secrets-SealedSecrets-2E7D32?logo=bitwarden&logoColor=white)](https://github.com/bitnami-labs/sealed-secrets)
+[![Twingate](https://img.shields.io/badge/Remote%20Access-Twingate-FF4F00)](https://www.twingate.com/)
 
-## 🏷️ **Service Categories**
+[![GitHub stars](https://img.shields.io/github/stars/Thre4dripper/Home-Server-Lab?style=social)](https://github.com/Thre4dripper/Home-Server-Lab/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Thre4dripper/Home-Server-Lab?style=social)](https://github.com/Thre4dripper/Home-Server-Lab/network/members)
+[![Last commit](https://img.shields.io/github/last-commit/Thre4dripper/Home-Server-Lab?logo=git&logoColor=white)](https://github.com/Thre4dripper/Home-Server-Lab/commits/main)
 
-| Category | Description | Services |
-|----------|-------------|----------|
-| 🎬 Media & Entertainment | Media servers and streaming | Jellyfin, Plex |
-| 🏡 Dashboard & Network Services | Network services and dashboards | Dashy, Homarr, Nginx Proxy Manager, Pi-hole |
-| 📁 File Management & Collaboration | File storage, synchronization and collaboration | FileBrowser, Nextcloud, Pydio, Seafile Pro, +1 more |
-| 📊 Monitoring & Stats | System statistics and performance dashboards | Dashdot, Netdata, Portainer |
-| 🔄 Automation & Workflow | Workflow automation and task scheduling | n8n |
-| 🛠️ Development & DevOps | Development tools and CI/CD | GitLab, Gitea, LocalStack |
-| 🧲 Download Managers | Torrent and download management | Deluge, qBittorrent |
+[**🐳 Docker Stack →**](./docker/README.md) ⋅ [**☸️ k3s Stack →**](./k3s/README.md) ⋅ [**⚙️ Ansible →**](./ansible/README.md) ⋅ [**🤝 Contributing →**](./CONTRIBUTING.md)
 
-## 🏗️ **Architecture Overview**
+</div>
 
-> **📝 Note:** This architecture diagram is automatically generated from service metadata. Changes will be reflected when services are added or modified.
+---
+
+## 🎯 Why this repo exists
+
+Most homelab projects pick a side: either "here's my `docker-compose.yml` collection" **or** "here's my Helm-charted k3s cluster". This repo refuses to choose, because **both have a place in a serious homelab**:
+
+- **Docker Compose** is unbeatable for *trying things out* — clone, edit env vars, `docker compose up`. Done in ninety seconds.
+- **Kubernetes (k3s)** is unbeatable for *running things long-term* — declarative state, GitOps reconciliation, sealed secrets, real ingress, real RBAC.
+
+So this repo gives you both, side-by-side, with the **same set of services modelled twice** — once the easy way, once the production way. Pick a service, prototype it in `docker/`, then promote the working configuration to `k3s/` once you trust it.
+
+Every choice is benchmarked for an **8 GB Raspberry Pi 5**. Everything is reproducible from a clean `git clone`. Nothing depends on a SaaS, a paid plan, or an undocumented click in someone's WebUI.
+
+---
+
+## ⚖️ The two stacks at a glance
+
+| | **🐳 [Docker Stack](./docker/README.md)** | **☸️ [k3s Stack](./k3s/README.md)** |
+|---|---|---|
+| **Best for** | Prototyping · single-service experiments · learning · "let me try X for an evening" | Production · GitOps · long-running workloads · multi-service composition |
+| **Deploy unit** | `docker compose up -d` per service | `kubectl apply -k` per app, then ArgoCD reconciles |
+| **Source of truth** | `docker-compose.yml` + `.env` files | YAML manifests + SealedSecrets in git |
+| **Networking** | Bridge networks + host port bindings | Traefik IngressRoute + LoadBalancer (klipper-lb) |
+| **TLS / certificates** | Manual (or Nginx Proxy Manager UI) | cert-manager + Let's Encrypt, automatic renewal |
+| **Secrets** | `.env` files (git-ignored) | SealedSecrets (encrypted, **safe to commit**) |
+| **Updates** | `docker compose pull && up -d` | `git push` → ArgoCD auto-syncs |
+| **Rollback** | Edit compose / re-pull old tag | `git revert` → ArgoCD un-applies |
+| **Recovery** | Re-run `setup.sh`, restore bind mounts | `cluster-restore.sh` + PVCs |
+| **Per-service docs** | <!-- AUTOGEN:DOCKER_COUNT -->27<!-- /AUTOGEN:DOCKER_COUNT --> self-contained READMEs | <!-- AUTOGEN:K3S_COUNT -->15<!-- /AUTOGEN:K3S_COUNT --> self-contained READMEs |
+| **Resource overhead** | Just Docker daemon (~50 MB RAM) | k3s control plane (~500 MB RAM) |
+| **Service count** | **<!-- AUTOGEN:DOCKER_COUNT -->27<!-- /AUTOGEN:DOCKER_COUNT -->** | **<!-- AUTOGEN:K3S_COUNT -->15<!-- /AUTOGEN:K3S_COUNT -->** (and growing) |
+
+> **TL;DR** — Use the Docker stack to try things out. Promote what works to the k3s stack and let ArgoCD run it for you. They share the same Pi, the same Pi-hole DNS, and the same Twingate connector.
+
+---
+
+## 🏗️ Architecture at a glance
 
 ```mermaid
 graph LR
     Internet[🌐 Internet]
+    Twingate[🛡️ Twingate Edge]
     Router[🏠 Home Router]
-    RPI[🍓 Raspberry Pi]
-    Docker[🐳 Docker]
-    
-    Internet --> Router
-    Router --> RPI
-    RPI --> Docker
-    
-    %% Core Infrastructure
-    subgraph Core["🏗️ Core Infrastructure"]
+    Pi[🍓 Raspberry Pi 5]
+
+    subgraph Stacks["🧪 Two Parallel Stacks"]
         direction TB
+        Docker[🐳 Docker<br/>compose]
+        K3s[☸️ k3s<br/>cluster]
+        ArgoCD[🚀 ArgoCD<br/>GitOps]
+        K3s --> ArgoCD
     end
 
-
-    %% 🎬 Media & Entertainment
-    subgraph MediaEntertainment["🎬 Media & Entertainment"]
+    subgraph Edge["🚪 Edge Services"]
         direction TB
-        Jellyfin[🎬<br/>Jellyfin]
-        Plex[🎬<br/>Plex]
-        Jellyfin --- Plex
+        Pihole[🛡️ Pi-hole DNS]
+        Traefik[🛣️ Traefik Ingress]
     end
-    Docker -.-> Jellyfin
-    Docker -.-> Plex
 
-    %% 🏡 Dashboard & Network Services
-    subgraph DashboardNetworkServices["🏡 Dashboard & Network Services"]
+    subgraph Workloads["📦 Self-hosted Workloads"]
         direction TB
-        Dashy[🎯<br/>Dashy]
-        Homarr[🏡<br/>Homarr]
-        Nginxui[🔀<br/>Nginx Proxy Manager]
-        Pihole[🛡️<br/>Pi-hole]
-        Dashy --- Homarr
-        Nginxui --- Pihole
+        Dash[🏡 Dashboards<br/>Homepage · Homarr]
+        Media[🎬 Media<br/>Jellyfin · Plex]
+        Files[📁 Files<br/>FileBrowser · Samba · Nextcloud]
+        Auto[🤖 Automation<br/>HA · n8n]
+        DL[🧲 Downloads<br/>Aria2 · BitComet · qBittorrent]
+        Mon[📊 Monitoring<br/>Dashdot · Netdata · Portainer]
+        Dev[🛠️ Dev<br/>Gitea · GitLab · LocalStack]
     end
-    Docker -.-> Dashy
-    Docker -.-> Homarr
-    Docker -.-> Nginxui
-    Docker -.-> Pihole
 
-    %% 📁 File Management & Collaboration
-    subgraph FileManagementCollaboration["📁 File Management & Collaboration"]
-        direction TB
-        Filebrowser[📂<br/>FileBrowser]
-        Nextcloud[☁️<br/>Nextcloud]
-        Pydio[📁<br/>Pydio]
-        Seafile[🌊<br/>Seafile Pro]
-        Owncloud[☁️<br/>ownCloud]
-        Filebrowser --- Nextcloud
-        Pydio --- Seafile
-    end
-    Docker -.-> Filebrowser
-    Docker -.-> Nextcloud
-    Docker -.-> Pydio
-    Docker -.-> Seafile
-    Docker -.-> Owncloud
+    Internet --> Twingate --> Pi
+    Internet --> Router --> Pi
+    Pi --> Docker
+    Pi --> K3s
+    Docker --> Edge
+    K3s --> Edge
+    Edge --> Workloads
 
-    %% 📊 Monitoring & Stats
-    subgraph MonitoringStats["📊 Monitoring & Stats"]
-        direction TB
-        Dashdot[📊<br/>Dashdot]
-        Netdata[📈<br/>Netdata]
-        Portainer[📊<br/>Portainer]
-        Dashdot --- Netdata
-    end
-    Docker -.-> Dashdot
-    Docker -.-> Netdata
-    Docker -.-> Portainer
-
-    %% 🔄 Automation & Workflow
-    subgraph AutomationWorkflow["🔄 Automation & Workflow"]
-        direction TB
-        N8N[🔄<br/>n8n]
-    end
-    Docker -.-> N8N
-
-    %% 🛠️ Development & DevOps
-    subgraph DevelopmentDevOps["🛠️ Development & DevOps"]
-        direction TB
-        Gitlab[🦊<br/>GitLab]
-        Gitea[🍃<br/>Gitea]
-        Localstack[☁️<br/>LocalStack]
-        Gitlab --- Gitea
-    end
-    Docker -.-> Gitlab
-    Docker -.-> Gitea
-    Docker -.-> Localstack
-
-    %% 🧲 Download Managers
-    subgraph DownloadManagers["🧲 Download Managers"]
-        direction TB
-        Deluge[🧲<br/>Deluge]
-        Qbittorrent[📥<br/>qBittorrent]
-        Deluge --- Qbittorrent
-    end
-    Docker -.-> Deluge
-    Docker -.-> Qbittorrent
-
-    %% Custom Styling for better visibility and contrast
-    classDef coreInfra fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000000
-    classDef infraNode fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000000
-    classDef monitoringNode fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
-    classDef downloadNode fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000000
-    classDef mediaNode fill:#fce4ec,stroke:#e91e63,stroke-width:2px,color:#000000
-    classDef nasNode fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:#000000
-    classDef automationNode fill:#e0f2f1,stroke:#009688,stroke-width:2px,color:#000000
-    classDef devNode fill:#fff8e1,stroke:#ff9800,stroke-width:2px,color:#000000
-    classDef dashNode fill:#f9fbe7,stroke:#8bc34a,stroke-width:2px,color:#000000
-    
-    class Internet,Router,RPI,Docker coreInfra
-    class Jellyfin,Plex mediaNode
-    class Dashy,Homarr,Nginxui,Pihole dashNode
-    class Filebrowser,Nextcloud,Pydio,Seafile,Owncloud nasNode
-    class Dashdot,Netdata,Portainer monitoringNode
-    class N8N automationNode
-    class Gitlab,Gitea,Localstack devNode
-    class Deluge,Qbittorrent downloadNode
+    classDef core fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000
+    classDef stack fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    class Internet,Twingate,Router,Pi core
+    class Docker,K3s,ArgoCD stack
 ```
 
+A single Pi sits behind a normal home router. **No port forwarding** is required — remote access flows through the Twingate connector, while the LAN gets DNS-level ad blocking and an internal `*.home.ijlalahmad.dev` domain served by Traefik (k3s) or Nginx Proxy Manager (Docker).
 
-## 🚀 **Available Services**
+---
 
-> **📝 Note:** This section is automatically generated from individual service README.md files. To update service information, edit the respective service's README.md file and the changes will be reflected here automatically.
+## 🚀 Quick start
 
-### 📊 Monitoring & Stats
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**Dashdot**](./dashdot/) | Server Resource Monitoring | Real-time CPU, RAM, Storage, Network, and GPU monitoring, CPU temperature mon... | ~50MB RAM |
-| [**Netdata**](./netdata/) | Real-time System Monitoring | Real-time metrics with 1-second granularity, Interactive web dashboards, Smar... | ~250MB RAM |
-| [**Portainer**](./portainer/) | Container Management | Complete Docker management interface, Multi-user support with RBAC, Applicati... | ~100MB RAM |
-
-### 🧲 Download Managers
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**Deluge**](./deluge/) | BitTorrent Client | Web-based user interface, Torrent management and monitoring, Bandwidth limiti... | ~200MB RAM |
-| [**qBittorrent**](./qbittorrent/) | BitTorrent Client | Web-based UI for remote access, Sequential downloading support, RSS feed supp... | ~500MB RAM |
-
-### 🎬 Media & Entertainment
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**Jellyfin**](./jellyfin/) | Self-hosted Media Server | Stream movies, TV, music, and photos, Multi-user with permissions, Hardware a... | ~1GB RAM |
-| [**Plex**](./plex/) | Media Server | Stream personal media anywhere, Cross-platform device support, Hardware trans... | ~1GB RAM |
-
-### 📁 File Management & Collaboration
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**FileBrowser**](./filebrowser/) | Web-based File Manager | Browse and manage server files, Upload/download files via web, Create, edit, ... | ~100MB RAM |
-| [**Nextcloud**](./nextcloud/) | Self-hosted file sync and share | File sync and sharing, Calendar and contacts, Office document editing | ~1-2GB RAM (scales with usage) |
-| [**Pydio**](./pydio/) | File Management Platform | Web-based file management, Team collaboration tools, External storage integra... | ~400MB RAM |
-| [**Seafile Pro**](./seafile/) | Enterprise File Sync | Real-time collaboration and editing, Desktop and mobile sync clients, Enterpr... | ~1GB RAM |
-| [**ownCloud**](./owncloud/) | File Synchronization & Sharing | Self-hosted file sync and share, Web interface and mobile apps, User manageme... | ~800MB RAM |
-
-### 🔄 Automation & Workflow
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**n8n**](./n8n/) | Workflow Automation | Visual workflow builder, 300+ integrations, API and webhook support | ~300MB RAM |
-
-### 🛠️ Development & DevOps
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**GitLab**](./gitlab/) | Full DevOps Platform | Git repos with CI/CD pipelines, Issue tracking and project management, Contai... | ~2GB RAM |
-| [**Gitea**](./gitea/) | Lightweight Git Service | Git hosting with web interface, Pull requests and code review, Issue tracking... | ~200MB RAM |
-| [**LocalStack**](./localstack/) | AWS Cloud Emulation | Local AWS services emulation, Development and testing platform, Cloud dashboa... | ~500MB RAM |
-
-### 🏡 Dashboard & Network Services
-
-| Service | Purpose | Key Features | Resource Usage |
-|---------|---------|--------------|----------------|
-| [**Dashy**](./dashy/) | Service Dashboard | Customizable dashboard interface, Service status monitoring, Advanced search ... | ~150MB RAM |
-| [**Homarr**](./homarr/) | Homepage Dashboard | Customizable homepage dashboard, Service integration and monitoring, Modern r... | ~200MB RAM |
-| [**Nginx Proxy Manager**](./nginx-ui/) | Reverse Proxy Management UI | Web UI for reverse proxy setup, Free SSL with Let's Encrypt, Access lists and... | ~400MB RAM |
-| [**Pi-hole**](./pihole/) | Network Ad Blocker | Network-wide ad blocking, DNS-level filtering, Detailed query analytics | ~100MB RAM |
-
-
-## 🚀 **Quick Start**
-
-### Prerequisites
-
-- **Hardware**: Raspberry Pi 4 (4GB+ RAM recommended) or any Linux server
-- **OS**: Ubuntu 20.04+ / Raspberry Pi OS / Any Docker-compatible Linux
-- **Software**: Docker & Docker Compose installed
-
-### 1. Clone Repository
+### Option A — "I just want to try one service" (🐳 Docker)
 
 ```bash
 git clone https://github.com/Thre4dripper/Home-Server-Lab.git
-cd Home-Server-Lab
+cd Home-Server-Lab/docker/<service>     # e.g. docker/jellyfin
+./setup.sh
 ```
 
-### 2. Choose Your Services
+Every Docker service is a self-contained folder with `docker-compose.yml`, `setup.sh` and a per-service `README.md`. The setup script handles env-file scaffolding, directory creation and `docker compose up -d`. → see **[docker/README.md](./docker/README.md)** for the full catalog and detailed walkthrough.
 
-Each service is self-contained with its own configuration:
+### Option B — "I'm running this for real" (☸️ k3s + ArgoCD)
 
 ```bash
-# Deploy individual services
-cd netdata && ./setup.sh    # System monitoring
-cd ../portainer && ./setup.sh    # Container management  
-cd ../seafile && ./setup.sh      # File collaboration
+# 1. Install k3s (single-node, with default Traefik + klipper-lb)
+curl -sfL https://get.k3s.io | sh -
+
+# 2. Bootstrap the cluster
+git clone https://github.com/Thre4dripper/Home-Server-Lab.git
+cd Home-Server-Lab/k3s
+kubectl apply -f base/namespaces/
+kubectl apply -k infra/sealed-secrets/
+kubectl apply -k infra/traefik/
+kubectl apply -k infra/cert-manager/
+kubectl apply -k infra/argocd/
+
+# 3. Hand the keys to ArgoCD (one ApplicationSet → one Application per app)
+kubectl apply -f infra/argocd/root-app.yaml
+
+# Done. From here, every commit to k3s/apps/** is auto-deployed.
 ```
 
-### 3. Access Your Services
+→ see **[k3s/README.md](./k3s/README.md)** for the full bootstrap order, secrets workflow and service catalog.
 
-After deployment, access services via your server IP:
-
-- **Portainer**: http://your-server-ip:9000
-- **Netdata**: http://your-server-ip:19999
-- **Seafile**: http://your-server-ip:8000
-- **And more...** (check individual service documentation)
-
-## 📋 **System Requirements**
-
-### Minimum Configuration
-- **RAM**: 4GB (recommended 8GB+)
-- **Storage**: 32GB+ SD card/SSD
-- **Network**: Ethernet connection recommended
-- **Power**: 3A+ power supply for Raspberry Pi
-
-### Resource Planning
-
-| Configuration | Services | Total RAM | Storage |
-|---------------|----------|-----------|---------|
-| **Basic** | Portainer + Netdata + Pi-hole | ~500MB | 16GB |
-| **Developer** | + GitLab + n8n + LocalStack | ~3GB | 32GB |
-| **Media Hub** | + Plex + Seafile + Dashboards | ~5GB | 64GB+ |
-| **Full Stack** | All Services | ~8GB+ | 128GB+ |
-
-## 🛡️ **Security & Best Practices**
-
-### Built-in Security Features
-
-- **Environment Isolation**: Each service runs in isolated containers
-- **Secret Management**: Sensitive data in `.env` files (git-ignored)
-- **Network Segmentation**: Internal Docker networks for service communication
-- **Resource Limits**: Memory and CPU constraints prevent resource exhaustion
-- **Health Checks**: Automatic service health monitoring and recovery
-
-### Recommended Security Measures
-
-1. **Change Default Passwords**: Update all default credentials
-2. **Enable Firewall**: Configure UFW or iptables
-3. **Use Strong Authentication**: Enable 2FA where available
-4. **Regular Updates**: Keep containers and host system updated
-5. **Backup Strategy**: Implement automated backups
-6. **Reverse Proxy**: Use Nginx/Traefik for HTTPS termination
-
-## 🔧 **Management Commands**
-
-### Global Operations
+### Option C — "Provision the bare-metal Pi too" (⚙️ Ansible)
 
 ```bash
-# Check all running services
-docker ps
-
-# View resource usage
-docker stats
-
-# Update all services
-find . -name "docker-compose.yml" -execdir docker compose pull \;
-find . -name "docker-compose.yml" -execdir docker compose up -d \;
-
-# Backup all data
-tar -czf homelab-backup-$(date +%Y%m%d).tar.gz */data/ */.env
-
-# System cleanup
-docker system prune -f
-docker volume prune -f
+cd Home-Server-Lab/ansible
+ansible-playbook -i inventory.yml site.yml
 ```
 
-### Service-Specific Operations
+Installs Docker, k3s, the Sealed Secrets controller and friends on a fresh Pi — then you're ready for Option A or B.
 
-Each service includes standardized management scripts:
+---
+
+## 📚 Service catalogs
+
+Both stacks publish auto-generated catalog pages with mermaid diagrams and per-category tables:
+
+<!-- AUTOGEN:CATALOG_TABLE -->
+| Stack | Catalog | Services | Categories |
+|-------|---------|----------|------------|
+| 🐳 Docker | **[docker/README.md →](./docker/README.md)** | 27 ready-to-run Compose stacks | 7 |
+| ☸️ k3s | **[k3s/README.md →](./k3s/README.md)** | 15 GitOps-managed Kubernetes apps | 9 |
+<!-- /AUTOGEN:CATALOG_TABLE -->
+
+Both pages **regenerate automatically** from per-service `README.md` frontmatter via GitHub Actions — see [Automation](#-automation).
+
+---
+
+## 🎯 Project philosophy
+
+- **🔒 Privacy first** — Your data, your hardware, your rules. No SaaS dependencies, no telemetry, no third-party clouds in the critical path.
+- **🏗️ Production-grade patterns** — Real ingress, real secrets management, real GitOps — *even on a Pi*. The k3s stack is structured exactly the way you'd structure a small production cluster.
+- **📦 Single-board friendly** — Every service has a benchmarked RAM/CPU footprint. The full Docker catalog runs comfortably on an 8 GB Pi 5.
+- **🧪 Reproducible from zero** — `git clone` → bootstrap → working homelab. No undocumented manual clicks. No "oh, you also need to…".
+- **📖 Self-documenting** — Every service carries machine-readable YAML frontmatter. The catalog pages, mermaid diagrams and category tables are derived from that frontmatter, so they cannot drift out of sync with reality.
+- **🎓 Educational** — Each per-service README is structured to teach: *Why this service · How it's wired · What can go wrong · How to fix it.*
+
+---
+
+## 🛠️ Tech stack
+
+<div align="center">
+
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![ArgoCD](https://img.shields.io/badge/Argo%20CD-EF7B4D?style=for-the-badge&logo=argo&logoColor=white)
+![Traefik](https://img.shields.io/badge/Traefik-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white)
+![Helm](https://img.shields.io/badge/Helm-0F1689?style=for-the-badge&logo=helm&logoColor=white)
+![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=for-the-badge&logo=ansible&logoColor=white)
+![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-A22846?style=for-the-badge&logo=raspberry-pi&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+![YAML](https://img.shields.io/badge/YAML-CB171E?style=for-the-badge&logo=yaml&logoColor=white)
+![Bash](https://img.shields.io/badge/Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+
+</div>
+
+| Layer | Docker stack | k3s stack |
+|-------|--------------|-----------|
+| **Container runtime** | Docker Engine | containerd (via k3s) |
+| **Orchestration** | docker compose | k3s (Kubernetes 1.28+) |
+| **Ingress / proxy** | Nginx Proxy Manager (`nginx-ui`) | Traefik (built into k3s) |
+| **Load balancer** | host port bindings | klipper-lb (built into k3s) |
+| **TLS** | Manual / Let's Encrypt via NPM | cert-manager + Let's Encrypt |
+| **Secrets** | `.env` files (git-ignored) | Bitnami SealedSecrets (encrypted in git) |
+| **Deployment automation** | per-service `setup.sh` | per-app `setup.sh` + ArgoCD |
+| **Remote access** | Twingate connector container | Twingate connector Pod |
+| **DNS** | Pi-hole container | Pi-hole Pod (`hostNetwork: true`) |
+| **CI** | GitHub Actions (README + frontmatter) | GitHub Actions (README + frontmatter) |
+
+---
+
+## 💻 System requirements
+
+The reference deployment is a **Raspberry Pi 5 (8 GB) with an external SSD over USB 3** running Raspberry Pi OS Bookworm 64-bit.
+
+| Component | Minimum | Recommended | Notes |
+|-----------|---------|-------------|-------|
+| **CPU** | ARM64 quad-core 1.5 GHz | Pi 5 / x86_64 4-core | Both stacks are arch-agnostic where the underlying images are |
+| **RAM** | 4 GB | 8 GB | k3s adds ~500 MB baseline; full Docker catalog needs 6 GB+ |
+| **Storage** | 32 GB SD card | 256 GB+ NVMe / SSD | Move `/var/lib/{docker,rancher}` to SSD for sane I/O |
+| **Network** | 100 Mbit Ethernet | Gigabit Ethernet | Multicast / Wi-Fi is hostile to Home Assistant discovery |
+| **Power** | 3 A USB-C | Official Pi 5 PSU | SD-card corruption on under-volt is a common Pi pitfall |
+
+### Resource planning by use case
+
+| Profile | Services | Total RAM | Storage | Stack |
+|---------|----------|-----------|---------|-------|
+| **Minimal** | Pi-hole + Portainer + Homepage | ~400 MB | 16 GB | 🐳 Docker |
+| **Media hub** | + Jellyfin + qBittorrent + FileBrowser | ~2 GB | 256 GB+ | 🐳 Docker |
+| **Smart home** | + Home Assistant + n8n + Mosquitto | ~3 GB | 32 GB | 🐳 Docker |
+| **Production cluster** | k3s + Traefik + ArgoCD + 8–10 apps | ~4 GB | 128 GB+ | ☸️ k3s |
+| **Full lab** | Both stacks side-by-side | ~6–7 GB | 256 GB+ | 🐳 + ☸️ |
+
+---
+
+## 🛡️ Security posture
+
+This is a **homelab**, not a production SaaS, but the patterns used here are real:
+
+- ✅ **No inbound port forwarding** — remote access flows through the Twingate connector (outbound-only TCP/443 to the Twingate edge).
+- ✅ **Secrets never in git plaintext** — Docker uses `.env` files (git-ignored); k3s uses Bitnami SealedSecrets, which are encrypted with the cluster's public key and only decryptable inside the cluster.
+- ✅ **TLS everywhere** — k3s ingress is fronted by cert-manager + Let's Encrypt; Docker stack uses Nginx Proxy Manager with the same provider.
+- ✅ **Network segmentation** — Docker isolates each stack on its own bridge network; k3s isolates by namespace, with `NetworkPolicy` available where needed.
+- ✅ **Least-privilege RBAC** — k3s service accounts (e.g. Homepage's kubernetes widget) are bound to read-only ClusterRoles, never `cluster-admin` (except Portainer, which is opt-in and called out).
+- ✅ **DNS-level filtering** — Pi-hole blocks ads, trackers and known-malicious domains for every device on the LAN.
+- ✅ **Resource limits** — every Pod has CPU + memory requests/limits to prevent one runaway container from OOM-killing the host.
+
+What this **does not** give you out of the box:
+
+- ❌ DDoS protection (you're not on the public internet)
+- ❌ WAF / app-layer firewall (overkill for a homelab; add Crowdsec if you want it)
+- ❌ Hardware-attested boot (Pi limitation)
+
+→ Every per-service README has its own *Troubleshooting* and *Hardening notes* sections.
+
+---
+
+## 🤖 Automation
+
+This repo is itself GitOps — the documentation, the catalog and the diagrams are all reconciled from the source of truth, which is each service's `README.md` frontmatter.
+
+| Workflow | Trigger | Effect |
+|----------|---------|--------|
+| [`update-readme.yml`](./.github/workflows/update-readme.yml) | Any per-service README change in `docker/*` or `k3s/apps/*` | Regenerates **all three** catalogs — `docker/README.md`, `k3s/README.md` and the root `README.md` — in a single matrix job |
+| [`validate-metadata.yml`](./.github/workflows/validate-metadata.yml) | PRs touching any service README | Validates frontmatter schema for both stacks (required fields, allowed categories, valid icons) |
+
+The matrix-based generator is a [single workflow file](./.github/workflows/update-readme.yml) that runs `update-docker-readme.py`, `update-k3s-readme.py` and `update-global-readme.py` in parallel and commits/pushes (or PR-comments) any regenerated catalog. Inside the root README, only the segments wrapped in `<!-- AUTOGEN:* -->` markers are touched — every other line is yours.
+
+**Add a service → write its README with the right frontmatter → push → the catalog updates itself.**
+
+---
+
+## 📁 Repository layout
+
+```
+Home-Server-Lab/
+├── README.md                     ← you are here
+├── docker/                       🐳 Docker Compose stack — <!-- AUTOGEN:DOCKER_COUNT -->27<!-- /AUTOGEN:DOCKER_COUNT --> services
+│   ├── README.md                     auto-generated catalog + mermaid
+│   └── <service>/                    docker-compose.yml + setup.sh + README.md (frontmatter)
+├── k3s/                          ☸️  k3s + ArgoCD stack — <!-- AUTOGEN:K3S_COUNT -->15<!-- /AUTOGEN:K3S_COUNT --> apps
+│   ├── README.md                     auto-generated catalog + mermaid + bootstrap docs
+│   ├── base/                         shared namespaces
+│   ├── infra/                        Traefik · SealedSecrets · cert-manager · ArgoCD
+│   ├── apps/<service>/               manifests + setup.sh + README.md (frontmatter)
+│   └── scripts/                      shared helpers (_app-ctl.sh, seal.sh, db-user.sh, …)
+├── ansible/                      ⚙️  Bare-metal & host bootstrap (Docker, k3s, sealed-secrets)
+└── .github/
+    ├── scripts/                      update-docker-readme.py · update-k3s-readme.py · validate-service.py
+    └── workflows/                    update-readme.yml · validate-metadata.yml
+```
+
+---
+
+## ❓ FAQ
+
+<details>
+<summary><b>Why both Docker AND k3s? Isn't that redundant?</b></summary>
+
+No — they serve different purposes. The Docker stack is for *trying* things; the k3s stack is for *running* them. You'll spin up a service in Docker for an afternoon to learn how it works, then promote it to k3s once you trust the configuration. Removing one would force every experiment through the production deployment path, which is friction you don't want when you're tinkering.
+
+</details>
+
+<details>
+<summary><b>Do I need to run both?</b></summary>
+
+No. They're independent. The Docker stack works on any Linux host with Docker. The k3s stack works on any host with k3s (or full k8s). Pick one or both.
+
+</details>
+
+<details>
+<summary><b>Why k3s and not full Kubernetes?</b></summary>
+
+k3s is full Kubernetes — same APIs, same `kubectl`, same manifests. It just ships as a single binary, replaces etcd with SQLite by default, and is built for ARM/edge. Everything in `k3s/apps/` would work unchanged on EKS / GKE / AKS / k0s / minikube.
+
+</details>
+
+<details>
+<summary><b>Can I run this on x86_64 / Intel / AMD?</b></summary>
+
+Yes. Every image used here ships multi-arch manifests (`linux/amd64` + `linux/arm64`). The Pi 5 is the reference platform, but nothing forces it.
+
+</details>
+
+<details>
+<summary><b>How do I add my own service?</b></summary>
+
+Pick a stack, copy the closest existing service folder, edit the manifests/compose file, write a README with the required frontmatter, push. The catalog regenerates itself. Full guide in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+</details>
+
+<details>
+<summary><b>How do I expose a service to the public internet?</b></summary>
+
+You don't need to. Twingate is the recommended path — it's outbound-only, identity-aware and works through CGNAT. If you really want public exposure, both stacks support it: Docker via Nginx Proxy Manager + Let's Encrypt, k3s via Traefik + cert-manager + a router port-forward.
+
+</details>
+
+<details>
+<summary><b>What about backups?</b></summary>
+
+- **Docker**: every service uses bind-mounted volumes under `<service>/data/`. A `tar.gz` of the repo + `data/` folders is your backup.
+- **k3s**: PVCs use `Retain` reclaim policy. For logical DB backups see `k3s/apps/databases/README.md`. For full cluster snapshots, the `cluster-restore.sh` helper exists.
+
+</details>
+
+<details>
+<summary><b>Does this work behind CGNAT / on a phone hotspot / on a hostile network?</b></summary>
+
+Yes — that's exactly why Twingate is the recommended remote-access path. It only requires outbound HTTPS.
+
+</details>
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome — adding a service, fixing a manifest, improving docs, sharing benchmarks.
+
+- See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the full workflow.
+- See **[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)** for community standards.
+
+The TL;DR for adding a service:
+
+<details>
+<summary><b>🐳 Add a Docker service</b></summary>
 
 ```bash
-cd <service-directory>
-./setup.sh          # Initial deployment
-docker compose logs -f   # View logs
-docker compose restart  # Restart service
-docker compose down     # Stop service
+mkdir docker/my-app && cd docker/my-app
+# create docker-compose.yml, setup.sh, README.md (with frontmatter)
+git add . && git commit -m "feat(docker): add my-app"
+git push   # docker/README.md regenerates automatically
 ```
 
-## 📊 **Monitoring & Maintenance**
+Required frontmatter fields: `name`, `category`, `purpose`, `description`, `icon`, `features`, `resource_usage`. See any existing service for an example.
 
-### Health Monitoring
+</details>
 
-- **Netdata Dashboard**: Real-time system metrics at http://your-server-ip:19999
-- **Portainer**: Container status and resource usage
-- **Service Health Checks**: Built-in Docker health monitoring
-- **Log Aggregation**: Centralized logging via Docker
+<details>
+<summary><b>☸️ Add a k3s service</b></summary>
 
-### Maintenance Schedule
-
-| Task | Frequency | Command |
-|------|-----------|---------|
-| **Check Service Health** | Daily | `docker ps` |
-| **Review Logs** | Weekly | `docker compose logs` |
-| **Update Containers** | Monthly | `docker compose pull && docker compose up -d` |
-| **System Backup** | Weekly | Custom backup scripts |
-| **Clean Docker Cache** | Monthly | `docker system prune` |
-
-## 🤝 **Contributing**
-
-We welcome contributions! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for details on:
-
-- Adding new services
-- Improving existing configurations
-- Reporting bugs and feature requests
-- Documentation improvements
-
-## 📜 **Code of Conduct**
-
-This project adheres to a [Code of Conduct](./CODE_OF_CONDUCT.md) to ensure a welcoming environment for all contributors.
-
-## 📚 **Documentation Structure**
-
-Each service includes comprehensive documentation:
-
-```
-service-name/
-├── README.md              # Service-specific guide
-├── docker-compose.yml     # Container configuration
-├── .env.example          # Configuration template
-├── setup.sh              # Automated deployment
-├── .gitignore            # Exclude sensitive data
-└── data/                 # Persistent data (bind mounted)
+```bash
+cd k3s
+./scripts/new-service.sh my-app
+# fill in manifests + write apps/my-app/README.md with frontmatter
+git add . && git commit -m "feat(k3s): add my-app"
+git push   # k3s/README.md regenerates and ArgoCD deploys
 ```
 
-## 🔗 **Useful Links**
+Required frontmatter fields: `name`, `category`, `purpose`, `description`, `icon`, `namespace`, `components`, `features`, `resource_usage`.
 
-### Official Documentation
-- [Docker Documentation](https://docs.docker.com/)
-- [Docker Compose Reference](https://docs.docker.com/compose/)
-- [Raspberry Pi Documentation](https://www.raspberrypi.org/documentation/)
+</details>
 
-### Community Resources
-- [Awesome Self-Hosted](https://github.com/awesome-selfhosted/awesome-selfhosted)
-- [r/selfhosted](https://reddit.com/r/selfhosted)
-- [Home Lab Community](https://www.reddit.com/r/homelab/)
+---
 
-### Security Resources
-- [Docker Security Best Practices](https://docs.docker.com/engine/security/)
-- [Self-Hosted Security Guide](https://github.com/imthenachoman/How-To-Secure-A-Linux-Server)
+## 📄 License
 
-## 📄 **License**
+[MIT](./LICENSE) — do whatever you want, just keep the notice.
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+---
 
-## 🙏 **Acknowledgments**
+## 🙏 Acknowledgements
 
-- Thanks to the open-source community for creating amazing self-hosted solutions
-- Special recognition to developers of each service for their excellent work
-- Raspberry Pi Foundation for making affordable computing accessible
-- Docker team for revolutionizing application deployment
+Built on the shoulders of giants:
+
+- The **self-hosted community** — [awesome-selfhosted](https://github.com/awesome-selfhosted/awesome-selfhosted), [r/selfhosted](https://reddit.com/r/selfhosted), [r/homelab](https://reddit.com/r/homelab)
+- **[k3s](https://k3s.io/)** — for making real Kubernetes possible on a Pi
+- **[ArgoCD](https://argo-cd.readthedocs.io/)** — for GitOps that actually works
+- **[Bitnami SealedSecrets](https://github.com/bitnami-labs/sealed-secrets)** — for letting secrets live in git, safely
+- **[Traefik](https://traefik.io/)** + **[cert-manager](https://cert-manager.io/)** — for ingress that just works
+- **[Twingate](https://www.twingate.com/)** — for zero-trust remote access without port forwarding
+- **[Raspberry Pi Foundation](https://www.raspberrypi.org/)** — for affordable, capable hardware
+- And every open-source project listed in the catalogs — none of this exists without them
 
 ---
 
 <div align="center">
 
-**[⭐ Star this repository](https://github.com/Thre4dripper/Home-Server-Lab) if you find it useful!**
+### **If this repo helped you build something cool, [⭐ star it](https://github.com/Thre4dripper/Home-Server-Lab) — it's the best way to help others find it.**
 
 [![GitHub stars](https://img.shields.io/github/stars/Thre4dripper/Home-Server-Lab?style=social)](https://github.com/Thre4dripper/Home-Server-Lab/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/Thre4dripper/Home-Server-Lab?style=social)](https://github.com/Thre4dripper/Home-Server-Lab/network/members)
+[![GitHub watchers](https://img.shields.io/github/watchers/Thre4dripper/Home-Server-Lab?style=social)](https://github.com/Thre4dripper/Home-Server-Lab/watchers)
 
-*Building the future of self-hosted home labs, one container at a time.*
+*Built one container, one manifest and one Pi at a time.*
 
 </div>
