@@ -308,6 +308,166 @@ The reference deployment is a **Raspberry Pi 5 (8 GB) with an external SSD over 
 
 ---
 
+## 🌐 DNS & TLS — beginner to pro
+
+> *"How do I get `https://jellyfin.home` to actually work in my browser?"* — every homelab tutorial skips this. Here is the full progression, from a five-minute hack on one laptop, all the way to publicly-trusted certificates on a wildcard domain that resolves to a private IP.
+
+Each level builds on the last. **You don't need the next level until the current one starts hurting.** Pick the lowest one that still covers your needs.
+
+### 🥚 Level 0 — Raw IP + port (the "it just works" baseline)
+
+```
+http://192.168.1.42:8096      → Jellyfin
+http://192.168.1.42:9000      → Portainer
+```
+
+- ✅ Zero setup. Works on day one.
+- ❌ Ugly URLs, no TLS, no friendly names, breaks if DHCP changes the IP.
+- 👍 **Use when:** you're testing a service for an hour and never coming back.
+
+> Reserve the Pi's IP in your router's DHCP leases — it costs nothing and stops every URL from breaking the day your router reboots.
+
+---
+
+### 🐣 Level 1 — `/etc/hosts` (one device, no infra)
+
+Edit `/etc/hosts` (Linux/macOS) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
+
+```
+192.168.1.42   jellyfin.lan portainer.lan homepage.lan
+```
+
+Now `http://jellyfin.lan:8096` works **on that one machine**.
+
+- ✅ Zero infra, instant.
+- ❌ Per-device. Doesn't help your phone, your TV, or guests.
+- 👍 **Use when:** you're the only user and you only care about your laptop.
+
+---
+
+### 🐥 Level 2 — Pi-hole local DNS (LAN-wide friendly names)
+
+Run [`docker/pihole`](./docker/pihole/) (or [`k3s/apps/pihole`](./k3s/apps/pihole/)), then point your **router's DHCP** at the Pi's IP as the network DNS server. Now every device on your LAN — phone, TV, IoT, guests — resolves the names you define.
+
+In `dns-entries.conf` (already wired into the Pi-hole compose file):
+
+```
+192.168.1.42  jellyfin.lan
+192.168.1.42  portainer.lan
+192.168.1.42  *.home.lan
+```
+
+- ✅ Whole LAN, including phones and TVs. Plus network-wide ad blocking as a bonus.
+- ❌ Still no TLS — browsers will scream `Not Secure` and disable half their features (clipboard, service workers, mic/camera).
+- ❌ Doesn't work outside your house.
+- 👍 **Use when:** you have multiple devices and don't yet care about HTTPS.
+
+---
+
+### 🐤 Level 3 — Cloudflare DNS pointing at a private IP (the homelab trick)
+
+Most people think "Cloudflare DNS" means "exposed to the internet." It doesn't have to. **DNS is just name → IP resolution; it doesn't care if the IP is public or private.** This is the single most useful trick in homelabbing.
+
+In your Cloudflare dashboard for `your-domain.tld`:
+
+```
+Type   Name                Content          Proxy
+A      home                192.168.1.42     ☁️  DNS only (grey cloud)
+A      *.home              192.168.1.42     ☁️  DNS only (grey cloud)
+```
+
+Yes — a public DNS record pointing at `192.168.1.42`. From the public internet that IP is unroutable, so the record is harmless. **From inside your LAN, however, the name resolves and traffic stays local.** Result: you get a real, properly-delegated domain (`jellyfin.home.your-domain.tld`) that works on every device on your LAN — *without* editing hosts files, *without* running Pi-hole local DNS overrides, and crucially **the same hostnames will keep working for the TLS-via-Let's-Encrypt step below**.
+
+- ✅ Real domain, no per-device config, no internal DNS server needed.
+- ✅ Sets you up perfectly for Level 5 (Let's Encrypt DNS-01).
+- ❌ Anyone with a Cloudflare account can see that you have a host called `jellyfin.home.your-domain.tld` pointing at an RFC-1918 IP. (Fine — it's a private IP, they can't reach it.)
+- ❌ Outside your LAN the names resolve to a useless private IP. You still need Twingate / WireGuard / etc. for actual remote access.
+- 👍 **Use when:** you own a domain and want professional-looking hostnames without running a DNS server.
+
+> 🧠 **Why this is brilliant:** it makes "remote access" and "local access" use the *exact same hostname*. From your couch, `jellyfin.home.your-domain.tld` resolves to `192.168.1.42` and goes direct. From a coffee shop with Twingate connected, the resolver returns the same IP and Twingate transparently tunnels you to the LAN. One URL, two paths, zero config drift.
+
+---
+
+### 🐔 Level 4 — TLS with mkcert (locally-trusted HTTPS)
+
+Now you have nice names, but browsers still complain. The cheapest fix is [`mkcert`](https://github.com/FiloSottile/mkcert) — it generates a local certificate authority and installs it into your OS trust store. Certs signed by it are trusted **on the machines where you ran `mkcert -install`**.
+
+```bash
+# On the Pi, once
+mkcert -install
+mkcert "*.home.your-domain.tld" home.your-domain.tld
+# → home.your-domain.tld+1.pem  +  home.your-domain.tld+1-key.pem
+```
+
+Drop those files into Nginx Proxy Manager (Docker stack) or into a Kubernetes `Secret` consumed by Traefik (k3s stack). Browsers on machines that trust the mkcert root CA now show the green padlock.
+
+- ✅ Real HTTPS, real green padlock, full Web-API access (clipboard, service workers, WebRTC).
+- ✅ Free, offline, works for any hostname including `*.lan`.
+- ❌ You must install the mkcert root CA on every device that should trust the cert. Doable for laptops, painful for Smart TVs, IoT devices and visitors' phones.
+- 👍 **Use when:** you want HTTPS for *yourself* and don't want to wrestle with public certificate authorities yet.
+
+---
+
+### 🦅 Level 5 — Let's Encrypt with DNS-01 challenge (publicly trusted, no port forward)
+
+The grown-up version. cert-manager (k3s) or Nginx Proxy Manager (Docker) requests a real Let's Encrypt certificate for `*.home.your-domain.tld` using the **DNS-01** challenge — Let's Encrypt asks you to prove ownership of the domain by adding a TXT record, cert-manager calls Cloudflare's API to add it, Let's Encrypt verifies, certificate issued.
+
+**The killer feature:** because DNS-01 doesn't require Let's Encrypt to *connect* to your service, it works perfectly when:
+
+- The hostname resolves to a private IP (Level 3 setup) ✅
+- You have no port forwarding ✅
+- You're behind CGNAT ✅
+- You want a wildcard cert (HTTP-01 doesn't support wildcards) ✅
+
+In k3s, this is one ClusterIssuer and one Certificate resource — see [`k3s/infra/cert-manager`](./k3s/infra/cert-manager/). In Docker, it's the "Let's Encrypt" tab in Nginx Proxy Manager with the Cloudflare DNS provider plugin.
+
+```yaml
+# k3s ClusterIssuer (excerpt)
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key:  api-token
+```
+
+- ✅ Real, publicly-trusted certs. Works on every device, every browser, every visitor's phone, no manual trust install.
+- ✅ Auto-renews every 60 days. Set and forget.
+- ✅ Combined with Level 3, your `https://jellyfin.home.your-domain.tld` URL is identical from your couch, your phone over Twingate, and a friend's laptop you handed access to.
+- ❌ Requires a real domain (~$10/year) and a Cloudflare account (free).
+- 👍 **Use when:** you've graduated. This is the "production" answer.
+
+---
+
+### 🦉 Level 6 — Remote access without exposing anything (Twingate / WireGuard / Tailscale)
+
+DNS + TLS solves "what name and what cert," not "how do bytes get from the coffee shop to my Pi." For that you have three sane options:
+
+| Option | How it works | Trade-off |
+|--------|--------------|-----------|
+| **Port-forward + Let's Encrypt HTTP-01** | Open 80/443 on the router, point them at the Pi | Simple, but exposes the Pi directly to the internet. Don't unless you know what you're doing. |
+| **Cloudflare Tunnel** | Daemon on the Pi makes outbound connection to Cloudflare; CF terminates TLS and proxies in | Free tier, no router config, but all traffic flows through Cloudflare |
+| **Twingate / Tailscale / Headscale** | Identity-aware mesh VPN; outbound-only connector on the Pi | What this repo uses. No port forwarding, no SaaS in the *data* path (only signaling) |
+
+This repo ships [`docker/twingate`](./docker/twingate/) and [`k3s/apps/twingate`](./k3s/apps/twingate/) precisely because Twingate's connector model composes cleanly with the Level 3 + Level 5 setup above: same hostname, real cert, no inbound port, identity-checked at the edge.
+
+---
+
+### 🎯 TL;DR — "what should I actually do?"
+
+| You are... | Stop at level | Why |
+|------------|---------------|-----|
+| Tinkering on one laptop for an evening | **0–1** | Don't waste an hour on infra you'll throw away |
+| Multi-device household, LAN only | **2** | Pi-hole alone solves the friendly-name problem and blocks ads |
+| You own a domain, want HTTPS for yourself | **3 + 4** | Cloudflare DNS + mkcert is the lowest-effort secure setup |
+| You want it to "just work" for everyone forever | **3 + 5** | Real cert, real domain, zero per-device setup |
+| You also want remote access | **3 + 5 + 6** | Twingate connector container is already in this repo |
+
+---
+
 ## 🛡️ Security posture
 
 This is a **homelab**, not a production SaaS, but the patterns used here are real:
