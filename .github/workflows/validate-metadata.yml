@@ -17,40 +17,40 @@ jobs:
   validate-metadata:
     name: 🔍 Validate Service Documentation
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 🛒 Checkout Repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
     - name: 🐍 Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    
+
     - name: 📦 Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pyyaml
-    
+
     - name: 🔍 Validate Changed Services
       id: validate
       run: |
         echo "🔍 Validating service metadata in PR..."
-        
+
         # Get list of changed files
         CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
-        
+
         # Check if any service README files were changed
         VALIDATION_ERRORS=0
         VALIDATED_SERVICES=""
-        
+
         for file in $CHANGED_FILES; do
           if [[ $file == docker/*/README.md || $file == k3s/apps/*/README.md ]]; then
             SERVICE_DIR=$(dirname "$file")
             echo "📋 Validating $SERVICE_DIR..."
-            
+
             if python3 .github/scripts/validate-service.py "$SERVICE_DIR"; then
               echo "✅ $SERVICE_DIR metadata is valid"
               VALIDATED_SERVICES="$VALIDATED_SERVICES\n- ✅ $SERVICE_DIR"
@@ -61,20 +61,20 @@ jobs:
             fi
           fi
         done
-        
+
         # Save results for comment
         echo "validation_errors=$VALIDATION_ERRORS" >> $GITHUB_OUTPUT
         echo "validated_services<<EOF" >> $GITHUB_OUTPUT
         echo -e "$VALIDATED_SERVICES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
-        
+
         if [ $VALIDATION_ERRORS -gt 0 ]; then
           echo "💥 $VALIDATION_ERRORS service(s) have invalid metadata"
           exit 1
         else
           echo "🎉 All service metadata is valid!"
         fi
-    
+
     - name: 💬 Comment Validation Results
       if: always()
       uses: actions/github-script@v6
@@ -82,36 +82,36 @@ jobs:
         script: |
           const validationErrors = '${{ steps.validate.outputs.validation_errors }}';
           const validatedServices = `${{ steps.validate.outputs.validated_services }}`;
-          
+
           let body = '## 🔍 Service Metadata Validation Results\n\n';
-          
+
           if (validationErrors === '0') {
             body += '✅ **All service metadata is valid!**\n\n';
           } else {
             body += `❌ **${validationErrors} service(s) failed validation**\n\n`;
           }
-          
+
           if (validatedServices.trim()) {
             body += '### Checked Services:\n';
             body += validatedServices;
           } else {
             body += '📝 No service README files were modified in this PR.';
           }
-          
+
           body += '\n\n---\n*This comment was generated automatically by the service validation workflow.*';
-          
+
           // Find existing comment
           const comments = await github.rest.issues.listComments({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo
           });
-          
-          const existingComment = comments.data.find(comment => 
-            comment.user.login === 'github-actions[bot]' && 
+
+          const existingComment = comments.data.find(comment =>
+            comment.user.login === 'github-actions[bot]' &&
             comment.body.includes('Service Metadata Validation Results')
           );
-          
+
           if (existingComment) {
             // Update existing comment
             await github.rest.issues.updateComment({
@@ -129,7 +129,7 @@ jobs:
               body: body
             });
           }
-    
+
     - name: 📊 Summary
       run: |
         echo "## 📊 Validation Summary" >> $GITHUB_STEP_SUMMARY
