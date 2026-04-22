@@ -1,0 +1,82 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":timezone(UTC)",
+    ":prHourlyLimit4",
+    "schedule:weekly"
+  ],
+  "description": "Renovate config for Home-Server-Lab — auto-updates Docker image tags, Helm charts, and k8s manifests.",
+  "labels": ["dependencies", "renovate"],
+  "assignees": ["@Thre4dripper"],
+  "rangeStrategy": "bump",
+  "prConcurrentLimit": 5,
+  "rebaseWhen": "behind-base-branch",
+  "vulnerabilityAlerts": {
+    "labels": ["security", "vulnerability"],
+    "schedule": ["at any time"]
+  },
+  "docker-compose": {
+    "fileMatch": ["(^|/)docker-compose[^/]*\\.ya?ml$"]
+  },
+  "kubernetes": {
+    "fileMatch": ["k3s/.+\\.ya?ml$"]
+  },
+  "helm-values": {
+    "fileMatch": ["k3s/.+values.*\\.ya?ml$"]
+  },
+  "packageRules": [
+    {
+      "description": "Auto-merge patch + minor updates after CI passes",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Group all non-major Docker image updates",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "docker images (non-major)"
+    },
+    {
+      "description": "Major Docker bumps stay separate + need review",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "docker", "major-update"]
+    },
+    {
+      "description": "Pin core infra images explicitly",
+      "matchPackageNames": [
+        "rancher/k3s",
+        "argoproj/argocd",
+        "traefik",
+        "bitnami/sealed-secrets-controller"
+      ],
+      "automerge": false,
+      "labels": ["dependencies", "core-infra"]
+    },
+    {
+      "description": "Group Helm chart updates",
+      "matchDatasources": ["helm"],
+      "groupName": "helm charts"
+    }
+  ],
+  "regexManagers": [
+    {
+      "description": "Update tool versions in Ansible group_vars",
+      "fileMatch": ["^ansible/group_vars/.+\\.ya?ml$"],
+      "matchStrings": [
+        "k3s_version:\\s*[\"']?(?<currentValue>v?[\\d\\.\\+\\-a-z]+)[\"']?",
+        "kubeseal_version:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?",
+        "helm_version:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "k3s-io/k3s"
+    }
+  ]
+}

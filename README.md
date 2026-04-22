@@ -498,10 +498,15 @@ This repo is itself GitOps — the documentation, the catalog and the diagrams a
 |----------|---------|--------|
 | [`update-readme.yml`](./.github/workflows/update-readme.yml) | Any per-service README change in `docker/*` or `k3s/apps/*` | Regenerates **all three** catalogs — `docker/README.md`, `k3s/README.md` and the root `README.md` — in a single matrix job |
 | [`validate-metadata.yml`](./.github/workflows/validate-metadata.yml) | PRs touching any service README | Validates frontmatter schema for both stacks (required fields, allowed categories, valid icons) |
+| [`security-scan.yml`](./.github/workflows/security-scan.yml) | Every push + PR + weekly cron | **gitleaks** (fast secret scan) + **trufflehog** (verified credentials, deep history) + **Trivy** (filesystem CVEs + IaC misconfigs) |
+| [Dependabot](./.github/dependabot.yml) | Weekly | PRs for GitHub Actions, pip packages, n8n Dockerfile bumps |
+| [Renovate](./renovate.json) | Continuous | PRs for Docker image tags, Helm charts, k8s manifests, Ansible tool versions — minor/patch auto-merged after CI |
 
 The matrix-based generator is a [single workflow file](./.github/workflows/update-readme.yml) that runs `update-docker-readme.py`, `update-k3s-readme.py` and `update-global-readme.py` in parallel and commits/pushes (or PR-comments) any regenerated catalog. Inside the root README, only the segments wrapped in `<!-- AUTOGEN:* -->` markers are touched — every other line is yours.
 
 **Add a service → write its README with the right frontmatter → push → the catalog updates itself.**
+
+> 🔐 **Pre-commit hooks** block secrets *before* they hit git. Install once with `pip install pre-commit && pre-commit install` — see [SECURITY.md](./SECURITY.md) for the full incident-response playbook (rotate → purge history → re-clone).
 
 ---
 

@@ -1,0 +1,40 @@
+# Gitleaks configuration for Home-Server-Lab
+# Extends the default ruleset; only adds project-specific allowlist entries.
+# Docs: https://github.com/gitleaks/gitleaks
+
+title = "Home-Server-Lab gitleaks config"
+
+[extend]
+# Inherit all default rules (AWS, GCP, Azure, GitHub, Slack, JWT, generic API keys, etc.)
+useDefault = true
+
+[allowlist]
+description = "Allow placeholders, examples, sealed secrets, and known-safe paths"
+
+# Files / paths that legitimately contain secret-shaped strings
+paths = [
+    '''(.*?)(\.|^)gitleaks\.toml$''',
+    '''(.*?)\.example$''',
+    '''(.*?)\.template$''',
+    '''(.*?)\.sample$''',
+    '''.*\.md$''',                              # documentation often shows fake tokens
+    '''k3s/apps/.*/sealed-secret.*\.yaml$''',   # SealedSecrets are encrypted by design
+    '''k3s/apps/.*/sealedsecret.*\.yaml$''',
+    '''.*\.sealed\.yaml$''',
+    '''.*\.sops\.yaml$''',                      # SOPS-encrypted files
+    '''docker/pihole/dns-entries\.conf$''',     # local DNS entries, not secrets
+    '''ansible/group_vars/all\.yml$''',         # only contains version pins / ports
+]
+
+# Common placeholder strings used throughout the repo
+regexes = [
+    '''(?i)(your[-_]?(api[-_]?key|password|secret|token)[-_]?here)''',
+    '''(?i)(change[-_]?me|changeme|example|placeholder|dummy|sample|test123)''',
+    '''(?i)(xxx+|yyy+|zzz+|abc123|password123)''',
+    '''<[A-Z_]+>''',                            # <YOUR_TOKEN>, <PASSWORD> style
+    '''\$\{[A-Z_]+\}''',                        # ${ENV_VAR} style
+    '''\{\{[^}]+\}\}''',                        # {{ ansible_var }} / {{ jinja }}
+]
+
+# Specific commit SHAs known to contain false positives can be allowlisted here:
+# commits = ["abc123..."]
