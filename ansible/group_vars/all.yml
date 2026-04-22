@@ -1,0 +1,72 @@
+---
+# Global variables for all homelab servers
+#
+# These can be overridden per-host in host_vars/<hostname>.yml
+
+# ─── System ──────────────────────────────────────────────────────────────────
+timezone: "UTC"
+locale: "en_US.UTF-8"
+
+# ─── SSH Hardening ───────────────────────────────────────────────────────────
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_pubkey_authentication: "yes"
+
+# ─── Storage ─────────────────────────────────────────────────────────────────
+# Paths for Docker and k3s data (override for external SSD, NFS, etc.)
+docker_data_root: "/var/lib/docker"
+k3s_data_dir: "/var/lib/rancher/k3s"
+
+# Move to external storage if available (optional)
+# docker_data_root: "/mnt/ssd/docker"
+# k3s_data_dir: "/mnt/ssd/k3s"
+
+# ─── Networking ──────────────────────────────────────────────────────────────
+# Firewall rules (UFW) — allow these ports
+firewall_allowed_ports:
+  - { port: "22", proto: "tcp", comment: "SSH" }
+  - { port: "80", proto: "tcp", comment: "HTTP (Traefik/NPM)" }
+  - { port: "443", proto: "tcp", comment: "HTTPS (Traefik/NPM)" }
+  - { port: "6443", proto: "tcp", comment: "k3s API" }
+  - { port: "8080:8900", proto: "tcp", comment: "Homelab services" }
+
+# ─── Tools ───────────────────────────────────────────────────────────────────
+# Additional CLI tools to install
+extra_packages:
+  - git
+  - curl
+  - wget
+  - jq
+  - htop
+  - btop
+  - ncdu
+  - vim
+  - tmux
+  - tree
+  - unzip
+  - ca-certificates
+  - gnupg
+  - lsb-release
+
+# kubectl version (matches k3s)
+kubectl_version: "{{ k3s_version | regex_replace('\\+k3s.*', '') }}"
+
+# kubeseal (sealed-secrets CLI)
+kubeseal_version: "0.27.2"
+
+# Helm
+helm_version: "3.16.4"
+
+# Python packages (for GitHub Actions scripts, etc.)
+python_packages:
+  - pyyaml
+  - jinja2
+  - requests
+
+# ─── Homelab Repo ────────────────────────────────────────────────────────────
+# Clone the repo if it doesn't exist
+homelab_clone_repo: true
+
+# Run initial setup after cloning (creates .env files, etc.)
+homelab_run_initial_setup: false  # Set to true to auto-scaffold on first boot

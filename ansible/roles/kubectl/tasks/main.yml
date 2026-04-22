@@ -1,0 +1,26 @@
+---
+# kubectl installation role
+
+- name: Check if kubectl is already installed
+  command: kubectl version --client
+  register: kubectl_installed
+  failed_when: false
+  changed_when: false
+
+- name: Install kubectl
+  block:
+    - name: Download kubectl binary
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+    
+    - name: Verify kubectl installation
+      command: kubectl version --client
+      register: kubectl_verify
+      changed_when: false
+  when: kubectl_installed.rc != 0
+
+- name: Display kubectl version
+  debug:
+    msg: "✅ kubectl {{ kubectl_version }} installed"

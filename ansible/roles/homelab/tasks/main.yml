@@ -1,0 +1,55 @@
+---
+# Homelab repository setup role
+
+- name: Check if homelab repository exists
+  stat:
+    path: "{{ homelab_repo_dest }}"
+  register: repo_exists
+
+- name: Clone homelab repository
+  git:
+    repo: "{{ homelab_repo_url }}"
+    dest: "{{ homelab_repo_dest }}"
+    version: main
+    update: false
+  become: false
+  when: homelab_clone_repo and not repo_exists.stat.exists
+
+- name: Set repository ownership
+  file:
+    path: "{{ homelab_repo_dest }}"
+    owner: "{{ homelab_user }}"
+    group: "{{ homelab_user }}"
+    recurse: true
+  when: repo_exists.stat.exists or homelab_clone_repo
+
+- name: Create common directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ homelab_user }}"
+    group: "{{ homelab_user }}"
+    mode: '0755'
+  loop:
+    - "/home/{{ homelab_user }}/homelab-data"
+    - "/home/{{ homelab_user }}/homelab-backups"
+
+- name: Display completion message
+  debug:
+    msg: |
+      ✅ Homelab repository ready
+      Location: {{ homelab_repo_dest }}
+      
+      Next steps:
+        cd {{ homelab_repo_dest }}
+        
+        For Docker services:
+          cd docker/<service> && ./setup.sh
+        
+        For k3s cluster:
+          cd k3s
+          kubectl apply -f base/namespaces/
+          kubectl apply -k infra/sealed-secrets/
+          kubectl apply -k infra/traefik/
+          kubectl apply -k infra/cert-manager/
+          kubectl apply -k infra/argocd/

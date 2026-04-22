@@ -1,0 +1,84 @@
+---
+# Base system role — packages, timezone, locale, SSH hardening, firewall
+
+- name: Update apt cache (Debian/Ubuntu)
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Update dnf cache (RHEL/Fedora)
+  dnf:
+    update_cache: yes
+  when: ansible_os_family == "RedHat"
+
+- name: Install base packages
+  package:
+    name: "{{ extra_packages }}"
+    state: present
+
+- name: Set timezone
+  timezone:
+    name: "{{ timezone }}"
+
+- name: Set locale
+  locale_gen:
+    name: "{{ locale }}"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Configure SSH hardening
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    validate: 'sshd -t -f %s'
+  loop:
+    - { regexp: '^#?Port', line: "Port {{ ssh_port }}" }
+    - { regexp: '^#?PermitRootLogin', line: "PermitRootLogin {{ ssh_permit_root_login }}" }
+    - { regexp: '^#?PasswordAuthentication', line: "PasswordAuthentication {{ ssh_password_authentication }}" }
+    - { regexp: '^#?PubkeyAuthentication', line: "PubkeyAuthentication {{ ssh_pubkey_authentication }}" }
+  notify: restart ssh
+
+- name: Install UFW (Debian/Ubuntu)
+  apt:
+    name: ufw
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install firewalld (RHEL/Fedora)
+  dnf:
+    name: firewalld
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Configure UFW firewall rules (Debian/Ubuntu)
+  ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+    comment: "{{ item.comment }}"
+  loop: "{{ firewall_allowed_ports }}"
+  when: ansible_os_family == "Debian"
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny
+  when: ansible_os_family == "Debian"
+
+- name: Configure firewalld rules (RHEL/Fedora)
+  firewalld:
+    port: "{{ item.port }}/{{ item.proto }}"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  loop: "{{ firewall_allowed_ports }}"
+  when: ansible_os_family == "RedHat"
+
+- name: Install Python packages
+  pip:
+    name: "{{ python_packages }}"
+    state: present
+    executable: pip3
