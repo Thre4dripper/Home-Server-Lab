@@ -13,7 +13,7 @@ resource_usage: "~100MB RAM"
 
 # FileBrowser - Docker Setup
 
-FileBrowser provides a web-based interface to browse, upload, download, and manage files on your Raspberry Pi server. Perfect for accessing your server files from any device on your network.
+FileBrowser provides a web-based interface to browse, upload, download, and manage files on your homelab server. Perfect for accessing your server files from any device on your network.
 
 ## Features
 - **Web-based interface** - Access files from any browser

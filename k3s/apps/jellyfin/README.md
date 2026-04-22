@@ -14,7 +14,7 @@ components:
   - pvc
 features:
   - "Movies, TV, music, photos"
-  - "Hardware transcoding via Pi VideoCore VI"
+  - "Hardware transcoding (GPU support where available)"
   - "Multi-user with per-library access"
   - "Live TV / DVR support"
   - "Sync clients for iOS, Android, web, TV"
@@ -29,7 +29,7 @@ The cluster's free, self-hosted alternative to Plex / Emby. Library, metadata an
 ## Features
 
 - **All media**: movies, TV, music, photos, books, audiobooks
-- **Hardware transcoding** on the Pi 5's VideoCore VI (V4L2 M2M)
+- **Hardware transcoding** via GPU acceleration (where supported: Intel Quick Sync, NVIDIA NVENC, AMD AMF, V4L2 on SBCs)
 - **Multi-user** with parental controls and per-library permissions
 - **Live TV / DVR** with HDHomeRun, Xteve, etc.
 - **Native clients** for every OS + browser

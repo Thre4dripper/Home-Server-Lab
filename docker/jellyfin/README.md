@@ -68,7 +68,7 @@ EOF
 - `./media` - Your media library
 
 ## Hardware Acceleration
-If your host supports it, leave the `/dev/dri` mapping enabled. On Raspberry Pi, you may need V4L2 devices:
+If your host supports it, leave the `/dev/dri` mapping enabled. On single-board computers like Raspberry Pis, you may need V4L2 devices:
 ```yaml
 devices:
   - /dev/dri:/dev/dri
