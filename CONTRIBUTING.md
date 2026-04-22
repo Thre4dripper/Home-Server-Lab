@@ -34,8 +34,8 @@ Before creating bug reports, please check existing issues as you might find out 
 **Bug Report Template:**
 ```markdown
 **Environment:**
-- OS: [e.g., Raspberry Pi OS, Ubuntu 20.04]
-- Hardware: [e.g., Raspberry Pi 4 4GB]
+- OS: [e.g., Ubuntu 22.04, Debian 12, Raspberry Pi OS]
+- Hardware: [e.g., 8GB server, Raspberry Pi 5, Intel NUC]
 - Docker version: [e.g., 20.10.21]
 - Service: [e.g., Seafile, Netdata]
 
@@ -76,7 +76,7 @@ We're always looking to expand our collection of self-hosted services! Before ad
 
 1. **Check if the service is already planned** in our issues
 2. **Ensure the service is actively maintained** by its developers
-3. **Verify it works well on ARM64** (Raspberry Pi compatibility)
+3. **Verify it works well on ARM64** (Raspberry Pi and other SBC compatibility)
 4. **Confirm it's genuinely useful** for home lab environments
 
 ## 🏗️ Getting Started
@@ -105,7 +105,7 @@ We're always looking to expand our collection of self-hosted services! Before ad
 
 ### Testing Environment
 
-- Test on actual hardware when possible (Raspberry Pi recommended)
+- Test on actual hardware when possible (single-board computer or mini-PC recommended)
 - Use virtual machines for initial development
 - Test resource consumption and performance
 - Verify services work after system reboot
@@ -205,7 +205,7 @@ networks:
 
 ### Performance Requirements
 
-- **ARM64 Compatibility**: Must work on Raspberry Pi 4
+- **ARM64 Compatibility**: Must work on ARM64 single-board computers (Raspberry Pi, Orange Pi, etc.)
 - **Resource Efficiency**: Optimize for single-board computers
 - **Startup Time**: Services should start within 2 minutes
 - **Memory Usage**: Document expected memory consumption
@@ -371,7 +371,7 @@ feat(seafile): add Seafile Pro configuration with SeaDoc
 
 - Add official Seafile Pro Docker setup
 - Include document editing capabilities
-- Optimize for Raspberry Pi deployment
+- Optimize for homelab server deployment (resource-efficient, multi-arch)
 - Add comprehensive documentation
 
 Closes #123
