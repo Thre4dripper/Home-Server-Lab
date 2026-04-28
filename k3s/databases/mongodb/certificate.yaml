@@ -1,0 +1,38 @@
+## Public TLS cert for mongod, issued by Let's Encrypt via Cloudflare DNS-01.
+##
+## Why LE instead of a private CA:
+##   Clients (Compass, DataGrip, app drivers) get TLS without needing to
+##   trust a custom CA — LE's roots are in every OS / Java truststore.
+##
+## Why only the external hostnames:
+##   LE only signs publicly-resolvable names. Internal cluster DNS
+##   (mongodb-0.mongodb-headless...svc.cluster.local) cannot be in the SAN.
+##   That's fine because:
+##     - External clients connect via `mongo-N.home.ijlalahmad.dev` (covered)
+##     - Internal apps + replica-set member-to-member connect over plain
+##       TCP (mongod runs in `allowTLS` mode — accepts both, initiates plain)
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mongodb-server
+  namespace: databases
+spec:
+  secretName: mongodb-server-tls
+  duration: 2160h        # 90 days (LE max)
+  renewBefore: 360h      # renew 15 days before expiry
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  # mongod's certificateKeyFile expects cert + key concatenated in one PEM.
+  additionalOutputFormats:
+    - type: CombinedPEM
+  commonName: mongo-0.home.ijlalahmad.dev
+  dnsNames:
+    - mongo-0.home.ijlalahmad.dev
+    - mongo-1.home.ijlalahmad.dev
+    - mongo-2.home.ijlalahmad.dev
