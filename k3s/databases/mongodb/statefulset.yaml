@@ -6,6 +6,7 @@ metadata:
 spec:
   serviceName: mongodb-headless
   replicas: 3
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app: mongodb

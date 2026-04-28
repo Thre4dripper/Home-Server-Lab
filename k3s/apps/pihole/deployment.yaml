@@ -7,6 +7,7 @@ metadata:
     app: pihole
 spec:
   replicas: 0
+  revisionHistoryLimit: 2
   paused: true
   strategy:
     type: Recreate
