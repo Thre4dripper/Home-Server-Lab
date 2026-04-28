@@ -1,0 +1,59 @@
+## Retained MongoDB Persistent Volumes
+##
+## These must be applied BEFORE the StatefulSet on a fresh cluster.
+## They pre-create the PVCs that the StatefulSet volumeClaimTemplates will bind.
+## On an existing cluster the PVCs are already bound — this file is a no-op.
+##
+## Apply with: kubectl apply -f pv.yaml
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-pv-0
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/db-data/mongodb-rs0/mongodb-0
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: databases
+    name: data-mongodb-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-pv-1
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/db-data/mongodb-rs0/mongodb-1
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: databases
+    name: data-mongodb-1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-pv-2
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/db-data/mongodb-rs0/mongodb-2
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: databases
+    name: data-mongodb-2

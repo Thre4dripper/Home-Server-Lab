@@ -9,6 +9,7 @@
 # Kubernetes plain secrets — use sealedsecret.yaml instead (git-safe)
 # Keep secret.yaml locally for reference/re-sealing, never commit it
 k3s/apps/**/secret.yaml
+k3s/databases/**/secret.yaml
 k3s/infra/**/secret.yaml
 
 # Database data directories
@@ -100,3 +101,4 @@ Thumbs.db
 **/*.tar.gz
 **/*.zip
 **/*.rar
+
