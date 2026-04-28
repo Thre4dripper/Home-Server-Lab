@@ -9,6 +9,12 @@ spec:
   generators:
     - list:
         elements:
+          # ── Infra / Cluster ────────────────────────────────
+          - name: priority-classes
+            namespace: kube-system
+            category: infra
+            path: k3s/infra/priority-classes
+
           # ── Monitoring ─────────────────────────────────────
           - name: dashdot
             namespace: monitoring

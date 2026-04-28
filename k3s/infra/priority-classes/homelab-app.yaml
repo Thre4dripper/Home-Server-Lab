@@ -1,0 +1,10 @@
+# Default priority for regular application workloads.
+# globalDefault: true means pods without an explicit priorityClassName get this.
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: homelab-app
+value: 100
+globalDefault: true
+preemptionPolicy: PreemptLowerPriority
+description: "Default priority for homelab application workloads."
