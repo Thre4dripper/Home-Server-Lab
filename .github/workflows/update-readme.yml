@@ -23,8 +23,30 @@ permissions:
   pull-requests: write
 
 jobs:
-  update-readme:
-    name: 📊 Regenerate ${{ matrix.stack }} catalog
+  # ── Job 1: Checkout once, snapshot the repo for all downstream jobs ────────
+  prepare:
+    name: 🔧 Prepare Repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛒 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🗜️ Package repository snapshot
+        run: tar -czf /tmp/repo-snapshot.tar.gz --exclude='.git' .
+
+      - name: ⬆️ Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-snapshot
+          path: /tmp/repo-snapshot.tar.gz
+          retention-days: 1
+
+  # ── Jobs 2-4: Three parallel generators (matrix) ─────────────────────────
+  generate:
+    name: ${{ matrix.emoji }} Generate ${{ matrix.stack }} README
+    needs: prepare
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -34,21 +56,26 @@ jobs:
             script: .github/scripts/update-docker-readme.py
             target: docker/README.md
             emoji: "🐳"
+            artifact: readme-docker
           - stack: k3s
             script: .github/scripts/update-k3s-readme.py
             target: k3s/README.md
             emoji: "☸️"
+            artifact: readme-k3s
           - stack: global
             script: .github/scripts/update-global-readme.py
             target: README.md
             emoji: "🏠"
+            artifact: readme-global
 
     steps:
-      - name: 🛒 Checkout Repository
-        uses: actions/checkout@v4
+      - name: ⬇️ Download repo snapshot
+        uses: actions/download-artifact@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
+          name: repo-snapshot
+
+      - name: 📂 Extract snapshot
+        run: tar -xzf repo-snapshot.tar.gz
 
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
@@ -58,38 +85,117 @@ jobs:
       - name: 📦 Install Dependencies
         run: pip install pyyaml
 
-      - name: 🔍 Regenerate ${{ matrix.target }}
-        id: scan
+      - name: 🔍 Generate ${{ matrix.target }}
         run: |
+          # Save original before generation (no .git in extracted snapshot)
+          cp ${{ matrix.target }} _original_readme.md
           python ${{ matrix.script }}
-          if git diff --quiet ${{ matrix.target }}; then
-            echo "changed=false" >> $GITHUB_OUTPUT
+          mkdir -p _output
+          cp ${{ matrix.target }} _output/README.md
+          if diff -q _original_readme.md ${{ matrix.target }} > /dev/null 2>&1; then
+            echo "false" > _output/changed.txt
             echo "📊 No changes detected in ${{ matrix.target }}"
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "true" > _output/changed.txt
             echo "📊 Changes detected in ${{ matrix.target }}"
+            diff _original_readme.md ${{ matrix.target }} || true
           fi
 
-      - name: 📋 Show Diff
-        if: steps.scan.outputs.changed == 'true'
-        run: git --no-pager diff ${{ matrix.target }}
+      - name: ⬆️ Upload generated artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: _output/
+          retention-days: 1
 
-      - name: ✅ Commit & Push
-        if: steps.scan.outputs.changed == 'true' && github.event_name != 'pull_request'
+  # ── Job 5a: Collect all outputs and make a single commit (push only) ───────
+  commit:
+    name: 💾 Commit All READMEs
+    needs: generate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛒 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: ⬇️ Download docker README
+        uses: actions/download-artifact@v4
+        with:
+          name: readme-docker
+          path: _artifacts/docker
+
+      - name: ⬇️ Download k3s README
+        uses: actions/download-artifact@v4
+        with:
+          name: readme-k3s
+          path: _artifacts/k3s
+
+      - name: ⬇️ Download global README
+        uses: actions/download-artifact@v4
+        with:
+          name: readme-global
+          path: _artifacts/global
+
+      - name: 🔄 Apply generated READMEs & Commit
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add ${{ matrix.target }}
-          git commit -m "🤖 ${{ matrix.emoji }} Auto-update ${{ matrix.stack }} README"
-          for i in 1 2 3; do
-            git pull --rebase origin ${{ github.ref_name }} && \
-            git push origin HEAD:${{ github.ref_name }} && break
-            echo "Push attempt $i failed, retrying..."
-            sleep $((RANDOM % 5 + 1))
-          done
+
+          changed=false
+          [ "$(cat _artifacts/docker/changed.txt)" = "true" ] && cp _artifacts/docker/README.md docker/README.md && changed=true
+          [ "$(cat _artifacts/k3s/changed.txt)"   = "true" ] && cp _artifacts/k3s/README.md   k3s/README.md   && changed=true
+          [ "$(cat _artifacts/global/changed.txt)" = "true" ] && cp _artifacts/global/README.md README.md      && changed=true
+
+          if [ "$changed" = "true" ]; then
+            git add docker/README.md k3s/README.md README.md
+            git commit -m "🤖 🏠 Auto-update READMEs
+
+          Auto-generated from updated service metadata."
+            git pull --rebase origin ${{ github.ref_name }}
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "No README changes to commit."
+          fi
+
+  # ── Job 5b: Per-README PR comments (PR only, matrix) ──────────────────────
+  comment:
+    name: ${{ matrix.emoji }} Comment on PR — ${{ matrix.stack }}
+    needs: generate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - stack: docker
+            target: docker/README.md
+            emoji: "🐳"
+            artifact: readme-docker
+          - stack: k3s
+            target: k3s/README.md
+            emoji: "☸️"
+            artifact: readme-k3s
+          - stack: global
+            target: README.md
+            emoji: "🏠"
+            artifact: readme-global
+
+    steps:
+      - name: ⬇️ Download ${{ matrix.stack }} artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: _artifact
+
+      - name: 🔍 Check if changed
+        id: check
+        run: echo "changed=$(cat _artifact/changed.txt)" >> $GITHUB_OUTPUT
 
       - name: 💬 Comment on PR
-        if: steps.scan.outputs.changed == 'true' && github.event_name == 'pull_request'
+        if: steps.check.outputs.changed == 'true'
         uses: actions/github-script@v7
         with:
           script: |
