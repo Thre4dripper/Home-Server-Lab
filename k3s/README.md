@@ -67,7 +67,6 @@ k3s/
 | 🎬 Media & Entertainment | Streaming and media servers | Jellyfin |
 | 📁 Files & Storage | Persistent file storage and sharing | FileBrowser, Samba |
 | 🧲 Downloads | Torrents, downloaders and grabbers | Aria2, BitComet |
-| 🗄️ Databases | Stateful data stores | Databases |
 <!-- AUTOGEN:CATEGORIES:END -->
 
 ## 🏗️ **Cluster Architecture**
@@ -159,12 +158,6 @@ graph LR
     K3s --> aria2
     K3s --> bitcomet
 
-    subgraph Databases["🗄️ Databases"]
-        direction TB
-        databases[🗄️<br/>Databases]
-    end
-    K3s --> databases
-
     classDef coreInfra fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000000
     classDef gitops fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000000
     class Internet,Twingate,Router,Pi,K3s coreInfra
@@ -234,12 +227,6 @@ graph LR
 |---------|-----------|------|--------|------------|
 | [**⬇️ Aria2**](./apps/aria2/) | `downloads` | `8080` | `aria2.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc` |
 | [**🧲 BitComet**](./apps/bitcomet/) | `dashboard-network` | `8700` | `bitcomet.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `sealedsecret`, `pvc` |
-
-### 🗄️ Databases
-
-| Service | Namespace | Port | Domain | Components |
-|---------|-----------|------|--------|------------|
-| [**🗄️ Databases**](./databases/) | `databases` | `—` | `—` | `statefulset`, `service`, `sealedsecret`, `pvc` |
 <!-- AUTOGEN:SERVICES:END -->
 
 ---
