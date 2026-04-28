@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # ─── App Configuration ───────────────────────────────────────────────────────
-APP="redis"
+APP="postgres"
 NAMESPACE="databases"
-CONTAINER_PORT="6379"
+CONTAINER_PORT="5432"
 EXTERNAL_PORT=""
 DOMAIN=""
 DEFAULT_SHELL="sh"
@@ -23,13 +23,13 @@ NODE_IP="${K3S_NODE_IP:-$(kubectl get node -o jsonpath='{.items[0].status.addres
 _find_scripts() {
   local d="$1"
   while [[ "$d" != "/" ]]; do
-    [[ -d "$d/scripts" && -f "$d/scripts/_app-ctl.sh" ]] && echo "$d/scripts" && return
+    [[ -d "$d/scripts" && -f "$d/scripts/_db-ctl.sh" ]] && echo "$d/scripts" && return
     d="$(dirname "$d")"
   done
 }
 SCRIPTS_DIR="$(_find_scripts "$DEPLOY_DIR")"
-[[ -z "$SCRIPTS_DIR" ]] && { echo "ERROR: k3s/scripts/_app-ctl.sh not found"; exit 1; }
+[[ -z "$SCRIPTS_DIR" ]] && { echo "ERROR: k3s/scripts/_db-ctl.sh not found"; exit 1; }
 
-# shellcheck source=../../scripts/_app-ctl.sh
-source "$SCRIPTS_DIR/_app-ctl.sh"
-main "$@"
+# shellcheck source=../../scripts/_db-ctl.sh
+source "$SCRIPTS_DIR/_db-ctl.sh"
+db_main "$@"
