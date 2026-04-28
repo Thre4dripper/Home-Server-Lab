@@ -215,9 +215,9 @@ apply_all_apps() {
   step "4. Applications"
 
   # Databases first (other apps may depend on them)
-  if [[ -d "$REPO_ROOT/apps/databases" ]]; then
+  if [[ -d "$REPO_ROOT/databases" ]]; then
     echo -e "  ${BOLD}Databases:${NC}"
-    for db_dir in "$REPO_ROOT/apps/databases"/*/; do
+    for db_dir in "$REPO_ROOT/databases"/*/; do
       [[ -d "$db_dir" ]] && apply_app "$db_dir"
     done
   fi
@@ -225,7 +225,6 @@ apply_all_apps() {
   echo ""
   echo -e "  ${BOLD}Apps:${NC}"
   for app_dir in "$REPO_ROOT/apps"/*/; do
-    [[ "$(basename "$app_dir")" == "databases" ]] && continue
     [[ -d "$app_dir" ]] && apply_app "$app_dir"
   done
 

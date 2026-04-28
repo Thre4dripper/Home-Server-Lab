@@ -580,7 +580,7 @@ You don't need to. Twingate is the recommended path — it's outbound-only, iden
 <summary><b>What about backups?</b></summary>
 
 - **Docker**: every service uses bind-mounted volumes under `<service>/data/`. A `tar.gz` of the repo + `data/` folders is your backup.
-- **k3s**: PVCs use `Retain` reclaim policy. For logical DB backups see `k3s/apps/databases/README.md`. For full cluster snapshots, the `cluster-restore.sh` helper exists.
+- **k3s**: PVCs use `Retain` reclaim policy. For logical DB backups see `k3s/databases/README.md`. For full cluster snapshots, the `cluster-restore.sh` helper exists.
 
 </details>
 
