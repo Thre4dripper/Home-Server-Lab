@@ -1,0 +1,44 @@
+## Per-pod ClusterIP services for the MongoDB StatefulSet.
+##
+## Each one targets exactly one pod via its statefulset.kubernetes.io/pod-name
+## label. They are NOT how internal apps connect — internal apps use
+## services/internal.yaml which load-balances across all pods. These per-pod
+## services exist so Traefik IngressRouteTCP can route SNI hostnames to the
+## correct individual replica member for external access.
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-0
+  namespace: databases
+spec:
+  selector:
+    statefulset.kubernetes.io/pod-name: mongodb-0
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-1
+  namespace: databases
+spec:
+  selector:
+    statefulset.kubernetes.io/pod-name: mongodb-1
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-2
+  namespace: databases
+spec:
+  selector:
+    statefulset.kubernetes.io/pod-name: mongodb-2
+  ports:
+    - port: 27017
+      targetPort: 27017

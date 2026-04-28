@@ -3,13 +3,9 @@ kind: Service
 metadata:
   name: mongodb
   namespace: databases
-  labels:
-    app: mongodb
 spec:
-  type: LoadBalancer
   selector:
     app: mongodb
   ports:
     - port: 27017
       targetPort: 27017
-      protocol: TCP

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-headless
+  namespace: databases
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      name: mongodb
