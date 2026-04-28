@@ -1,0 +1,10 @@
+# Databases and stateful infrastructure.
+# Scheduled before homelab-app (1000 > 100) when the Pi boots under load.
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: homelab-infra
+value: 1000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Homelab infrastructure workloads (databases, stateful services). Scheduled before homelab-app."
