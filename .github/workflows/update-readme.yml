@@ -6,6 +6,7 @@ on:
     paths:
       - 'docker/*/README.md'
       - 'k3s/apps/*/README.md'
+      - 'k3s/databases/*/README.md'
       - '.github/scripts/update-docker-readme.py'
       - '.github/scripts/update-k3s-readme.py'
       - '.github/scripts/update-global-readme.py'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'docker/*/README.md'
       - 'k3s/apps/*/README.md'
+      - 'k3s/databases/*/README.md'
   workflow_dispatch:
 
 permissions:
