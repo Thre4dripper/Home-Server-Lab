@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: databases
+spec:
+  serviceName: mongodb-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongodb
+
+  template:
+    metadata:
+      labels:
+        app: mongodb
+
+    spec:
+      terminationGracePeriodSeconds: 60
+
+      initContainers:
+        - name: keyfile-init
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              cp /tmp/keyfile /keyfile/keyfile && \
+              chmod 400 /keyfile/keyfile && \
+              cp /tls-src/tls-combined.pem /tls/tls-combined.pem && \
+              chmod 400 /tls/tls-combined.pem && \
+              chown 999:999 /keyfile/keyfile /tls/tls-combined.pem && \
+              chown -R 999:999 /data/db
+          volumeMounts:
+            - name: keyfile-src
+              mountPath: /tmp
+            - name: keyfile
+              mountPath: /keyfile
+            - name: tls-src
+              mountPath: /tls-src
+            - name: tls
+              mountPath: /tls
+            - name: data
+              mountPath: /data/db
+
+      containers:
+        - name: mongodb
+          image: mongo:7
+
+          command:
+            - mongod
+            - --config
+            - /etc/mongo/mongod.conf
+
+          ports:
+            - containerPort: 27017
+
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - bash
+                  - -c
+                  - |
+                    # Only pod-0 bootstraps the replica set
+                    [[ "${HOSTNAME}" != "mongodb-0" ]] && exit 0
+                    # Wait up to 60s for mongod to accept connections
+                    for i in $(seq 1 30); do
+                      mongosh --quiet --eval "db.adminCommand('ping').ok" 2>/dev/null | grep -q '^1$' && break
+                      sleep 2
+                    done
+                    # Initiate replica set — error code 23 means already initialized, which is fine
+                    mongosh admin \
+                      -u "${MONGO_INITDB_ROOT_USERNAME}" \
+                      -p "${MONGO_INITDB_ROOT_PASSWORD}" \
+                      --quiet \
+                      --eval "
+                        var r = rs.initiate({
+                          _id: 'rs0',
+                          members: [
+                            { _id: 0, host: 'mongodb-0.mongodb-headless.databases.svc.cluster.local:27017' },
+                            { _id: 1, host: 'mongodb-1.mongodb-headless.databases.svc.cluster.local:27017' },
+                            { _id: 2, host: 'mongodb-2.mongodb-headless.databases.svc.cluster.local:27017' }
+                          ]
+                        });
+                        if (r.ok !== 1 && r.code !== 23) quit(1);
+                      " 2>/dev/null || true
+
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
+
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+
+            - name: config
+              mountPath: /etc/mongo/mongod.conf
+              subPath: mongod.conf
+
+            - name: keyfile
+              mountPath: /etc/mongo/keyfile
+              subPath: keyfile
+
+            - name: tls
+              mountPath: /etc/mongo/tls
+              readOnly: true
+
+      volumes:
+        - name: config
+          configMap:
+            name: mongodb-config
+
+        - name: keyfile-src
+          secret:
+            secretName: mongodb-secret
+            items:
+              - key: MONGO_REPLICA_SET_KEY_FILE
+                path: keyfile
+
+        - name: keyfile
+          emptyDir: {}
+
+        - name: tls-src
+          secret:
+            secretName: mongodb-server-tls
+
+        - name: tls
+          emptyDir: {}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app: mongodb
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: ""
+        resources:
+          requests:
+            storage: 20Gi
