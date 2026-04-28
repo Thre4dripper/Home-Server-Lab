@@ -55,26 +55,123 @@ _require_running() {
   echo "$pod"
 }
 
-# Apply manifests in correct dependency order
+# If config/ directory exists, generate a ConfigMap named ${APP}-config from
+# the files inside. This lets each config keep its native syntax (and IDE
+# autocomplete) instead of being inlined as a string in configmap.yaml.
+_apply_config_dir() {
+  [[ -d "$DEPLOY_DIR/config" ]] || return 0
+  local from_file_args=()
+  while IFS= read -r -d '' f; do
+    from_file_args+=(--from-file="$(basename "$f")=$f")
+  done < <(find "$DEPLOY_DIR/config" -maxdepth 1 -type f -print0)
+  [[ ${#from_file_args[@]} -eq 0 ]] && return 0
+
+  kubectl create configmap "${APP}-config" -n "$NAMESPACE" \
+    "${from_file_args[@]}" --dry-run=client -o yaml | \
+    kubectl apply -f - > /dev/null
+  echo -e "  ${GREEN}✓${NC} configmap ${APP}-config (from config/)"
+}
+
+# Apply every YAML file in a directory (sorted) if it exists
+_apply_dir() {
+  local dir="$1"
+  [[ -d "$DEPLOY_DIR/$dir" ]] || return 0
+  while IFS= read -r f; do
+    kubectl apply -f "$f" > /dev/null
+    echo -e "  ${GREEN}✓${NC} $dir/$(basename "$f")"
+  done < <(find "$DEPLOY_DIR/$dir" -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) | sort)
+}
+
+# Apply manifests in correct dependency order. Top-level files are applied in
+# the canonical order; per-app extras live in services/ (applied after the
+# workload) so apps with multiple Service / Route manifests stay tidy.
 _apply_ordered() {
-  local files=(pvc.yaml configmap.yaml sealedsecret.yaml rbac.yaml deployment.yaml service.yaml ingress.yaml)
+  local files=(
+    pv.yaml
+    pvc.yaml
+    certificate.yaml
+    configmap.yaml
+    sealedsecret.yaml
+    rbac.yaml
+    deployment.yaml
+    statefulset.yaml
+    service.yaml
+    ingress.yaml
+  )
+
+  _apply_config_dir
+
+  # Wait for any cert-manager Certificates so the workload can mount the secret
+  if [[ -f "$DEPLOY_DIR/certificate.yaml" ]]; then
+    kubectl apply -f "$DEPLOY_DIR/certificate.yaml" > /dev/null
+    echo -e "  ${GREEN}✓${NC} certificate.yaml"
+    local cert_names
+    cert_names=$(kubectl get -f "$DEPLOY_DIR/certificate.yaml" -o jsonpath='{.items[*].metadata.name}{.metadata.name}' 2>/dev/null)
+    for c in $cert_names; do
+      kubectl wait --for=condition=Ready certificate/"$c" -n "$NAMESPACE" --timeout=120s >/dev/null 2>&1 || true
+    done
+  fi
+
   for f in "${files[@]}"; do
+    [[ "$f" == "certificate.yaml" ]] && continue
     if [[ -f "$DEPLOY_DIR/$f" ]]; then
       kubectl apply -f "$DEPLOY_DIR/$f" > /dev/null
       echo -e "  ${GREEN}✓${NC} $f"
     fi
   done
+
+  # Apply any other root-level *.yaml files (e.g. service-headless.yaml,
+  # service-per-pod.yaml, ingressroute-tcp.yaml). The known files above are
+  # skipped so we don't re-apply them.
+  local known=" ${files[*]} "
+  while IFS= read -r f; do
+    local base; base="$(basename "$f")"
+    [[ "$known" == *" $base "* ]] && continue
+    kubectl apply -f "$f" > /dev/null
+    echo -e "  ${GREEN}✓${NC} $base"
+  done < <(find "$DEPLOY_DIR" -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) ! -name 'secret.yaml' | sort)
+
+  _apply_dir services
 }
 
 # Delete manifests in reverse dependency order
 _delete_ordered() {
-  local files=(ingress.yaml service.yaml deployment.yaml rbac.yaml sealedsecret.yaml configmap.yaml)
+  local files=(
+    ingress.yaml
+    service.yaml
+    statefulset.yaml
+    deployment.yaml
+    rbac.yaml
+    sealedsecret.yaml
+    configmap.yaml
+    certificate.yaml
+  )
+  if [[ -d "$DEPLOY_DIR/services" ]]; then
+    while IFS= read -r f; do
+      kubectl delete -f "$f" --ignore-not-found=true > /dev/null
+      echo -e "  ${GREEN}✓${NC} deleted services/$(basename "$f")"
+    done < <(find "$DEPLOY_DIR/services" -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) | sort -r)
+  fi
+
+  # Delete root-level extras (e.g. service-headless.yaml) before the canonical files
+  local known=" ${files[*]} pv.yaml pvc.yaml secret.yaml "
+  while IFS= read -r f; do
+    local base; base="$(basename "$f")"
+    [[ "$known" == *" $base "* ]] && continue
+    kubectl delete -f "$f" --ignore-not-found=true > /dev/null
+    echo -e "  ${GREEN}✓${NC} deleted $base"
+  done < <(find "$DEPLOY_DIR" -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) ! -name 'secret.yaml' | sort -r)
+
   for f in "${files[@]}"; do
     if [[ -f "$DEPLOY_DIR/$f" ]]; then
-      kubectl delete -f "$DEPLOY_DIR/$f" --ignore-not-found=true > /dev/null
+      kubectl delete -f "$f" --ignore-not-found=true > /dev/null
       echo -e "  ${GREEN}✓${NC} deleted $f"
     fi
   done
+  if [[ -d "$DEPLOY_DIR/config" ]]; then
+    kubectl delete configmap "${APP}-config" -n "$NAMESPACE" --ignore-not-found=true > /dev/null
+    echo -e "  ${GREEN}✓${NC} deleted configmap ${APP}-config"
+  fi
 }
 
 # Resolve the k3s/scripts directory (works at any nesting depth)
@@ -87,22 +184,40 @@ _find_scripts_dir() {
   echo ""
 }
 
+_detect_workload_kind() {
+  if kubectl get statefulset "$APP" -n "$NAMESPACE" &>/dev/null; then
+    echo "statefulset"
+  elif kubectl get deployment "$APP" -n "$NAMESPACE" &>/dev/null; then
+    echo "deployment"
+  else
+    echo ""
+  fi
+}
+
 # ─── Commands ─────────────────────────────────────────────────────────────────
 
 cmd_deploy() {
+  local existing_workload_kind
+  existing_workload_kind="$(_detect_workload_kind)"
+
   echo -e "\n${BOLD}Deploying ${CYAN}$APP${NC}${BOLD} → ${CYAN}$NAMESPACE${NC}\n"
   _apply_ordered
   echo ""
 
-  if kubectl get deployment "$APP" -n "$NAMESPACE" &>/dev/null; then
-    # Force a rollout restart so pods always pick up the latest Secret/ConfigMap values.
-    # kubectl apply only restarts pods when the Deployment spec changes; a Secret value
-    # change is invisible to the Deployment spec, so pods would keep the stale env vars
-    # until the next natural restart. rollout restart bumps the restartedAt annotation,
-    # triggering a new ReplicaSet and fresh env injection on every deploy.
-    kubectl rollout restart deployment/"$APP" -n "$NAMESPACE" > /dev/null
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+
+  if [[ -n "$workload_kind" ]]; then
+    if [[ -n "$existing_workload_kind" ]]; then
+      # Force a rollout restart so pods always pick up the latest Secret/ConfigMap values.
+      # kubectl apply only restarts pods when the workload spec changes; a Secret value
+      # change is invisible to that spec, so pods would keep the stale env vars until the
+      # next natural restart. rollout restart bumps the restartedAt annotation instead.
+      kubectl rollout restart "$workload_kind/$APP" -n "$NAMESPACE" > /dev/null
+    fi
+
     info "Waiting for rollout (timeout: 120s)..."
-    if kubectl rollout status deployment/"$APP" -n "$NAMESPACE" --timeout=120s; then
+    if kubectl rollout status "$workload_kind/$APP" -n "$NAMESPACE" --timeout=120s; then
       ok "Rollout complete"
     else
       warn "Rollout timed out — run: ./setup.sh events"
@@ -148,13 +263,20 @@ cmd_teardown() {
 }
 
 cmd_status() {
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+
   header "Pod(s)"
   kubectl get pods -n "$NAMESPACE" -l app="$APP" \
     -o custom-columns='NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready,RESTARTS:.status.containerStatuses[0].restartCount,AGE:.metadata.creationTimestamp,NODE:.spec.nodeName' \
     2>/dev/null || echo "  No pods found"
 
-  header "Deployment"
-  kubectl get deployment "$APP" -n "$NAMESPACE" 2>/dev/null || echo "  No deployment found"
+  header "Workload"
+  if [[ -n "$workload_kind" ]]; then
+    kubectl get "$workload_kind" "$APP" -n "$NAMESPACE"
+  else
+    echo "  No workload found"
+  fi
 
   if kubectl get svc "$APP" -n "$NAMESPACE" &>/dev/null; then
     header "Service & Endpoints"
@@ -227,30 +349,51 @@ cmd_shell() {
 }
 
 cmd_restart() {
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+  if [[ -z "$workload_kind" ]]; then
+    err "No workload found for $APP in $NAMESPACE"
+    exit 1
+  fi
+
   info "Restarting $APP (rollout restart)..."
-  kubectl rollout restart deployment/"$APP" -n "$NAMESPACE"
+  kubectl rollout restart "$workload_kind/$APP" -n "$NAMESPACE"
   echo ""
-  kubectl rollout status deployment/"$APP" -n "$NAMESPACE" --timeout=120s
+  kubectl rollout status "$workload_kind/$APP" -n "$NAMESPACE" --timeout=120s
   ok "Restarted — new pod is live"
 }
 
 cmd_rollback() {
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+  if [[ -z "$workload_kind" ]]; then
+    err "No workload found for $APP in $NAMESPACE"
+    exit 1
+  fi
+
   header "Rollout History (before rollback)"
-  kubectl rollout history deployment/"$APP" -n "$NAMESPACE"
+  kubectl rollout history "$workload_kind/$APP" -n "$NAMESPACE"
   echo ""
   info "Rolling back to previous revision..."
-  kubectl rollout undo deployment/"$APP" -n "$NAMESPACE"
+  kubectl rollout undo "$workload_kind/$APP" -n "$NAMESPACE"
   echo ""
-  kubectl rollout status deployment/"$APP" -n "$NAMESPACE" --timeout=120s
+  kubectl rollout status "$workload_kind/$APP" -n "$NAMESPACE" --timeout=120s
   echo ""
   header "Rollout History (after rollback)"
-  kubectl rollout history deployment/"$APP" -n "$NAMESPACE"
+  kubectl rollout history "$workload_kind/$APP" -n "$NAMESPACE"
   ok "Rolled back"
 }
 
 cmd_history() {
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+  if [[ -z "$workload_kind" ]]; then
+    err "No workload found for $APP in $NAMESPACE"
+    exit 1
+  fi
+
   header "Rollout History — $APP"
-  kubectl rollout history deployment/"$APP" -n "$NAMESPACE"
+  kubectl rollout history "$workload_kind/$APP" -n "$NAMESPACE"
 }
 
 cmd_update() {
@@ -260,10 +403,18 @@ cmd_update() {
     echo "  Example: ./setup.sh update ghcr.io/homarr-labs/homarr:v0.15.0"
     exit 1
   fi
+
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+  if [[ -z "$workload_kind" ]]; then
+    err "No workload found for $APP in $NAMESPACE"
+    exit 1
+  fi
+
   info "Updating $APP → $new_image"
-  kubectl set image deployment/"$APP" "$APP=$new_image" -n "$NAMESPACE"
+  kubectl set image "$workload_kind/$APP" "$APP=$new_image" -n "$NAMESPACE"
   echo ""
-  kubectl rollout status deployment/"$APP" -n "$NAMESPACE" --timeout=120s
+  kubectl rollout status "$workload_kind/$APP" -n "$NAMESPACE" --timeout=120s
   ok "Updated to $new_image"
   echo ""
   cmd_history
@@ -277,10 +428,18 @@ cmd_scale() {
     echo "  Example (start):   ./setup.sh scale 1"
     exit 1
   fi
+
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+  if [[ -z "$workload_kind" ]]; then
+    err "No workload found for $APP in $NAMESPACE"
+    exit 1
+  fi
+
   info "Scaling $APP to $replicas replica(s)..."
-  kubectl scale deployment/"$APP" -n "$NAMESPACE" --replicas="$replicas"
+  kubectl scale "$workload_kind/$APP" -n "$NAMESPACE" --replicas="$replicas"
   if [[ "$replicas" -gt 0 ]]; then
-    kubectl rollout status deployment/"$APP" -n "$NAMESPACE" --timeout=60s
+    kubectl rollout status "$workload_kind/$APP" -n "$NAMESPACE" --timeout=60s
   fi
   ok "Scaled to $replicas"
 }
@@ -297,20 +456,35 @@ cmd_events() {
 }
 
 cmd_resources() {
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+
   header "Live Resource Usage — $APP"
   kubectl top pods -n "$NAMESPACE" -l app="$APP" 2>/dev/null || \
     warn "metrics-server unavailable or pod not ready"
 
   header "Configured Requests & Limits"
-  kubectl get deployment "$APP" -n "$NAMESPACE" \
-    -o jsonpath='{range .spec.template.spec.containers[*]}  {.name}:{"\n"}    requests: cpu={.resources.requests.cpu}  memory={.resources.requests.memory}{"\n"}    limits:   cpu={.resources.limits.cpu}  memory={.resources.limits.memory}{"\n"}{end}' \
-    2>/dev/null || dim "  No resource config found"
+  if [[ -n "$workload_kind" ]]; then
+    kubectl get "$workload_kind" "$APP" -n "$NAMESPACE" \
+      -o jsonpath='{range .spec.template.spec.containers[*]}  {.name}:{"\n"}    requests: cpu={.resources.requests.cpu}  memory={.resources.requests.memory}{"\n"}    limits:   cpu={.resources.limits.cpu}  memory={.resources.limits.memory}{"\n"}{end}' \
+      2>/dev/null || dim "  No resource config found"
+  else
+    dim "  No resource config found"
+  fi
   echo ""
 }
 
 cmd_describe() {
-  header "Deployment — $APP"
-  kubectl describe deployment "$APP" -n "$NAMESPACE"
+  local workload_kind
+  workload_kind="$(_detect_workload_kind)"
+
+  if [[ -n "$workload_kind" ]]; then
+    header "${workload_kind^} — $APP"
+    kubectl describe "$workload_kind" "$APP" -n "$NAMESPACE"
+  else
+    header "Workload — $APP"
+    dim "  No workload found"
+  fi
 
   local pod; pod="$(_get_any_pod)"
   if [[ -n "$pod" ]]; then
