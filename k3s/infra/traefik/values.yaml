@@ -13,6 +13,15 @@ ports:
           scheme: https
   websecure:
     hostPort: null
+  # TCP entrypoint for MongoDB replica-set external access.
+  # Traefik terminates TLS here using the wildcard cert and routes by HostSNI
+  # (mongo-0/1/2.home.ijlalahmad.dev) to the matching StatefulSet pod.
+  mongodb:
+    port: 27017
+    expose:
+      default: true
+    exposedPort: 27017
+    protocol: TCP
 
 # Run on the control-plane node
 tolerations:
