@@ -17,6 +17,7 @@ spec:
       labels:
         app: redis
     spec:
+      priorityClassName: homelab-infra
       containers:
         - name: redis
           image: redis:7-alpine

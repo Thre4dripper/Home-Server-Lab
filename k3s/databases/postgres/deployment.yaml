@@ -17,6 +17,7 @@ spec:
       labels:
         app: postgres
     spec:
+      priorityClassName: homelab-infra
       securityContext:
         runAsUser: 999
         runAsGroup: 999

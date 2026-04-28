@@ -16,6 +16,7 @@ spec:
         app: mongodb
 
     spec:
+      priorityClassName: homelab-infra
       terminationGracePeriodSeconds: 60
 
       initContainers:
