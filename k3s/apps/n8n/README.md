@@ -50,7 +50,7 @@ Database connection points at `postgres.databases.svc.cluster.local:5432`.
 
 ## Prerequisites
 
-- The shared `databases` namespace deployed (`k3s/apps/databases/`) with a Postgres user `n8n` provisioned
+- The shared `databases` namespace deployed (`k3s/databases/`) with a Postgres user `n8n` provisioned
 - Sealed Secrets controller installed
 - Pi-hole resolving `n8n.home.ijlalahmad.dev`
 

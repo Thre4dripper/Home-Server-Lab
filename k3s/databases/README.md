@@ -42,18 +42,19 @@ A single `databases` namespace hosts every stateful backend other apps depend on
 | MongoDB | StatefulSet `mongodb` | `mongodb-data` | `ClusterIP` | `mongodb.databases.svc.cluster.local:27017` |
 | Redis | StatefulSet `redis` | `redis-data` | `ClusterIP` | `redis.databases.svc.cluster.local:6379` |
 
-Each engine gets a headless Service for stable DNS, a regular Service for clients, a SealedSecret with root credentials, and a PVC sized for the workload.
+Each engine gets a headless Service for stable DNS, a regular Service for clients, a SealedSecret with root credentials, and a PVC sized for the workload. MongoDB uses one retained volume per replica member so each member keeps its own data copy.
 
 ## Prerequisites
 
-- A StorageClass that supports `ReadWriteOnce` PVCs (default `local-path` works for single-node k3s)
+- A StorageClass that supports `ReadWriteOnce` PVCs for apps that use dynamic provisioning
+- For MongoDB in this repo, fixed hostPath PVs under `/home/pi/db-data/mongodb-rs0/` are used so each member's volume is retained explicitly
 - The Sealed Secrets controller installed
 - Sufficient host disk (recommend SSD, not SD card)
 
 ## Quick Start
 
 ```bash
-cd k3s/apps/databases
+cd k3s/databases
 ./setup.sh deploy        # applies all four engines
 ./setup.sh status        # pods, PVCs, services
 ```
@@ -132,6 +133,13 @@ kubectl -n databases exec sts/mysql -- \
 - **PVC stuck Pending** → no StorageClass / wrong access mode
 - **Connection refused from another namespace** → verify the Service name + that the consuming Pod has DNS access (NetworkPolicy)
 - **OOMKilled MySQL** → bump `innodb_buffer_pool_size` or the StatefulSet memory limit
+
+## MongoDB Storage Notes
+
+- A MongoDB replica set does not share one disk. Each member stores its own full copy of the data on its own PVC/PV.
+- Losing one member volume does not delete the replica set, but that member must resync from another member.
+- For planned maintenance, the safe detach pattern is to stop the StatefulSet and keep the PVCs/PVs bound, not to delete them.
+- The MongoDB helper supports `./setup.sh detach-storage` and `./setup.sh attach-storage` for that workflow.
 
 ## Links
 

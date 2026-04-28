@@ -239,7 +239,7 @@ graph LR
 
 | Service | Namespace | Port | Domain | Components |
 |---------|-----------|------|--------|------------|
-| [**🗄️ Databases**](./apps/databases/) | `databases` | `—` | `—` | `statefulset`, `service`, `sealedsecret`, `pvc` |
+| [**🗄️ Databases**](./databases/) | `databases` | `—` | `—` | `statefulset`, `service`, `sealedsecret`, `pvc` |
 <!-- AUTOGEN:SERVICES:END -->
 
 ---
