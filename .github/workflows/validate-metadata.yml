@@ -78,7 +78,7 @@ jobs:
 
     - name: 💬 Comment Validation Results
       if: always()
-      uses: actions/github-script@v6
+      uses: actions/github-script@v9
       with:
         script: |
           const validationErrors = '${{ steps.validate.outputs.validation_errors }}';
