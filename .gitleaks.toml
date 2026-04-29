@@ -18,8 +18,8 @@ paths = [
     '''(.*?)\.template$''',
     '''(.*?)\.sample$''',
     '''.*\.md$''',                              # documentation often shows fake tokens
-    '''k3s/apps/.*/sealed-secret.*\.yaml$''',   # SealedSecrets are encrypted by design
-    '''k3s/apps/.*/sealedsecret.*\.yaml$''',
+    '''.*/?sealed-secret.*\.yaml$''',            # SealedSecrets are encrypted by design
+    '''.*/?sealedsecret.*\.yaml$''',             # covers k3s/apps/, k3s/databases/, k3s/infra/, etc.
     '''.*\.sealed\.yaml$''',
     '''.*\.sops\.yaml$''',                      # SOPS-encrypted files
     '''docker/pihole/dns-entries\.conf$''',     # local DNS entries, not secrets
