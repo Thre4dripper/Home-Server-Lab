@@ -25,17 +25,21 @@ spec:
           ports:
             - containerPort: 6379
           command:
-            - redis-server
-            - /etc/redis/redis.conf
+            - sh
+            - -c
+            - exec redis-server /etc/redis/redis.conf --requirepass "$REDIS_PASSWORD"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
           volumeMounts:
             - name: data
               mountPath: /data
             - name: redis-config
               mountPath: /etc/redis/redis.conf
               subPath: redis.conf
-            - name: redis-acl
-              mountPath: /etc/redis/users.acl
-              subPath: users.acl
           resources:
             requests:
               memory: 32Mi
@@ -46,16 +50,18 @@ spec:
           livenessProbe:
             exec:
               command:
-                - redis-cli
-                - ping
+                - sh
+                - -c
+                - redis-cli -a "$REDIS_PASSWORD" ping
             initialDelaySeconds: 15
             periodSeconds: 20
             timeoutSeconds: 5
           readinessProbe:
             exec:
               command:
-                - redis-cli
-                - ping
+                - sh
+                - -c
+                - redis-cli -a "$REDIS_PASSWORD" ping
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
@@ -69,9 +75,3 @@ spec:
             items:
               - key: redis.conf
                 path: redis.conf
-        - name: redis-acl
-          configMap:
-            name: redis-config
-            items:
-              - key: users.acl
-                path: users.acl
