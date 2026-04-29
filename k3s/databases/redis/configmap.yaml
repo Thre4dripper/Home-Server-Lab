@@ -13,16 +13,15 @@ data:
     appendonly yes
     appendfsync everysec
 
-    # 16 logical databases available (SELECT 0 through SELECT 15)
-    # Create users via ACL to isolate access per application
+    # 16 logical databases (SELECT 0-15)
     databases 16
 
-    # ACL — per-service users with full access to all databases
-    aclfile /etc/redis/users.acl
+    # Password is injected at runtime via --requirepass from the Secret.
+    # Do not set requirepass here — this file is committed to git.
 
     # Bind to all interfaces inside the pod
     bind 0.0.0.0
-    protected-mode no
+    protected-mode yes
     port 6379
 
     # Tuning for Raspberry Pi
@@ -30,7 +29,3 @@ data:
     dynamic-hz yes
     lazyfree-lazy-eviction yes
     lazyfree-lazy-expire yes
-
-  users.acl: |
-    user default on nopass ~* resetchannels +ping +info
-    user admin on >adminRedis2024! ~* &* +@all
