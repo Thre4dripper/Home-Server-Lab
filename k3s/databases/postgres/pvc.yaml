@@ -10,7 +10,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   hostPath:
-    path: /home/pi/db-data/postgres
+    path: /home/pi/k3s-volumes/databases/postgres
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
