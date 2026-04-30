@@ -6,9 +6,8 @@ metadata:
   labels:
     app: aria2
 spec:
-  replicas: 0
+  replicas: 1
   revisionHistoryLimit: 2
-  paused: true
   strategy:
     type: Recreate
   selector:
