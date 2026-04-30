@@ -34,5 +34,3 @@ spec:
   commonName: mongo-0.home.ijlalahmad.dev
   dnsNames:
     - mongo-0.home.ijlalahmad.dev
-    - mongo-1.home.ijlalahmad.dev
-    - mongo-2.home.ijlalahmad.dev

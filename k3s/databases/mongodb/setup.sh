@@ -48,7 +48,7 @@ _db_connection_string() {
 
   case "$scope" in
     external)
-      echo "mongodb://${user}:${pass}@mongo-0.home.ijlalahmad.dev,mongo-1.home.ijlalahmad.dev,mongo-2.home.ijlalahmad.dev:27017/?replicaSet=rs0&tls=true&authSource=admin"
+      echo "mongodb://${user}:${pass}@mongo-0.home.ijlalahmad.dev:27017/?replicaSet=rs0&tls=true&authSource=admin"
       echo ""
       info "TLS uses Let's Encrypt \u2014 no CA file needed (trusted by OS / Compass / DataGrip out of the box)."
       info "For a plaintext connection, use: ./setup.sh connection-string internal (no TLS) or append &tls=false."

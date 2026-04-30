@@ -5,7 +5,7 @@ metadata:
   namespace: databases
 spec:
   serviceName: mongodb-headless
-  replicas: 3
+  replicas: 1
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -71,7 +71,7 @@ spec:
                       mongosh --quiet --eval "db.adminCommand('ping').ok" 2>/dev/null | grep -q '^1$' && break
                       sleep 2
                     done
-                    # Initiate replica set — error code 23 means already initialized, which is fine
+                    # Initiate single-member replica set — error code 23 means already initialized, which is fine
                     mongosh admin \
                       -u "${MONGO_INITDB_ROOT_USERNAME}" \
                       -p "${MONGO_INITDB_ROOT_PASSWORD}" \
@@ -80,9 +80,7 @@ spec:
                         var r = rs.initiate({
                           _id: 'rs0',
                           members: [
-                            { _id: 0, host: 'mongodb-0.mongodb-headless.databases.svc.cluster.local:27017' },
-                            { _id: 1, host: 'mongodb-1.mongodb-headless.databases.svc.cluster.local:27017' },
-                            { _id: 2, host: 'mongodb-2.mongodb-headless.databases.svc.cluster.local:27017' }
+                            { _id: 0, host: 'mongodb-0.mongodb-headless.databases.svc.cluster.local:27017' }
                           ]
                         });
                         if (r.ok !== 1 && r.code !== 23) quit(1);
