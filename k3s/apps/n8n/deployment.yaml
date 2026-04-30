@@ -65,8 +65,8 @@ spec:
                   name: n8n-secret
                   key: N8N_ENCRYPTION_KEY
 
-            # --- Task runners (required in n8n 2.x) ---
-            - name: N8N_RUNNERS_ENABLED
+            # --- One-shot: migrate legacy nested binaryData to storage/ (n8n v3 prep) ---
+            - name: N8N_MIGRATE_FS_STORAGE_PATH
               value: "true"
 
             # --- Risky / advanced node access ---
