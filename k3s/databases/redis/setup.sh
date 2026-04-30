@@ -10,7 +10,7 @@ DOMAIN=""
 DEFAULT_SHELL="sh"
 
 # Components this app uses
-HAS_PVC=true
+HAS_PVC=false
 HAS_SECRET=true
 HAS_INGRESS=false
 HAS_CONFIGMAP=true

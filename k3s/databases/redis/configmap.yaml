@@ -9,9 +9,10 @@ data:
     maxmemory 256mb
     maxmemory-policy allkeys-lru
 
-    # Persistence (AOF for reliability)
-    appendonly yes
-    appendfsync everysec
+    # Persistence: DISABLED — redis is used as a cache only.
+    # Restart loses all data, which is acceptable for cache semantics.
+    appendonly no
+    save ""
 
     # 16 logical databases (SELECT 0-15)
     databases 16
