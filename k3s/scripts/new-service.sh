@@ -387,13 +387,13 @@ STORAGE_SIZE=""
 if ask_yn "Does this app need persistent storage?" "y"; then
   HAS_PVC=true
   echo -e "  Storage backends:"
-  echo "    1) pendrive  — /home/pi/pendrive/k3s-data  (exFAT, 234GB)"
-  echo "    2) ext4      — /home/pi/db-data            (ext4, for databases only)"
+  echo "    1) apps      — /home/pi/k3s-volumes/apps        (default for application state)"
+  echo "    2) databases — /home/pi/k3s-volumes/databases   (for database engines)"
   prompt "Pick [1/2]: "
   choice=""; IFS= read -r choice
   case "$choice" in
-    2) STORAGE_PATH="/home/pi/db-data" ;;
-    *) STORAGE_PATH="/home/pi/pendrive/k3s-data" ;;
+    2) STORAGE_PATH="/home/pi/k3s-volumes/databases" ;;
+    *) STORAGE_PATH="/home/pi/k3s-volumes/apps" ;;
   esac
   ask STORAGE_SIZE "Storage size (e.g. 2Gi)" "2Gi"
 fi

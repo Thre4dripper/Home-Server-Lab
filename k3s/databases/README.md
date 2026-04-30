@@ -47,7 +47,7 @@ Each engine gets a headless Service for stable DNS, a regular Service for client
 ## Prerequisites
 
 - A StorageClass that supports `ReadWriteOnce` PVCs for apps that use dynamic provisioning
-- For MongoDB in this repo, fixed hostPath PVs under `/home/pi/db-data/mongodb-rs0/` are used so each member's volume is retained explicitly
+- For MongoDB in this repo, a fixed hostPath PV under `/home/pi/k3s-volumes/databases/mongodb/` is used so the data volume is retained explicitly
 - The Sealed Secrets controller installed
 - Sufficient host disk (recommend SSD, not SD card)
 

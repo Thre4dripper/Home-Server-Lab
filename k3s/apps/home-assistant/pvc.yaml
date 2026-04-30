@@ -9,7 +9,7 @@ spec:
     - ReadWriteOnce
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/home-assistant/config
+    path: /home/pi/k3s-volumes/apps/home-assistant/config
     type: DirectoryOrCreate
   claimRef:
     name: home-assistant-config

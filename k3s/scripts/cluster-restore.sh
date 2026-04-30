@@ -80,7 +80,7 @@ check_preflight() {
 
   echo ""
   echo -e "  ${BOLD}Host data directories:${NC}"
-  for dir in /home/pi/pendrive/k3s-data /home/pi/db-data; do
+  for dir in /home/pi/k3s-volumes/apps /home/pi/k3s-volumes/databases; do
     if [[ -d "$dir" ]]; then
       local free; free=$(df -BG "$dir" | awk 'NR==2{print $4}')
       ok "$dir  ($free free)"

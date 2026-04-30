@@ -9,7 +9,7 @@ spec:
     - ReadWriteOnce
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/homarr/appdata
+    path: /home/pi/k3s-volumes/apps/homarr/appdata
     type: DirectoryOrCreate
   claimRef:
     name: homarr-appdata

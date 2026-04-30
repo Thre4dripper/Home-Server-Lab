@@ -9,7 +9,7 @@ spec:
     - ReadWriteOnce
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/pihole/config
+    path: /home/pi/k3s-volumes/apps/pihole/config
     type: DirectoryOrCreate
   claimRef:
     name: pihole-config
@@ -40,7 +40,7 @@ spec:
     - ReadWriteOnce
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/pihole/dnsmasq
+    path: /home/pi/k3s-volumes/apps/pihole/dnsmasq
     type: DirectoryOrCreate
   claimRef:
     name: pihole-dnsmasq

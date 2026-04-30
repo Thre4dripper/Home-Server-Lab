@@ -9,7 +9,7 @@ spec:
     - ReadWriteOnce
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/jellyfin/config
+    path: /home/pi/k3s-volumes/apps/jellyfin/config
     type: DirectoryOrCreate
   claimRef:
     name: jellyfin-config
@@ -40,7 +40,7 @@ spec:
     - ReadWriteOnce
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/jellyfin/cache
+    path: /home/pi/k3s-volumes/apps/jellyfin/cache
     type: DirectoryOrCreate
   claimRef:
     name: jellyfin-cache

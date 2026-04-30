@@ -10,7 +10,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/bitcomet/config
+    path: /home/pi/k3s-volumes/apps/bitcomet/config
     type: DirectoryOrCreate
   claimRef:
     name: bitcomet-config
@@ -31,7 +31,7 @@ spec:
       storage: 500Mi
 ---
 # Downloads PV — capacity is just a label for hostPath, not enforced.
-# The actual limit is the pendrive's free space (~234GB).
+# The actual limit is the free space on the host filesystem backing /home/pi/k3s-volumes.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
