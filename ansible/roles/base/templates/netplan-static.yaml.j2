@@ -1,0 +1,36 @@
+# This file is managed by Ansible — do not edit manually.
+# cloud-init network management is disabled via /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+#
+# Static IP eliminates the DHCP race condition that occurs when Pi reboots
+# after a power cut: Pi boots faster than the router's DHCP server, leaving
+# the interface IP-less. K3s then starts without a valid node IP, flannel
+# sets up broken iptables rules that drop ALL incoming traffic (including SSH),
+# and the state never self-heals until a manual reboot.
+#
+# With static IP, the address is assigned instantly — no router dependency.
+# Each host defines its own ip/prefix in host_vars/<hostname>.yml:
+#   netplan_static_ip: "192.168.0.108"
+#   netplan_prefix_length: "24"
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      addresses:
+        - {{ netplan_static_ip }}/{{ netplan_prefix_length }}
+      routes:
+        - to: default
+          via: {{ pi_gateway }}
+      nameservers:
+        addresses: {{ pi_dns_servers | to_json }}
+  #wifis:
+  #  wlan0:
+  #    optional: true
+  #    dhcp4: true
+  #    access-points:
+  #      "YOUR_SSID":
+  #        auth:
+  #          key-management: "psk"
+  #          password: "YOUR_PASSWORD"
+  #    nameservers:
+  #      addresses: {{ pi_dns_servers | to_json }}
