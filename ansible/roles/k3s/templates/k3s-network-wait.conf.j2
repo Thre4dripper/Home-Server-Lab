@@ -1,0 +1,21 @@
+# This file is managed by Ansible — do not edit manually.
+# Drop-in override for k3s.service to prevent it from starting before
+# eth0 has a valid IP address (static or DHCP).
+#
+# Uses Wants= (soft dependency) instead of Requires= deliberately:
+# With Requires=, if network-online.target times out (router slow to boot),
+# systemd marks K3s failed and it won't self-recover even after the network
+# comes up. With Wants= + the ExecStartPre loop, K3s is free to attempt
+# starting but blocks execution until eth0 actually has an IP.
+# K3s's own Restart=always + TimeoutStartSec=0 handles any edge case retries.
+
+[Unit]
+Wants=network-online.target systemd-resolved.service
+After=network-online.target systemd-resolved.service
+
+[Service]
+# Wait indefinitely for eth0 to get any IP address (static or DHCP).
+# Safe because K3s sets TimeoutStartSec=0 — systemd will never kill this loop.
+# Flannel is told which interface to use via flannel-iface in config.yaml,
+# so K3s doesn't need to know the specific IP address here.
+ExecStartPre=/bin/sh -c 'until ip addr show eth0 2>/dev/null | grep -q "inet "; do sleep 2; done'

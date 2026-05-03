@@ -1,0 +1,11 @@
+---
+# k3s role handlers
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: restart k3s
+  service:
+    name: k3s
+    state: restarted
