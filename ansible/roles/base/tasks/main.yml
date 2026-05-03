@@ -1,6 +1,40 @@
 ---
-# Base system role — packages, timezone, locale, SSH hardening, firewall
+# Base system role — packages, timezone, locale, SSH hardening, firewall, network
 
+# ─── Network: static IP + DNS ─────────────────────────────────────────────────
+# Must run before package installs so DNS is healthy from the start.
+
+- name: Disable cloud-init network management
+  copy:
+    src: 99-disable-network-config.cfg
+    dest: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Configure static IP via netplan
+  template:
+    src: netplan-static.yaml.j2
+    dest: /etc/netplan/50-cloud-init.yaml
+    owner: root
+    group: root
+    mode: '0600'
+  notify: apply netplan
+
+- name: Enable and start systemd-resolved
+  service:
+    name: systemd-resolved
+    state: started
+    enabled: yes
+
+- name: Point /etc/resolv.conf to systemd-resolved stub
+  file:
+    src: /run/systemd/resolve/stub-resolv.conf
+    dest: /etc/resolv.conf
+    state: link
+    force: yes
+
+# ─── Packages ─────────────────────────────────────────────────────────────────
 - name: Update apt cache (Debian/Ubuntu)
   apt:
     update_cache: yes

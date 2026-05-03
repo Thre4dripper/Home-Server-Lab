@@ -31,6 +31,17 @@ firewall_allowed_ports:
   - { port: "6443", proto: "tcp", comment: "k3s API" }
   - { port: "8080:8900", proto: "tcp", comment: "Homelab services" }
 
+# Network configuration — override in host_vars/<hostname>.yml per host.
+# Static IP is configured per-host in the netplan template to eliminate the
+# DHCP race condition (Pi boots before the router's DHCP server is ready).
+# Each node gets its own static IP; flannel uses flannel-iface: eth0 so
+# K3s never has a specific IP hardcoded.
+pi_gateway: "192.168.0.1"
+pi_dns_servers:
+  - "1.1.1.1"
+  - "1.0.0.1"
+  - "8.8.8.8"
+
 # ─── Tools ───────────────────────────────────────────────────────────────────
 # Additional CLI tools to install
 extra_packages:

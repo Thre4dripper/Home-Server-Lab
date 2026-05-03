@@ -1,0 +1,8 @@
+---
+# Per-host network config for the primary Raspberry Pi homelab node.
+# Global defaults live in group_vars/all.yml.
+
+# Static IP — eliminates DHCP race condition on power-cut reboots.
+# Router also has a MAC reservation for this address as a second layer.
+netplan_static_ip: "192.168.0.108"
+netplan_prefix_length: "24"
