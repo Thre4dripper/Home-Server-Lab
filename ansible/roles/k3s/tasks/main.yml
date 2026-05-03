@@ -25,6 +25,50 @@
         creates: /usr/local/bin/k3s
   when: not k3s_binary.stat.exists
 
+# ─── Hardened network-wait drop-in ──────────────────────────────────────────
+# Upgrades the default Wants=network-online.target (soft) to Requires= (hard)
+# and adds an ExecStartPre that verifies the static IP is on the interface.
+# This prevents K3s from starting with no node IP after a power cut, which
+# would cause flannel to leave iptables in a state that blocks all traffic.
+
+- name: Create k3s systemd drop-in directory
+  file:
+    path: /etc/systemd/system/k3s.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy k3s network-wait drop-in
+  template:
+    src: k3s-network-wait.conf.j2
+    dest: /etc/systemd/system/k3s.service.d/10-network-wait.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload systemd
+    - restart k3s
+
+# ─── K3s config ──────────────────────────────────────────────────────────────
+
+- name: Ensure /etc/rancher/k3s directory exists
+  file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy k3s config.yaml with node-ip
+  template:
+    src: k3s-config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart k3s
+
 - name: Ensure k3s service is enabled and started
   service:
     name: k3s

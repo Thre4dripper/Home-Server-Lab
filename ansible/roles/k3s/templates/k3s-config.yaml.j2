@@ -1,0 +1,25 @@
+# This file is managed by Ansible — do not edit manually.
+# k3s server configuration
+write-kubeconfig-mode: "0644"
+disable:
+  - traefik
+
+# flannel-iface tells flannel which INTERFACE to use, not which IP.
+# This avoids hardcoding an address and works correctly with both DHCP
+# and static IP, and scales cleanly to multi-node setups where each
+# node has its own IP on eth0.
+flannel-iface: "eth0"
+
+# K3s uses its own resolv.conf for CoreDNS upstream resolution.
+# The main /etc/resolv.conf (managed by systemd-resolved) is separate.
+resolv-conf: /etc/resolv.conf.k3s
+
+tls-san:
+  - "{{ ansible_default_ipv4.address }}"
+  - "{{ ansible_hostname }}"
+  - "{{ ansible_hostname }}.lan"
+
+kubelet-arg:
+  - "kube-reserved=cpu=100m,memory=256Mi"
+  - "system-reserved=cpu=100m,memory=256Mi"
+  - "eviction-hard=memory.available<200Mi"
