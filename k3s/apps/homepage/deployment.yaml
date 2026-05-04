@@ -72,11 +72,11 @@ spec:
                 secretKeyRef:
                   name: homepage-secret
                   key: HOMEPAGE_VAR_ARGOCD_KEY
-            - name: HOMEPAGE_VAR_BITCOMET_TOKEN
+            - name: HOMEPAGE_VAR_ARIA2_SECRET
               valueFrom:
                 secretKeyRef:
                   name: homepage-secret
-                  key: HOMEPAGE_VAR_BITCOMET_TOKEN
+                  key: HOMEPAGE_VAR_ARIA2_SECRET
             - name: HOMEPAGE_VAR_CALENDAR_ICAL
               valueFrom:
                 secretKeyRef:
