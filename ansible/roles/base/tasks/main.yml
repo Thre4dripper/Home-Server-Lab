@@ -34,6 +34,17 @@
     state: link
     force: yes
 
+- name: Raise inotify limits for K3s and containerd
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_file: /etc/sysctl.d/99-k3s-inotify.conf
+    reload: yes
+  loop:
+    - { name: fs.inotify.max_user_watches, value: "524288" }
+    - { name: fs.inotify.max_user_instances, value: "1024" }
+
 # ─── Packages ─────────────────────────────────────────────────────────────────
 - name: Update apt cache (Debian/Ubuntu)
   apt:

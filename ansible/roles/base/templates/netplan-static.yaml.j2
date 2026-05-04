@@ -16,6 +16,8 @@ network:
   ethernets:
     eth0:
       dhcp4: false
+      dhcp6: false
+      accept-ra: false
       addresses:
         - {{ netplan_static_ip }}/{{ netplan_prefix_length }}
       routes:
