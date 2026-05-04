@@ -33,6 +33,11 @@ spec:
               value: "443"
             - name: EMBED_RPC_SECRET
               value: "false"
+            - name: RPC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: aria2-secret
+                  key: RPC_SECRET
           volumeMounts:
             - name: downloads
               mountPath: /aria2/data
