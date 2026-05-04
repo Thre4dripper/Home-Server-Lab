@@ -6,7 +6,8 @@ metadata:
   labels:
     app: bitcomet
 spec:
-  replicas: 1
+  replicas: 0
+  paused: true
   revisionHistoryLimit: 2
   strategy:
     type: Recreate
