@@ -1,0 +1,335 @@
+---
+# ┌─────────────┬─────────────┬─────────────────┬──────────────┬─────────┐
+# │  Markets    │  Services   │ Infrastructure  │ System & Info│  Links  │
+# └─────────────┴─────────────┴─────────────────┴──────────────┴─────────┘
+
+- Markets:
+    - NVDA:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:NVDA"
+          classes: h-52
+          allowScrolling: no
+    - AAPL:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:AAPL"
+          classes: h-52
+          allowScrolling: no
+    - GOOGL:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:GOOGL"
+          classes: h-52
+          allowScrolling: no
+    - TSLA:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:TSLA"
+          classes: h-52
+          allowScrolling: no
+    - AMZN:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:AMZN"
+          classes: h-52
+          allowScrolling: no
+    - META:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:META"
+          classes: h-52
+          allowScrolling: no
+    - NFLX:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:NFLX"
+          classes: h-52
+          allowScrolling: no
+    - TM:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NYSE:TM"
+          classes: h-52
+          allowScrolling: no
+    - TTWO:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:TTWO"
+          classes: h-52
+          allowScrolling: no
+    - EA:
+        widget:
+          type: iframe
+          src: "/widgets/mini-chart.html?symbol=NASDAQ:EA"
+          classes: h-52
+          allowScrolling: no
+
+- Services:
+    - Portainer:
+        icon: portainer
+        href: https://portainer.home.ijlalahmad.dev
+        siteMonitor: https://portainer.home.ijlalahmad.dev
+        description: Container management
+        namespace: monitoring
+        app: portainer
+        podSelector: "app=portainer"
+        showStats: true
+    - Jellyfin:
+        icon: jellyfin
+        href: https://jellyfin.home.ijlalahmad.dev
+        siteMonitor: https://jellyfin.home.ijlalahmad.dev
+        description: Media streaming
+        namespace: media
+        app: jellyfin
+        podSelector: "app=jellyfin"
+        showStats: true
+    - Dashdot:
+        icon: dashdot
+        href: https://dashdot.home.ijlalahmad.dev
+        siteMonitor: https://dashdot.home.ijlalahmad.dev
+        description: Hardware monitor
+        namespace: monitoring
+        app: dashdot
+        podSelector: "app=dashdot"
+        showStats: true
+    - Home Assistant:
+        icon: home-assistant
+        href: https://ha.home.ijlalahmad.dev
+        siteMonitor: https://ha.home.ijlalahmad.dev
+        description: Smart home hub
+        namespace: automation
+        app: home-assistant
+        podSelector: "app=home-assistant"
+        showStats: true
+    - Aria2:
+        icon: mdi-cloud-download
+        href: https://aria2.home.ijlalahmad.dev
+        siteMonitor: https://aria2.home.ijlalahmad.dev
+        description: Multi-protocol downloader
+        namespace: downloads
+        app: aria2
+        podSelector: "app=aria2"
+        showStats: true
+    - File Browser:
+        icon: filebrowser
+        href: https://files.home.ijlalahmad.dev
+        siteMonitor: https://files.home.ijlalahmad.dev
+        description: Web file manager
+        namespace: file-management
+        app: filebrowser
+        podSelector: "app=filebrowser"
+        showStats: true
+    - Samba:
+        icon: mdi-folder-network
+        description: Network shares (SMB)
+        namespace: file-management
+        app: samba
+        podSelector: "app=samba"
+        showStats: true
+    - Twingate:
+        icon: twingate
+        href: https://www.twingate.com
+        description: Zero-trust VPN
+        namespace: dashboard-network
+        app: twingate
+        podSelector: "app=twingate"
+        showStats: true
+
+- Infrastructure:
+    - ArgoCD:
+        icon: argo-cd
+        href: https://argocd.home.ijlalahmad.dev
+        siteMonitor: https://argocd.home.ijlalahmad.dev
+        description: GitOps delivery
+        namespace: argocd
+        app: argocd-server
+        showStats: true
+        widget:
+            type: argocd
+            url: https://argocd.home.ijlalahmad.dev
+            key: "{{HOMEPAGE_VAR_ARGOCD_KEY}}"
+            fields: ["apps", "synced", "outOfSync", "healthy"]
+    - Traefik:
+        icon: traefik
+        href: https://traefik.home.ijlalahmad.dev
+        siteMonitor: https://traefik.home.ijlalahmad.dev
+        description: Ingress proxy
+        namespace: traefik
+        app: traefik
+        showStats: true
+        widget:
+            type: traefik
+            url: https://traefik.home.ijlalahmad.dev
+    - Cert Manager:
+        icon: mdi-certificate
+        description: TLS automation
+        namespace: cert-manager
+        app: cert-manager
+        showStats: true
+    - Databases:
+        - MongoDB:
+            icon: mongodb
+            description: Document database
+            namespace: databases
+            app: mongodb
+            podSelector: "app=mongodb"
+            showStats: true
+        - PostgreSQL:
+            icon: postgres
+            description: Relational database
+            namespace: databases
+            app: postgres
+            podSelector: "app=postgres"
+            showStats: true
+        - Redis:
+            icon: redis
+            description: In-memory store
+            namespace: databases
+            app: redis
+            podSelector: "app=redis"
+            showStats: true
+
+- System & Info:
+    - Calendar:
+        icon: mdi-calendar-month
+        widget:
+            type: calendar
+            firstDayInWeek: monday
+            view: monthly
+            maxEvents: 10
+            showTime: true
+            timezone: Asia/Kolkata
+            integrations:
+              - type: ical
+                url: "{{HOMEPAGE_VAR_CALENDAR_ICAL}}"
+                name: My Events
+    - Service Details:
+        - Portainer:
+            icon: portainer
+            href: https://portainer.home.ijlalahmad.dev
+            description: Container management
+            widget:
+              type: portainer
+              url: https://portainer.home.ijlalahmad.dev
+              env: 5
+              kubernetes: true
+              key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
+        - File Browser:
+            icon: filebrowser
+            href: https://files.home.ijlalahmad.dev
+            description: File manager
+            widget:
+              type: filebrowser
+              url: https://files.home.ijlalahmad.dev
+              username: admin
+              password: "{{HOMEPAGE_VAR_FILEBROWSER_PASS}}"
+              authHeader: X-My-Header
+        - Jellyfin:
+            icon: jellyfin
+            href: https://jellyfin.home.ijlalahmad.dev
+            description: Media library
+            widget:
+              type: jellyfin
+              url: https://jellyfin.home.ijlalahmad.dev
+              key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
+              enableBlocks: true
+              enableNowPlaying: true
+        - Aria2:
+            icon: mdi-cloud-download
+            href: https://aria2.home.ijlalahmad.dev
+            description: Download manager
+            widgets:
+              - type: customapi
+                url: https://aria2.home.ijlalahmad.dev/jsonrpc
+                method: POST
+                headers:
+                  content-type: application/json
+                requestBody:
+                  jsonrpc: "2.0"
+                  method: aria2.getGlobalStat
+                  id: homepage
+                  params:
+                    - "token:{{HOMEPAGE_VAR_ARIA2_SECRET}}"
+                refreshInterval: 2000
+                display: block
+                mappings:
+                  - field: result.downloadSpeed
+                    label: Download
+                    format: bytes
+                    suffix: "/s"
+                  - field: result.uploadSpeed
+                    label: Upload
+                    format: bytes
+                    suffix: "/s"
+                  - field: result.numActive
+                    label: Active
+                    format: number
+                  - field: result.numWaiting
+                    label: Waiting
+                    format: number
+              - type: customapi
+                url: https://aria2.home.ijlalahmad.dev/jsonrpc
+                method: POST
+                headers:
+                  content-type: application/json
+                requestBody:
+                  jsonrpc: "2.0"
+                  method: aria2.tellActive
+                  id: homepage
+                  params:
+                    - "token:{{HOMEPAGE_VAR_ARIA2_SECRET}}"
+                refreshInterval: 2000
+                display: dynamic-list
+                mappings:
+                  items: result
+                  name: files.0.path
+                  label: downloadSpeed
+                  format: bytes
+                  suffix: "/s"
+                  limit: 10
+
+- Links:
+    - Developer:
+        - GitHub:
+            icon: github
+            href: https://github.com/
+            description: Code hosting
+        - ChatGPT:
+            icon: chatgpt
+            href: https://chat.openai.com/
+            description: AI assistant
+        - Docker Hub:
+            icon: docker
+            href: https://hub.docker.com/
+            description: Container registry
+        - Homepage Docs:
+            icon: homepage
+            href: https://gethomepage.dev/
+            description: Dashboard docs
+    - Social:
+        - Youtube:
+            icon: youtube
+            href: https://youtube.com/
+            description: Video platform
+        - Reddit:
+            icon: reddit
+            href: https://reddit.com
+            description: Community forums
+        - Twitter / X:
+            icon: x
+            href: https://x.com/
+            description: Social network
+    - Homelab:
+        - Cloudflare:
+            icon: cloudflare
+            href: https://dash.cloudflare.com/
+            description: DNS & CDN
+        - Awesome Selfhosted:
+            icon: mdi-star
+            href: https://awesome-selfhosted.net/
+            description: Curated list
+        - Selfhosted Wiki:
+            icon: mdi-book-open-variant
+            href: https://wiki.selfhosted.show/
+            description: Community wiki
