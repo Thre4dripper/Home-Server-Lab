@@ -196,14 +196,14 @@ data:
             app: home-assistant
             podSelector: "app=home-assistant"
             showStats: true
-        - BitComet:
-            icon: mdi-star-shooting
-            href: https://bitcomet.home.ijlalahmad.dev/webui/
-            siteMonitor: https://bitcomet.home.ijlalahmad.dev
-            description: BitTorrent client
+        - Aria2:
+            icon: mdi-cloud-download
+            href: https://aria2.home.ijlalahmad.dev
+            siteMonitor: https://aria2.home.ijlalahmad.dev
+            description: Multi-protocol downloader
             namespace: downloads
-            app: bitcomet
-            podSelector: "app=bitcomet"
+            app: aria2
+            podSelector: "app=aria2"
             showStats: true
         - File Browser:
             icon: filebrowser
@@ -329,64 +329,59 @@ data:
                   key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
                   enableBlocks: true
                   enableNowPlaying: true
-            - BitComet:
-                icon: mdi-star-shooting
-                href: https://bitcomet.home.ijlalahmad.dev/webui/
-                description: Torrent tasks
+            - Aria2:
+                icon: mdi-cloud-download
+                href: https://aria2.home.ijlalahmad.dev
+                description: Download manager
                 widgets:
                   - type: customapi
-                    url: https://bitcomet.home.ijlalahmad.dev/api_v2/task_list/get
+                    url: https://aria2.home.ijlalahmad.dev/jsonrpc
                     method: POST
                     headers:
-                      authorization: "Bearer {{HOMEPAGE_VAR_BITCOMET_TOKEN}}"
-                      client-type: "BitComet WebUI"
-                      content-type: "application/json"
+                      content-type: application/json
                     requestBody:
-                      state_group: "ALL"
-                      task_type: "ALL"
-                      tag_filter: "ALL"
-                      sort_key: ""
-                      sort_order: "unsorted"
-                      keyword: ""
-                      start: 0
-                      limit: 100
+                      jsonrpc: "2.0"
+                      method: aria2.getGlobalStat
+                      id: homepage
+                      params:
+                        - "token:{{HOMEPAGE_VAR_ARIA2_SECRET}}"
                     refreshInterval: 2000
                     display: block
                     mappings:
-                      - field: filtered_task_count
-                        label: Tasks
+                      - field: result.downloadSpeed
+                        label: Download
+                        format: bytes
+                        suffix: "/s"
+                      - field: result.uploadSpeed
+                        label: Upload
+                        format: bytes
+                        suffix: "/s"
+                      - field: result.numActive
+                        label: Active
                         format: number
-                      - field: version
-                        label: Version
-                        format: string
-                      - field: platform
-                        label: Platform
-                        format: string
+                      - field: result.numWaiting
+                        label: Waiting
+                        format: number
                   - type: customapi
-                    url: https://bitcomet.home.ijlalahmad.dev/api_v2/task_list/get
+                    url: http://localhost:6801/jsonrpc
                     method: POST
                     headers:
-                      authorization: "Bearer {{HOMEPAGE_VAR_BITCOMET_TOKEN}}"
-                      client-type: "BitComet WebUI"
-                      content-type: "application/json"
+                      content-type: application/json
                     requestBody:
-                      state_group: "ALL"
-                      task_type: "ALL"
-                      tag_filter: "ALL"
-                      sort_key: ""
-                      sort_order: "unsorted"
-                      keyword: ""
-                      start: 0
-                      limit: 100
+                      jsonrpc: "2.0"
+                      method: aria2.tellActive
+                      id: homepage
+                      params:
+                        - "token:{{HOMEPAGE_VAR_ARIA2_SECRET}}"
                     refreshInterval: 2000
                     display: dynamic-list
                     mappings:
-                      items: tasks
-                      name: task_name
-                      label: download_rate
+                      items: result
+                      name: files.0.path
+                      label: downloadSpeed
                       format: bytes
                       suffix: "/s"
-                      limit: 20
+                      limit: 10
 
     - Links:
         - Developer:
