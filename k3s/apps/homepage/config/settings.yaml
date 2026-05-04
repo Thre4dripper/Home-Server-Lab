@@ -1,0 +1,48 @@
+---
+title: Home Server Lab
+favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/homepage.png
+
+theme: dark
+color: sky
+headerStyle: boxed
+iconStyle: theme
+
+background:
+  image: https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=3440&q=80
+  blur: sm
+  saturate: 50
+  brightness: 50
+  opacity: 50
+cardBlur: sm
+
+fullWidth: true
+maxGroupColumns: 5
+useEqualHeights: true
+showStats: true
+statusStyle: basic
+disableCollapse: true
+hideVersion: true
+
+layout:
+  Markets:
+    icon: mdi-chart-line
+    style: row
+    columns: 2
+  Services:
+    icon: mdi-server
+  Infrastructure:
+    icon: mdi-kubernetes
+  System & Info:
+    icon: mdi-monitor-dashboard
+  Links:
+    icon: mdi-link-variant
+
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: false
+  showSearchSuggestions: true
+  provider: google
+
+providers:
+  openweathermap: "{{HOMEPAGE_VAR_OPENWEATHER_KEY}}"
+  finnhub: "{{HOMEPAGE_VAR_FINNHUB_KEY}}"
