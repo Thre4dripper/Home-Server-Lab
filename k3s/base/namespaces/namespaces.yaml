@@ -46,3 +46,10 @@ metadata:
   name: databases
   labels:
     category: databases
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: git
+  labels:
+    category: git
