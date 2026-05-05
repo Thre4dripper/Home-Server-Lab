@@ -1,0 +1,36 @@
+---
+# Forgejo Runner — Laptop Setup
+#
+# Run this on any laptop to register it as a CI runner against your Forgejo instance.
+#
+# Setup:
+#   1. Copy this file to the laptop (anywhere)
+#   2. Create a .env file next to it with:
+#        FORGEJO_RUNNER_REGISTRATION_TOKEN=<token from Forgejo admin panel>
+#        FORGEJO_RUNNER_NAME=<unique name, e.g. macbook-pro>
+#   3. docker compose -f docker-compose.runner.yml up -d
+#
+# Get the token: Forgejo → Site Administration → Actions → Runners → "Create new runner"
+#
+# The runner registers on first start and saves credentials to ./runner_data/.runner
+# After that, the token env var is ignored — you can remove it from .env if you like.
+
+services:
+  forgejo-runner:
+    image: code.forgejo.org/forgejo/runner:6
+    container_name: forgejo-runner
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      FORGEJO_INSTANCE_URL: "https://forgejo.home.ijlalahmad.dev"
+      FORGEJO_RUNNER_REGISTRATION_TOKEN: "${FORGEJO_RUNNER_REGISTRATION_TOKEN}"
+      FORGEJO_RUNNER_NAME: "${FORGEJO_RUNNER_NAME:-laptop-runner}"
+      # Adjust labels to match the laptop architecture (x64 vs arm64)
+      FORGEJO_RUNNER_LABELS: "ubuntu-latest:docker://ubuntu:22.04,ubuntu-22.04:docker://ubuntu:22.04,ubuntu-20.04:docker://ubuntu:20.04,self-hosted,linux,x64"
+    volumes:
+      # Persist .runner registration file across container restarts
+      - ./runner_data:/data
+      # Config file with Docker socket settings
+      - ./runner_config.yml:/data/config.yml:ro
+      # Host Docker socket — CI jobs run as sibling containers, not DinD
+      - /var/run/docker.sock:/var/run/docker.sock

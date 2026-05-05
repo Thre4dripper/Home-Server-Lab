@@ -1,0 +1,22 @@
+log:
+  level: info
+
+runner:
+  file: /data/.runner
+  capacity: 2
+  timeout: 3h
+  insecure: false
+  fetch_timeout: 5s
+  fetch_interval: 2s
+
+cache:
+  enabled: false
+
+container:
+  # Use host Docker daemon via mounted socket — CI jobs are sibling containers
+  docker_host: "unix:///var/run/docker.sock"
+  network: "bridge"
+  privileged: false
+  valid_volumes:
+    - "**"
+  force_pull: false
