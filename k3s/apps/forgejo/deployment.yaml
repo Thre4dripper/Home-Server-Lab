@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo
+  namespace: git
+  labels:
+    app: forgejo
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: forgejo
+  template:
+    metadata:
+      labels:
+        app: forgejo
+    spec:
+      containers:
+        - name: forgejo
+          image: codeberg.org/forgejo/forgejo:10
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: web
+            - containerPort: 2222
+              name: ssh
+          env:
+            - name: TZ
+              value: Asia/Kolkata
+            - name: USER_UID
+              value: "1000"
+            - name: USER_GID
+              value: "1000"
+
+            # ─── Database (SQLite — single user, hobby setup) ───────────────
+            - name: FORGEJO__database__DB_TYPE
+              value: sqlite3
+            - name: FORGEJO__database__PATH
+              value: /data/gitea/forgejo.db
+
+            # ─── Server ─────────────────────────────────────────────────────
+            - name: FORGEJO__server__DOMAIN
+              value: forgejo.home.ijlalahmad.dev
+            - name: FORGEJO__server__ROOT_URL
+              value: https://forgejo.home.ijlalahmad.dev
+            - name: FORGEJO__server__HTTP_PORT
+              value: "3000"
+            - name: FORGEJO__server__SSH_DOMAIN
+              value: forgejo.home.ijlalahmad.dev
+            # External port users put in clone URL (matches Traefik entrypoint)
+            - name: FORGEJO__server__SSH_PORT
+              value: "2222"
+            - name: FORGEJO__server__SSH_LISTEN_PORT
+              value: "2222"
+            - name: FORGEJO__server__START_SSH_SERVER
+              value: "true"
+            - name: FORGEJO__server__DISABLE_SSH
+              value: "false"
+
+            # ─── Security ───────────────────────────────────────────────────
+            - name: FORGEJO__security__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-secret
+                  key: FORGEJO_SECRET_KEY
+            - name: FORGEJO__security__INTERNAL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-secret
+                  key: FORGEJO_INTERNAL_TOKEN
+
+            # ─── Packages (container registry) ──────────────────────────────
+            - name: FORGEJO__packages__ENABLED
+              value: "true"
+
+            # ─── Actions (runner connects separately) ────────────────────────
+            - name: FORGEJO__actions__ENABLED
+              value: "true"
+
+            # ─── Registration — open for first setup, disable after ──────────
+            - name: FORGEJO__service__DISABLE_REGISTRATION
+              value: "false"
+
+            # ─── Mailer (disabled — configure later if needed) ───────────────
+            - name: FORGEJO__mailer__ENABLED
+              value: "false"
+
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 100m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: forgejo-data-pvc

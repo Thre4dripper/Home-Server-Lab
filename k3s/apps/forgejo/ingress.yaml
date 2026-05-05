@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: forgejo
+  namespace: git
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`forgejo.home.ijlalahmad.dev`)
+      kind: Rule
+      services:
+        - name: forgejo
+          port: 8900
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls
