@@ -30,6 +30,15 @@ ports:
       default: true
     exposedPort: 6379
     protocol: TCP
+  # TCP entrypoint for Forgejo SSH.
+  # SSH does not use TLS, so HostSNI(*) catches all traffic on this port.
+  # Clone URL: ssh://git@forgejo.home.ijlalahmad.dev:2222
+  forgejo-ssh:
+    port: 2222
+    expose:
+      default: true
+    exposedPort: 2222
+    protocol: TCP
 
 # Run on the control-plane node
 tolerations:
