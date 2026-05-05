@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forgejo-runner-config
+  namespace: git
+data:
+  config.yml: |
+    log:
+      level: info
+
+    runner:
+      # Path to the .runner registration file (persisted on PVC)
+      file: /data/.runner
+      # Max concurrent jobs this runner will handle
+      capacity: 2
+      timeout: 3h
+      insecure: false
+      fetch_timeout: 5s
+      fetch_interval: 2s
+
+    cache:
+      # Disable built-in cache server — use actions/cache in workflows if needed
+      enabled: false
+
+    container:
+      # Use the host Docker daemon via mounted socket (no DinD)
+      docker_host: "unix:///var/run/docker.sock"
+      network: "bridge"
+      privileged: false
+      # Allow any volume mounts in CI jobs
+      valid_volumes:
+        - "**"
+      force_pull: false

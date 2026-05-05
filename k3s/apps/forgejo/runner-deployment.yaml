@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo-runner
+  namespace: git
+  labels:
+    app: forgejo-runner
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    # Must be Recreate — only one runner instance should hold the .runner file
+    type: Recreate
+  selector:
+    matchLabels:
+      app: forgejo-runner
+  template:
+    metadata:
+      labels:
+        app: forgejo-runner
+    spec:
+      securityContext:
+        # GID 988 = docker group on the host — grants access to /var/run/docker.sock
+        supplementalGroups: [988]
+      containers:
+        - name: runner
+          image: code.forgejo.org/forgejo/runner:6
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              # Register on first boot (when .runner file doesn't exist yet).
+              # On subsequent starts the file is on the PVC and we skip this.
+              if [ ! -f /data/.runner ]; then
+                forgejo-runner register \
+                  --no-interactive \
+                  --instance "${FORGEJO_INSTANCE_URL}" \
+                  --token "${FORGEJO_RUNNER_REGISTRATION_TOKEN}" \
+                  --name "${FORGEJO_RUNNER_NAME}" \
+                  --labels "${FORGEJO_RUNNER_LABELS}" \
+                  --config /data/config.yml
+              fi
+              exec forgejo-runner daemon --config /data/config.yml
+          env:
+            # Internal cluster URL — runner talks directly to Forgejo pod
+            - name: FORGEJO_INSTANCE_URL
+              value: "http://forgejo:8900"
+            - name: FORGEJO_RUNNER_REGISTRATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-runner-secret
+                  key: FORGEJO_RUNNER_REGISTRATION_TOKEN
+            - name: FORGEJO_RUNNER_NAME
+              value: "pi-runner"
+            # Labels define which `runs-on:` values this runner accepts.
+            # Format: <label>:docker://<image>
+            - name: FORGEJO_RUNNER_LABELS
+              value: "ubuntu-latest:docker://ubuntu:22.04,ubuntu-22.04:docker://ubuntu:22.04,ubuntu-20.04:docker://ubuntu:20.04,self-hosted,linux,arm64"
+          volumeMounts:
+            # Persistent storage for .runner registration file and job workspace
+            - name: data
+              mountPath: /data
+            # Config file overlaid onto /data via subPath — doesn't conflict with PVC
+            - name: config
+              mountPath: /data/config.yml
+              subPath: config.yml
+            # Host Docker socket — CI job containers run as siblings on the Pi host,
+            # completely outside k3s. No DinD, no --privileged required.
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 50m
+            limits:
+              memory: 256Mi
+              cpu: 300m
+
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: forgejo-runner-data-pvc
+        - name: config
+          configMap:
+            name: forgejo-runner-config
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket

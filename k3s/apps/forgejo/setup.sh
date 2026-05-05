@@ -47,3 +47,15 @@ main "$@"
 # 4. After first login, disable open registration:
 #    Site Admin → Management → Disable self-registration
 #    OR set FORGEJO__service__DISABLE_REGISTRATION=true and redeploy
+#
+# ─── Runner setup ────────────────────────────────────────────────────────────
+# 5. Register the Pi runner:
+#    a. Go to Forgejo → Site Administration → Actions → Runners → "Create new runner"
+#    b. Copy the registration token
+#    c. Edit runner-secret.yaml and paste the token
+#    d. Seal it: kubeseal --format yaml < runner-secret.yaml > runner-sealedsecret.yaml
+#    e. Apply: kubectl apply -f runner-pvc.yaml -f runner-configmap.yaml \
+#                             -f runner-sealedsecret.yaml -f runner-deployment.yaml
+#    The runner registers itself on first start (token only used once).
+#
+# 6. For laptops — see docker/gitea/docker-compose.runner.yml
