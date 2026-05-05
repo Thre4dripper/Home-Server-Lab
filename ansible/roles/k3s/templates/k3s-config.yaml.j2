@@ -23,3 +23,14 @@ kubelet-arg:
   - "kube-reserved=cpu=100m,memory=256Mi"
   - "system-reserved=cpu=100m,memory=256Mi"
   - "eviction-hard=memory.available<200Mi"
+
+# etcd tuning for SD card — slow fsync tolerance.
+# Default heartbeat=100ms, election=1000ms are tuned for NVMe.
+# SD card fdatasync can take 200-800ms causing spurious leader elections
+# and wal sync timeouts that stall the API server briefly.
+etcd-arg:
+  - "heartbeat-interval=500"
+  - "election-timeout=5000"
+  - "snapshot-count=5000"
+  - "auto-compaction-mode=periodic"
+  - "auto-compaction-retention=1"
