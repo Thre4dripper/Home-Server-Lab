@@ -85,6 +85,12 @@ spec:
             category: databases
             path: k3s/databases/redis
 
+          # ── Git ────────────────────────────────────────────
+          - name: forgejo
+            namespace: git
+            category: git
+            path: k3s/apps/forgejo
+
           # ── Downloads ──────────────────────────────────────
           - name: aria2
             namespace: downloads
