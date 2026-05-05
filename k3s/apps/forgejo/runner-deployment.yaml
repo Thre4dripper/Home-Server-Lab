@@ -56,8 +56,12 @@ spec:
               value: "pi-runner"
             # Labels define which `runs-on:` values this runner accepts.
             # Format: <label>:docker://<image>
+            # catthehacker images are built specifically for act_runner:
+            #   - Native ARM64 (no QEMU emulation, no lag)
+            #   - Node.js pre-installed (required to run JS actions like actions/checkout)
+            #   - git, curl, and common CI tools included
             - name: FORGEJO_RUNNER_LABELS
-              value: "ubuntu-latest:docker://ubuntu:22.04,ubuntu-22.04:docker://ubuntu:22.04,ubuntu-20.04:docker://ubuntu:20.04,self-hosted,linux,arm64"
+              value: "ubuntu-latest:docker://catthehacker/ubuntu:act-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:act-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:act-20.04,self-hosted,linux,arm64"
           volumeMounts:
             # Persistent storage for .runner registration file and job workspace
             - name: data
