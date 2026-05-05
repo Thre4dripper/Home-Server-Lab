@@ -26,7 +26,8 @@ services:
       FORGEJO_RUNNER_REGISTRATION_TOKEN: "${FORGEJO_RUNNER_REGISTRATION_TOKEN}"
       FORGEJO_RUNNER_NAME: "${FORGEJO_RUNNER_NAME:-laptop-runner}"
       # Adjust labels to match the laptop architecture (x64 vs arm64)
-      FORGEJO_RUNNER_LABELS: "ubuntu-latest:docker://ubuntu:22.04,ubuntu-22.04:docker://ubuntu:22.04,ubuntu-20.04:docker://ubuntu:20.04,self-hosted,linux,x64"
+      # catthehacker images have Node.js pre-installed (needed for JS actions like actions/checkout)
+      FORGEJO_RUNNER_LABELS: "ubuntu-latest:docker://catthehacker/ubuntu:act-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:act-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:act-20.04,self-hosted,linux,x64"
     volumes:
       # Persist .runner registration file across container restarts
       - ./runner_data:/data
