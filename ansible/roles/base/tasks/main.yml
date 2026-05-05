@@ -84,6 +84,9 @@
     - { regexp: '^#?PermitRootLogin', line: "PermitRootLogin {{ ssh_permit_root_login }}" }
     - { regexp: '^#?PasswordAuthentication', line: "PasswordAuthentication {{ ssh_password_authentication }}" }
     - { regexp: '^#?PubkeyAuthentication', line: "PubkeyAuthentication {{ ssh_pubkey_authentication }}" }
+    - { regexp: '^#?TCPKeepAlive', line: "TCPKeepAlive yes" }
+    - { regexp: '^#?ClientAliveInterval', line: "ClientAliveInterval 30" }
+    - { regexp: '^#?ClientAliveCountMax', line: "ClientAliveCountMax 6" }
   notify: restart ssh
 
 - name: Install UFW (Debian/Ubuntu)
