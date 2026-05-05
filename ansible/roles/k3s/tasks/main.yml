@@ -50,6 +50,29 @@
     - reload systemd
     - restart k3s
 
+# ─── networkd-dispatcher: restart K3s on cable reconnect ─────────────────────
+# When the LAN cable is unplugged and replugged while the Pi is running,
+# flannel partially reinitializes iptables and can leave the INPUT chain in
+# a DROP state, blocking SSH even though the static IP comes back immediately.
+# This hook restarts K3s (which runs k3s-killall.sh as ExecStartPre, flushing
+# all stale rules) whenever eth0 becomes routable again.
+
+- name: Deploy networkd-dispatcher hook to restart K3s on eth0 link-up
+  copy:
+    src: networkd-dispatcher-k3s-restart
+    dest: /etc/networkd-dispatcher/routable.d/50-k3s-restart
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy targeted K3s iptables flush script
+  copy:
+    src: k3s-flush-iptables.sh
+    dest: /usr/local/bin/k3s-flush-iptables.sh
+    owner: root
+    group: root
+    mode: '0755'
+
 # ─── K3s config ──────────────────────────────────────────────────────────────
 
 - name: Ensure /etc/rancher/k3s directory exists
