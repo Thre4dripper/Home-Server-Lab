@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: forgejo-runner-data-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/pendrive/k3s-data/forgejo/runner
+    type: DirectoryOrCreate
+  claimRef:
+    name: forgejo-runner-data-pvc
+    namespace: git
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: forgejo-runner-data-pvc
+  namespace: git
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: forgejo-runner-data-pv
+  resources:
+    requests:
+      storage: 1Gi
