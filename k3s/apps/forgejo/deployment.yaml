@@ -79,6 +79,10 @@ spec:
             # ─── Actions (runner connects separately) ────────────────────────
             - name: FORGEJO__actions__ENABLED
               value: "true"
+            # Use GitHub as fallback for unqualified action refs (e.g. uses: gitleaks/gitleaks-action@v2)
+            # data.forgejo.org only hosts a subset of actions; most community actions are GitHub-only
+            - name: FORGEJO__actions__DEFAULT_ACTIONS_URL
+              value: "https://github.com"
 
             # ─── Registration — open for first setup, disable after ──────────
             - name: FORGEJO__service__DISABLE_REGISTRATION
@@ -93,25 +97,29 @@ spec:
               mountPath: /data
           resources:
             requests:
-              memory: 128Mi
+              memory: 256Mi
               cpu: 100m
             limits:
-              memory: 512Mi
-              cpu: 500m
+              memory: 768Mi
+              cpu: 700m
           livenessProbe:
             httpGet:
               path: /api/healthz
               port: 3000
             initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 5
+            periodSeconds: 60
+            # 15s timeout + 5 failures = Forgejo must be unresponsive for 5 full minutes
+            # before kubelet kills it — survives heavy CI runs on the Pi
+            timeoutSeconds: 15
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /api/healthz
               port: 3000
             initialDelaySeconds: 20
-            periodSeconds: 10
-            timeoutSeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
       volumes:
         - name: data
           persistentVolumeClaim:
