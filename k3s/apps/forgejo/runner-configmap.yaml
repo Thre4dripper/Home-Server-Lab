@@ -31,3 +31,7 @@ data:
       valid_volumes:
         - "**"
       force_pull: false
+      # Limit CI job containers so they can't starve Forgejo and other k3s pods.
+      # Pi has 4 cores — reserve ~1.5 cores for k3s workloads, give CI the rest.
+      # Memory capped so a runaway job can't OOM the whole node.
+      options: "--cpus=2 --memory=1g"
