@@ -24,7 +24,7 @@ spec:
         supplementalGroups: [988]
       containers:
         - name: runner
-          image: code.forgejo.org/forgejo/runner:6
+          image: code.forgejo.org/forgejo/runner:12
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
@@ -44,9 +44,12 @@ spec:
               fi
               exec forgejo-runner daemon --config /data/config.yml
           env:
-            # Internal cluster URL — runner talks directly to Forgejo pod
+            # LAN IP + LoadBalancer port — must be reachable from both the runner pod
+            # (inside k3s) AND from job containers (spawned on host Docker, outside k3s).
+            # Cannot use "http://forgejo:8900" here because k3s CoreDNS doesn't resolve
+            # inside host-Docker-spawned containers, causing actions/checkout to fail.
             - name: FORGEJO_INSTANCE_URL
-              value: "http://forgejo:8900"
+              value: "http://192.168.0.108:8900"
             - name: FORGEJO_RUNNER_REGISTRATION_TOKEN
               valueFrom:
                 secretKeyRef:
