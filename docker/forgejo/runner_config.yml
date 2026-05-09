@@ -1,0 +1,27 @@
+log:
+  level: info
+
+runner:
+  # Path to the .runner registration file (persisted in runner_data/)
+  file: /data/.runner
+  # Max concurrent jobs — increase if laptop has spare CPU
+  capacity: 2
+  timeout: 3h
+  insecure: false
+  fetch_timeout: 5s
+  fetch_interval: 2s
+
+cache:
+  enabled: false
+
+container:
+  # Use host Docker daemon via mounted socket — CI jobs are sibling containers, not DinD
+  docker_host: "unix:///var/run/docker.sock"
+  network: "bridge"
+  privileged: false
+  valid_volumes:
+    - "**"
+  force_pull: false
+  # Cap each CI job container so it doesn't freeze the laptop during heavy scans.
+  # Adjust --cpus based on your machine (e.g. --cpus=4 on an 8-core machine).
+  options: "--cpus=2 --memory=2g"
