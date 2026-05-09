@@ -1,0 +1,85 @@
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:10
+    container_name: forgejo-server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - USER_UID=${USER_UID}
+      - USER_GID=${USER_GID}
+      - FORGEJO__database__DB_TYPE=sqlite3
+      - FORGEJO__database__PATH=/data/gitea/forgejo.db
+      - FORGEJO__server__HTTP_PORT=${FORGEJO_HTTP_PORT}
+      - FORGEJO__server__DOMAIN=${FORGEJO_DOMAIN}
+      - FORGEJO__server__ROOT_URL=http://${FORGEJO_DOMAIN}:${FORGEJO_PORT}
+      - FORGEJO__server__SSH_DOMAIN=${FORGEJO_DOMAIN}
+      - FORGEJO__server__SSH_PORT=${FORGEJO_SSH_PORT}
+      - FORGEJO__server__SSH_LISTEN_PORT=22
+      - FORGEJO__server__START_SSH_SERVER=true
+      - FORGEJO__server__DISABLE_SSH=false
+      - FORGEJO__security__SECRET_KEY=${FORGEJO_SECRET_KEY}
+      - FORGEJO__security__INTERNAL_TOKEN=${FORGEJO_INTERNAL_TOKEN}
+      - FORGEJO__packages__ENABLED=true
+      - FORGEJO__actions__ENABLED=true
+      - FORGEJO__actions__DEFAULT_ACTIONS_URL=https://github.com
+      - FORGEJO__service__DISABLE_REGISTRATION=${FORGEJO_DISABLE_REGISTRATION:-false}
+      - FORGEJO__mailer__ENABLED=false
+    volumes:
+      - ./forgejo_data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${FORGEJO_PORT}:${FORGEJO_HTTP_PORT}"
+      - "${FORGEJO_SSH_PORT}:22"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${FORGEJO_HTTP_PORT}/api/healthz"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+
+  forgejo-runner:
+    image: code.forgejo.org/forgejo/runner:12
+    container_name: forgejo-runner
+    restart: unless-stopped
+    user: root
+    env_file: .env
+    environment:
+      # - FORGEJO_INSTANCE_URL=http://forgejo-server:${FORGEJO_HTTP_PORT}
+      - FORGEJO_INSTANCE_URL=https://forgejo.home.ijlalahmad.dev/
+      - FORGEJO_RUNNER_REGISTRATION_TOKEN=${FORGEJO_RUNNER_REGISTRATION_TOKEN}
+      - FORGEJO_RUNNER_NAME=${FORGEJO_RUNNER_NAME:-laptop-runner}
+      - FORGEJO_RUNNER_LABELS=ubuntu-latest:docker://catthehacker/ubuntu:act-22.04,ubuntu-22.04:docker://catthehacker/ubuntu:act-22.04,ubuntu-20.04:docker://catthehacker/ubuntu:act-20.04,self-hosted,linux,arm64
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        if [ ! -f /data/.runner ]; then
+          forgejo-runner register \
+            --no-interactive \
+            --instance "$${FORGEJO_INSTANCE_URL}" \
+            --token "$${FORGEJO_RUNNER_REGISTRATION_TOKEN}" \
+            --name "$${FORGEJO_RUNNER_NAME}" \
+            --labels "$${FORGEJO_RUNNER_LABELS}" \
+            --config /etc/forgejo-runner/config.yml
+        fi
+        exec forgejo-runner daemon --config /etc/forgejo-runner/config.yml
+    volumes:
+      - ./runner_data:/data
+      - ./runner_config.yml:/etc/forgejo-runner/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - default
+    # depends_on:
+    #   forgejo:
+    #     condition: service_healthy
+
+networks:
+  default:
+    # external: true
+    # name: pi-services
+    # only needed if you want to connect k3s-deployed Forgejo Runner to this containerized Forgejo server. If both are on the same Docker network, they can reach each other at "http://forgejo:8900".
+    driver: bridge
