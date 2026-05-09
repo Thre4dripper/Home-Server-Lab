@@ -1,0 +1,12 @@
+# Ignore sensitive configuration
+.env
+
+# Ignore data directories (contains repos, db, and runner credentials)
+forgejo_data/
+runner_data/
+
+# Ignore Docker volumes and temporary files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
