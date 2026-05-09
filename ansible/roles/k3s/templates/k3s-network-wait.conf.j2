@@ -22,3 +22,9 @@ After=network-online.target systemd-resolved.service
 # Flannel is told which interface to use via flannel-iface in config.yaml,
 # so K3s doesn't need to know the specific IP address here.
 ExecStartPre=/bin/sh -c 'until ip addr show eth0 2>/dev/null | grep -q "inet "; do sleep 2; done'
+
+# After K3s starts and sets up its iptables chains (INPUT policy DROP),
+# pin SSH (port 22) at position 1 so it is NEVER blocked — not during a
+# K3s restart, not during a flannel re-init, not during a cable bounce.
+# The check (-C) prevents duplicate rules on repeated restarts.
+ExecStartPost=/bin/sh -c 'sleep 8 && iptables -C INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -p tcp --dport 22 -j ACCEPT'
