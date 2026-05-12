@@ -70,7 +70,7 @@ jobs:
 
     steps:
       - name: ⬇️ Download repo snapshot
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: repo-snapshot
 
@@ -122,19 +122,19 @@ jobs:
           fetch-depth: 0
 
       - name: ⬇️ Download docker README
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: readme-docker
           path: _artifacts/docker
 
       - name: ⬇️ Download k3s README
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: readme-k3s
           path: _artifacts/k3s
 
       - name: ⬇️ Download global README
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: readme-global
           path: _artifacts/global
@@ -185,7 +185,7 @@ jobs:
 
     steps:
       - name: ⬇️ Download ${{ matrix.stack }} artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.artifact }}
           path: _artifact
