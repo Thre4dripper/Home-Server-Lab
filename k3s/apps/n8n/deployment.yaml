@@ -59,13 +59,26 @@ spec:
             - name: TZ
               value: "Asia/Kolkata"
 
-            # --- Storage: SQLite ---
+            # --- Storage: Postgres ---
             - name: DB_TYPE
-              value: "sqlite"
-            - name: DB_SQLITE_POOL_SIZE
+              value: "postgresdb"
+            - name: DB_POSTGRESDB_HOST
+              value: "postgres.databases.svc.cluster.local"
+            - name: DB_POSTGRESDB_PORT
+              value: "5432"
+            - name: DB_POSTGRESDB_DATABASE
+              value: "n8n"
+            - name: DB_POSTGRESDB_USER
+              value: "n8n_user"
+            - name: DB_POSTGRESDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secret
+                  key: N8N_DB_PASSWORD
+            - name: DB_POSTGRESDB_CONNECTION_TIMEOUT
+              value: "30000"
+            - name: DB_POSTGRESDB_POOL_SIZE
               value: "5"
-            - name: N8N_USER_FOLDER
-              value: "/home/node/.n8n"
 
             # --- Encryption key (must persist across restarts) ---
             - name: N8N_ENCRYPTION_KEY
