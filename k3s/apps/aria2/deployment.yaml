@@ -18,6 +18,73 @@ spec:
       labels:
         app: aria2
     spec:
+      # Allow aria2c time to flush its session file before being killed.
+      terminationGracePeriodSeconds: 30
+      initContainers:
+        # Problem this solves:
+        #   start.sh only writes rpc-secret into aria2.conf when $RPC_SECRET is
+        #   non-empty. If the sealed-secret ever fails to unseal the env var is
+        #   empty, start.sh skips the update, and whatever stale secret sits on
+        #   the PVC stays. aria2c then uses that stale secret while AriaNg
+        #   (which reads the current secret from the sealed-secret via
+        #   EMBED_RPC_SECRET) sends a different one → permanent "Unauthorized".
+        #
+        #   Fix: /aria2/conf is an emptyDir (ephemeral). This init container
+        #   writes a guaranteed-correct aria2.conf from scratch on every pod
+        #   start, with rpc-secret taken directly from the sealed secret env var
+        #   and the session path pointing to the persistent config PVC.
+        #
+        #   It also repairs a 0-byte session file (truncated on unclean
+        #   shutdown), which causes aria2c to fail starting its RPC listener.
+        - name: init-config
+          image: busybox:1.36
+          env:
+            - name: RPC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: aria2-secret
+                  key: RPC_SECRET
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              SESSION=/aria2/conf-pvc/aria2.session
+              if [ -f "$SESSION" ] && [ ! -s "$SESSION" ]; then
+                echo "Session file is 0 bytes (truncated on unclean shutdown) — removing."
+                rm -f "$SESSION"
+              fi
+              touch "$SESSION"
+              chmod 644 "$SESSION"
+              {
+              printf 'enable-rpc=true\n'
+              printf 'rpc-allow-origin-all=true\n'
+              printf 'rpc-listen-all=true\n'
+              printf 'disable-ipv6=true\n'
+              printf 'max-concurrent-downloads=5\n'
+              printf 'continue=true\n'
+              printf 'max-connection-per-server=5\n'
+              printf 'min-split-size=10M\n'
+              printf 'split=10\n'
+              printf 'max-overall-download-limit=0\n'
+              printf 'max-download-limit=0\n'
+              printf 'max-overall-upload-limit=0\n'
+              printf 'max-upload-limit=0\n'
+              printf 'dir=/aria2/data\n'
+              printf 'file-allocation=prealloc\n'
+              printf 'console-log-level=notice\n'
+              printf 'input-file=/aria2/conf-pvc/aria2.session\n'
+              printf 'save-session=/aria2/conf-pvc/aria2.session\n'
+              printf 'save-session-interval=10\n'
+              printf 'rpc-secret=%s\n' "$RPC_SECRET"
+              } > /aria2/conf/aria2.conf
+              chmod 644 /aria2/conf/aria2.conf
+              echo "aria2.conf written with correct rpc-secret."
+          volumeMounts:
+            - name: runtime-conf
+              mountPath: /aria2/conf
+            - name: config
+              mountPath: /aria2/conf-pvc
       containers:
         - name: aria2
           image: hurlenko/aria2-ariang
@@ -31,8 +98,11 @@ spec:
               value: "1004"
             - name: ARIA2RPCPORT
               value: "443"
+            # Any non-empty value causes start.sh to embed the base64-encoded
+            # secret into the AriaNg JS so new browser sessions don't need
+            # manual configuration.
             - name: EMBED_RPC_SECRET
-              value: "false"
+              value: "true"
             - name: RPC_SECRET
               valueFrom:
                 secretKeyRef:
@@ -41,8 +111,30 @@ spec:
           volumeMounts:
             - name: downloads
               mountPath: /aria2/data
-            - name: config
+            # emptyDir: start.sh finds aria2.conf already exists (written by
+            # init-config) and only re-applies the rpc-secret line — safe no-op.
+            - name: runtime-conf
               mountPath: /aria2/conf
+            # Config PVC: aria2c reads/writes the session file here directly.
+            - name: config
+              mountPath: /aria2/conf-pvc
+          # aria2c listens on 6800 for JSON-RPC; Caddy proxies /jsonrpc there.
+          # Probing 6800 directly catches a dead aria2c even when Caddy/nginx
+          # is still serving the AriaNg UI on 8080.
+          livenessProbe:
+            tcpSocket:
+              port: 6800
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+            timeoutSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 6800
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5
           resources:
             requests:
               memory: 64Mi
@@ -55,3 +147,5 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: aria2-config
+        - name: runtime-conf
+          emptyDir: {}
