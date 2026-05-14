@@ -337,7 +337,7 @@ cmd_logs() {
   [[ -n "$previous" ]] && info "Showing logs from previous (crashed) container"
   [[ -n "$follow" ]]   && info "Streaming logs — Ctrl+C to stop"
 
-  kubectl logs $follow $tail $previous "${extra_args[@]}" \
+  kubectl logs $follow $tail $previous ${extra_args[@]+"${extra_args[@]}"} \
     -n "$NAMESPACE" "$pod"
 }
 
