@@ -12,6 +12,10 @@ k3s/apps/**/secret.yaml
 k3s/databases/**/secret.yaml
 k3s/infra/**/secret.yaml
 
+# Ansible Vault — the encrypted vault.yml IS committed; never commit the plaintext version
+# (ansible-vault edit will re-encrypt on save automatically)
+ansible/group_vars/vault.yml.plaintext
+
 # Database data directories
 **/mysql_data/
 **/postgres_data/

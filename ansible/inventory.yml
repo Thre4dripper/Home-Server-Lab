@@ -9,18 +9,14 @@ all:
   children:
     homelab_servers:
       hosts:
-        # Primary homelab server
-        # Uncomment and edit for your environment:
-        # homelab-01:
-        #   ansible_host: 192.168.1.42
-        #   ansible_user: pi
-        #   ansible_become_password: !vault |
-        #     $ANSIBLE_VAULT;...
+        homelab-pi:
+          ansible_host: 192.168.0.108
+          ansible_user: pi
 
         # Or use localhost for the current machine:
-        localhost:
-          ansible_connection: local
-          ansible_python_interpreter: /usr/bin/python3
+        # localhost:
+        #   ansible_connection: local
+        #   ansible_python_interpreter: /usr/bin/python3
 
       vars:
         # Homelab-specific config (override in group_vars/all.yml or host_vars/)
