@@ -23,7 +23,7 @@ max-upload-limit=0
 dir=/aria2/data
 # file pre-allocation, can effectively reduce file fragmentation and improve disk performance. the disadvantage is that the pre-allocation time is longer.
 # none < falloc ? trunc « prealloc, falloc and trunc require file system and kernel support
-file-allocation=prealloc
+file-allocation=none
 
 # general options
 # log=/aria2/conf/aria2.log

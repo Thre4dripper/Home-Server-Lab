@@ -71,7 +71,7 @@ spec:
               printf 'max-overall-upload-limit=0\n'
               printf 'max-upload-limit=0\n'
               printf 'dir=/aria2/data\n'
-              printf 'file-allocation=prealloc\n'
+              printf 'file-allocation=none\n'
               printf 'console-log-level=notice\n'
               printf 'input-file=/aria2/conf-pvc/aria2.session\n'
               printf 'save-session=/aria2/conf-pvc/aria2.session\n'
@@ -137,9 +137,9 @@ spec:
             timeoutSeconds: 5
           resources:
             requests:
-              memory: 64Mi
+              memory: 128Mi
             limits:
-              memory: 256Mi
+              memory: 512Mi
       volumes:
         - name: downloads
           persistentVolumeClaim:
