@@ -9,7 +9,7 @@ spec:
     - ReadWriteOnce
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/aria2/downloads
+    path: /home/pi/pendrive/downloads
     type: DirectoryOrCreate
   claimRef:
     name: aria2-downloads
