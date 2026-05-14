@@ -12,7 +12,7 @@ services:
       - PGID=${PGID:-1004}
       - RPC_SECRET=${RPC_SECRET:-your-secret-here}
       - ARIA2RPCPORT=${ARIA2RPCPORT:-443}
-      - EMBED_RPC_SECRET=${EMBED_RPC_SECRET:-false}
+      - EMBED_RPC_SECRET=${EMBED_RPC_SECRET:-true}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "netstat -an | grep 6800 > /dev/null; if [ 0 != $$? ]; then exit 1; fi;"]
