@@ -6,7 +6,7 @@ APP="n8n"
 NAMESPACE="automation"
 CONTAINER_PORT="5678"
 EXTERNAL_PORT="8400"
-DOMAIN="n8n.lan"
+DOMAIN="n8n.home.ijlalahmad.dev"
 DEFAULT_SHELL="sh"
 
 # Components this app uses
