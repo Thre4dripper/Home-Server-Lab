@@ -6,7 +6,7 @@ metadata:
   labels:
     app: forgejo-runner
 spec:
-  replicas: 1
+  replicas: 0
   revisionHistoryLimit: 2
   strategy:
     # Must be Recreate — only one runner instance should hold the .runner file

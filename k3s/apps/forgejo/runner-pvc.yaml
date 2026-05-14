@@ -10,7 +10,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/forgejo/runner
+    path: /home/pi/k3s-volumes/apps/forgejo-runner
     type: DirectoryOrCreate
   claimRef:
     name: forgejo-runner-data-pvc
