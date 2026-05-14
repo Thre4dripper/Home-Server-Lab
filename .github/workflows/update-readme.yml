@@ -18,6 +18,10 @@ on:
       - 'k3s/databases/*/README.md'
   workflow_dispatch:
 
+concurrency:
+  group: update-readme-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write
