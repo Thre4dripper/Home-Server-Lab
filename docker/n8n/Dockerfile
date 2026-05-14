@@ -1,5 +1,5 @@
 # Start from official Node.js image (already has Debian base)
-FROM node:25-bookworm-slim
+FROM node:26-bookworm-slim
 
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
