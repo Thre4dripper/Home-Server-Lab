@@ -19,7 +19,7 @@ This is the **Docker half** of the [Home Server Lab](../README.md) two-stack set
 | 🏡 Dashboard & Network Services | Network services and dashboards | Dashy, Homarr, Homepage, Nginx Proxy Manager, +2 more |
 | 📁 File Management & Collaboration | File storage, synchronization and collaboration | FileBrowser, Nextcloud, Pydio, Rclone, +3 more |
 | 📊 Monitoring & Stats | System statistics and performance dashboards | Dashdot, Netdata, Portainer |
-| 🛠️ Development & DevOps | Development tools and CI/CD | GitLab, Gitea, LocalStack |
+| 🛠️ Development & DevOps | Development tools and CI/CD | Forgejo, GitLab, Gitea, LocalStack |
 | 🧲 Download Managers | Torrent and download management | Aria2, BitComet, Deluge, qBittorrent |
 
 
@@ -123,11 +123,14 @@ graph LR
     %% 🛠️ Development & DevOps
     subgraph DevelopmentDevOps["🛠️ Development & DevOps"]
         direction TB
+        Forgejo[🦋<br/>Forgejo]
         Gitlab[🦊<br/>GitLab]
         Gitea[🍃<br/>Gitea]
         Localstack[☁️<br/>LocalStack]
-        Gitlab --- Gitea
+        Forgejo --- Gitlab
+        Gitea --- Localstack
     end
+    Docker -.-> Forgejo
     Docker -.-> Gitlab
     Docker -.-> Gitea
     Docker -.-> Localstack
@@ -164,9 +167,10 @@ graph LR
     class Dashy,Homarr,Homepage,Nginxui,Pihole,Twingate dashNode
     class Filebrowser,Nextcloud,Pydio,Rclone,Samba,Seafile,Owncloud nasNode
     class Dashdot,Netdata,Portainer monitoringNode
-    class Gitlab,Gitea,Localstack devNode
+    class Forgejo,Gitlab,Gitea,Localstack devNode
     class Aria2Ui,Bitcomet,Deluge,Qbittorrent downloadNode
 ```
+
 
 
 
@@ -226,6 +230,7 @@ graph LR
 
 | Service | Purpose | Key Features | Resource Usage |
 |---------|---------|--------------|----------------|
+| [**Forgejo**](./forgejo/) | Self-hosted Git Service with CI/CD | Git hosting with web interface, Pull requests and code review, Issue tracking... | ~256MB RAM (server), ~128MB RAM (runner) |
 | [**GitLab**](./gitlab/) | Full DevOps Platform | Git repos with CI/CD pipelines, Issue tracking and project management, Contai... | ~2GB RAM |
 | [**Gitea**](./gitea/) | Lightweight Git Service | Git hosting with web interface, Pull requests and code review, Issue tracking... | ~200MB RAM |
 | [**LocalStack**](./localstack/) | AWS Cloud Emulation | Local AWS services emulation, Development and testing platform, Cloud dashboa... | ~500MB RAM |
