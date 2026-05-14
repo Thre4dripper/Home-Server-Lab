@@ -92,6 +92,20 @@
     mode: '0644'
   notify: restart k3s
 
+# ─── Private registry auth (Forgejo) ─────────────────────────────────────────
+# Configures k3s to authenticate against the Forgejo container registry
+# cluster-wide — no per-namespace pull secrets needed.
+# Set 'forgejo_registry_token' in Ansible Vault (ansible-vault edit group_vars/all.yml).
+- name: Deploy k3s private registry config
+  template:
+    src: registries.yaml.j2
+    dest: /etc/rancher/k3s/registries.yaml
+    owner: root
+    group: root
+    mode: '0600'
+  notify: restart k3s
+  when: forgejo_registry_token is defined and forgejo_registry_token | length > 0
+
 - name: Ensure k3s service is enabled and started
   service:
     name: k3s

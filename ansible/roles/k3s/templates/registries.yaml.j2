@@ -1,0 +1,16 @@
+# This file is managed by Ansible — do not edit manually.
+# k3s private registry configuration — allows all pods cluster-wide to pull
+# images from the Forgejo container registry without per-namespace pull secrets.
+# Credential is stored in Ansible Vault as 'forgejo_registry_token'.
+#
+# Reference: https://docs.k3s.io/installation/private-registry
+mirrors:
+  "{{ forgejo_domain }}":
+    endpoint:
+      - "https://{{ forgejo_domain }}"
+
+configs:
+  "{{ forgejo_domain }}":
+    auth:
+      username: "{{ forgejo_registry_username }}"
+      password: "{{ forgejo_registry_token }}"
