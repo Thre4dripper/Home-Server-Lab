@@ -90,6 +90,12 @@ spec:
             - name: N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE
               value: "true"
 
+            # --- Execute Command node (removed from n8n v2 by default) ---
+            - name: N8N_ENABLE_EXECUTE_COMMAND
+              value: "true"
+            - name: NODES_EXCLUDE
+              value: "[]"
+
             # --- Execution / pruning ---
             - name: EXECUTIONS_MODE
               value: "regular"
