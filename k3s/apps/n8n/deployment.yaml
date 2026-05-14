@@ -18,10 +18,15 @@ spec:
       labels:
         app: n8n
     spec:
+      # n8n service account has cluster-admin — required for the Kubernetes node
+      # credential type "Automatic" (in-cluster config via pod service account token).
+      serviceAccountName: n8n
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+        # GID 988 = docker group on the Pi host — lets node user access /var/run/docker.sock
+        supplementalGroups: [988]
       containers:
         - name: n8n
           # Custom image built from docker/n8n/Dockerfile — includes aws, kubectl, helm,
@@ -125,6 +130,21 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /home/node/.n8n
+            # Docker socket — lets the Docker CLI inside n8n talk to the host daemon
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+            # AWS credentials & config — avoids re-configuring aws inside the container
+            - name: aws-config
+              mountPath: /home/node/.aws
+              readOnly: true
+            # rclone config — cloud storage remotes already configured on the Pi
+            - name: rclone-config
+              mountPath: /home/node/.config/rclone
+              readOnly: true
+            # SSH keys — for git operations, rsync, remote commands
+            - name: ssh-keys
+              mountPath: /home/node/.ssh
+              readOnly: true
           resources:
             requests:
               memory: 256Mi
@@ -152,3 +172,23 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: n8n-data
+        # Docker socket from host
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+        # AWS credentials directory from pi home
+        - name: aws-config
+          hostPath:
+            path: /home/pi/.aws
+            type: DirectoryOrCreate
+        # rclone config directory
+        - name: rclone-config
+          hostPath:
+            path: /home/pi/.config/rclone
+            type: DirectoryOrCreate
+        # SSH keys
+        - name: ssh-keys
+          hostPath:
+            path: /home/pi/.ssh
+            type: DirectoryOrCreate
