@@ -81,3 +81,15 @@ homelab_clone_repo: true
 
 # Run initial setup after cloning (creates .env files, etc.)
 homelab_run_initial_setup: false  # Set to true to auto-scaffold on first boot
+
+# ─── Forgejo Container Registry ──────────────────────────────────────────────
+# Used by k3s to pull images from the Forgejo registry cluster-wide.
+# Set forgejo_registry_token in Ansible Vault — never plain-text here.
+#   ansible-vault edit ansible/group_vars/all.yml
+# Or store in a separate vault file:
+#   ansible-vault edit ansible/group_vars/vault.yml
+forgejo_domain: "forgejo.home.ijlalahmad.dev"
+forgejo_registry_username: "ijlal"
+# forgejo_registry_token: !vault |   # set this in vault
+#   $ANSIBLE_VAULT;1.1;AES256
+#   ...
