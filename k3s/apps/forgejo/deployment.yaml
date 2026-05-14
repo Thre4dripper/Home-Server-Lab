@@ -35,11 +35,22 @@ spec:
             - name: USER_GID
               value: "1000"
 
-            # ─── Database (SQLite — single user, hobby setup) ───────────────
+            # ─── Database (Postgres — replaces SQLite for concurrency) ─────
             - name: FORGEJO__database__DB_TYPE
-              value: sqlite3
-            - name: FORGEJO__database__PATH
-              value: /data/gitea/forgejo.db
+              value: postgres
+            - name: FORGEJO__database__HOST
+              value: postgres.databases.svc.cluster.local:5432
+            - name: FORGEJO__database__NAME
+              value: forgejo
+            - name: FORGEJO__database__USER
+              value: forgejo_user
+            - name: FORGEJO__database__PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-secret
+                  key: FORGEJO_DB_PASSWORD
+            - name: FORGEJO__database__SSL_MODE
+              value: disable
 
             # ─── Server ─────────────────────────────────────────────────────
             - name: FORGEJO__server__DOMAIN
