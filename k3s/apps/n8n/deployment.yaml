@@ -24,8 +24,12 @@ spec:
         fsGroup: 1000
       containers:
         - name: n8n
-          image: n8nio/n8n:2.18.5
-          imagePullPolicy: IfNotPresent
+          # Custom image built from docker/n8n/Dockerfile — includes aws, kubectl, helm,
+          # terraform, rclone, python3, docker CLI, yq, jq and all n8n env defaults.
+          # Build: docker build -t forgejo.home.ijlalahmad.dev/<user>/n8n-custom:latest docker/n8n/
+          # Push:  docker push forgejo.home.ijlalahmad.dev/<user>/n8n-custom:latest
+          image: forgejo.home.ijlalahmad.dev/ijlal/n8n-custom:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5678
               name: web

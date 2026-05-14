@@ -56,10 +56,40 @@ services:
       N8N_SECURE_COOKIE: false
       NODE_TLS_REJECT_UNAUTHORIZED: "0"  # Disable SSL verification for self-signed certs (home lab only)
 
-      # Execution
+      # --- Storage: SQLite ---
+      DB_TYPE: "sqlite"
+      DB_SQLITE_POOL_SIZE: "5"
+      N8N_USER_FOLDER: "/home/node/.n8n"
+
+      # --- Risky / advanced node access ---
+      NODE_FUNCTION_ALLOW_BUILTIN: "*"
+      NODE_FUNCTION_ALLOW_EXTERNAL: "*"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      N8N_COMMUNITY_PACKAGES_ENABLED: "true"
+      N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: "true"
+
+      # --- Telemetry / nags off ---
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_HIRING_BANNER_ENABLED: "false"
+
+      # --- Hardening ---
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_GIT_NODE_DISABLE_BARE_REPOS: "true"
+
+      # --- Logging ---
+      N8N_LOG_LEVEL: "info"
+      N8N_LOG_OUTPUT: "console"
+
+      # --- Node.js ---
+      NODE_OPTIONS: "--max-old-space-size=768"
+
+      # --- Execution / pruning ---
       EXECUTIONS_PROCESS: main
       EXECUTIONS_DATA_PRUNE: true
       EXECUTIONS_DATA_MAX_AGE: 336
+      EXECUTIONS_DATA_PRUNE_MAX_COUNT: "10000"
     ports:
       - "${N8N_PORT}:5678"
     volumes:
