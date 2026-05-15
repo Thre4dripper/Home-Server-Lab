@@ -46,14 +46,12 @@ spec:
               mountPath: /etc/samba/smb.conf
               subPath: smb.conf
               readOnly: true
-            - name: private
+            - name: samba-state
               mountPath: /var/lib/samba/private
             - name: public
               mountPath: /shares/public
-            - name: media
-              mountPath: /shares/media
-            - name: documents
-              mountPath: /shares/documents
+            - name: private
+              mountPath: /shares/private
           resources:
             requests:
               memory: 64Mi
@@ -63,17 +61,19 @@ spec:
         - name: smb-conf
           configMap:
             name: samba-config
-        - name: private
+        # Samba's internal account/secrets DB (TDB files). Ephemeral; the
+        # only "user" is recreated from the SAMBA_PASS env var on each start.
+        - name: samba-state
           emptyDir: {}
+        # Public exposes the shared downloads directory
+        # (same on-disk location aria2 + bitcomet write into).
         - name: public
           hostPath:
             path: /home/pi/pendrive/downloads
             type: DirectoryOrCreate
-        - name: media
-          hostPath:
-            path: /home/pi/pendrive/media
-            type: DirectoryOrCreate
-        - name: documents
+        # Private share exposes the entire pendrive root for authenticated
+        # access to course folders, fastapi, etc.
+        - name: private
           hostPath:
             path: /home/pi/pendrive
-            type: DirectoryOrCreate
+            type: Directory

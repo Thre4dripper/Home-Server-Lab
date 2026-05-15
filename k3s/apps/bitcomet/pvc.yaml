@@ -44,7 +44,9 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   hostPath:
-    path: /home/pi/pendrive/k3s-data/bitcomet/downloads
+    # Shared with aria2-downloads. Both clients write into the same pendrive
+    # downloads directory; their control files (.bc!, .aria2) coexist cleanly.
+    path: /home/pi/pendrive/downloads
     type: DirectoryOrCreate
   claimRef:
     name: bitcomet-downloads
