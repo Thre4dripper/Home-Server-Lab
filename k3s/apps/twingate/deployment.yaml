@@ -23,6 +23,7 @@ spec:
       containers:
         - name: twingate
           image: twingate/connector:1
+          imagePullPolicy: Always
           envFrom:
             - secretRef:
                 name: twingate-secret
@@ -31,3 +32,24 @@ spec:
               memory: 64Mi
             limits:
               memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          livenessProbe:
+            exec:
+              command: ["connectorctl", "health"]
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["connectorctl", "health"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
