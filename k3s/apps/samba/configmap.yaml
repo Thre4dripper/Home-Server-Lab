@@ -40,29 +40,20 @@ data:
         multicast dns register = yes
 
     [Public]
-        comment = Public Share - Guest Access
+        comment = Public Share - Guest Read-Only (downloads)
         path = /shares/public
-        browseable = yes
-        read only = no
-        guest ok = yes
-        create mask = 0775
-        directory mask = 0775
-        force user = nobody
-        force group = nogroup
-
-    [Media]
-        comment = Media Files - Movies, Music, Photos
-        path = /shares/media
         browseable = yes
         read only = yes
         guest ok = yes
-        write list = pi
-        create mask = 0775
-        directory mask = 0775
+        guest only = yes
+        create mask = 0755
+        directory mask = 0755
+        force user = nobody
+        force group = nogroup
 
-    [Documents]
-        comment = Personal Documents - Authenticated Users Only
-        path = /shares/documents
+    [Private]
+        comment = Pendrive Root - Authenticated Users Only
+        path = /shares/private
         browseable = yes
         read only = no
         guest ok = no
