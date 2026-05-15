@@ -33,6 +33,10 @@ spec:
               value: "true"
             - name: DASHDOT_ALWAYS_SHOW_PERCENTAGES
               value: "true"
+            - name: DASHDOT_ACCEPT_OOKLA_EULA
+              value: "true"
+            - name: DASHDOT_SPEED_TEST_INTERVAL
+              value: "240"
             - name: TZ
               value: "UTC"
           volumeMounts:
