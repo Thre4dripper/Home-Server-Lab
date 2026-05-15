@@ -1,15 +1,22 @@
 # This file is managed by Ansible — do not edit manually.
 # Drop-in override for k3s.service to:
-#   1. Never start before eth0 has a valid static IP
-#   2. (On live reboots) K3s handles its own iptables cleanup on restart.
-#      networkd-dispatcher restarts K3s when eth0 bounces (cable reconnect),
-#      which also re-initializes flannel + iptables cleanly without k3s-killall.sh.
+#   1. Never start before the gateway (router) is actually reachable.
+#      With a static IP, the interface gets its address the moment the link
+#      comes up — even before WiFi has associated or the router has finished
+#      booting. Checking IP presence alone exits too early. We ping the
+#      gateway instead, which confirms the router is up AND the link (WiFi
+#      or Ethernet) is fully connected. This eliminates the boot race: when
+#      both the Pi and the router restart after a power cut, k3s waits until
+#      the router is actually reachable before it starts.
+#   2. (On live reboots) networkd-dispatcher restarts K3s when the primary
+#      interface bounces, re-initializing flannel + iptables cleanly without
+#      k3s-killall.sh.
 #
 # Uses Wants= (soft dependency) instead of Requires= deliberately:
 # With Requires=, if network-online.target times out (router slow to boot),
 # systemd marks K3s failed and it won't self-recover even after the network
 # comes up. With Wants= + the ExecStartPre loop, K3s is free to attempt
-# starting but blocks execution until eth0 actually has an IP.
+# starting but blocks execution until the gateway is reachable.
 # K3s's own Restart=always + RestartSec=5s handles any edge case retries.
 
 [Unit]
@@ -17,14 +24,15 @@ Wants=network-online.target systemd-resolved.service
 After=network-online.target systemd-resolved.service
 
 [Service]
-# Wait indefinitely for eth0 to get any IP address (static or DHCP).
-# Safe because K3s sets TimeoutStartSec=0 — systemd will never kill this loop.
-# Flannel is told which interface to use via flannel-iface in config.yaml,
-# so K3s doesn't need to know the specific IP address here.
-ExecStartPre=/bin/sh -c 'until ip addr show eth0 2>/dev/null | grep -q "inet "; do sleep 2; done'
+# Ping the gateway (router) until it responds, with a 3-second per-attempt
+# timeout. Safe because K3s sets TimeoutStartSec=0 — systemd will never
+# kill this loop. Checking gateway reachability (not just IP presence) is
+# necessary because the static IP on {{ k3s_flannel_iface | default('eth0') }}
+# is assigned instantly at boot, before WiFi has associated or DHCP has run.
+ExecStartPre=/bin/sh -c 'until ping -c1 -W3 {{ pi_gateway }} >/dev/null 2>&1; do sleep 2; done'
 
 # After K3s starts and sets up its iptables chains (INPUT policy DROP),
 # pin SSH (port 22) at position 1 so it is NEVER blocked — not during a
-# K3s restart, not during a flannel re-init, not during a cable bounce.
+# K3s restart, not during a flannel re-init, not during a link bounce.
 # The check (-C) prevents duplicate rules on repeated restarts.
 ExecStartPost=/bin/sh -c 'sleep 8 && iptables -C INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -p tcp --dport 22 -j ACCEPT'
