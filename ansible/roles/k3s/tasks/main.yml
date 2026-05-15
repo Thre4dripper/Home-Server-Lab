@@ -57,9 +57,9 @@
 # This hook restarts K3s (which runs k3s-killall.sh as ExecStartPre, flushing
 # all stale rules) whenever eth0 becomes routable again.
 
-- name: Deploy networkd-dispatcher hook to restart K3s on eth0 link-up
-  copy:
-    src: networkd-dispatcher-k3s-restart
+- name: Deploy networkd-dispatcher hook to restart K3s on primary link-up
+  template:
+    src: networkd-dispatcher-k3s-restart.j2
     dest: /etc/networkd-dispatcher/routable.d/50-k3s-restart
     owner: root
     group: root

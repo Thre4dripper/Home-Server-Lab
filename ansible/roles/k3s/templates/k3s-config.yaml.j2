@@ -7,8 +7,9 @@ disable:
 # flannel-iface tells flannel which INTERFACE to use, not which IP.
 # This avoids hardcoding an address and works correctly with both DHCP
 # and static IP, and scales cleanly to multi-node setups where each
-# node has its own IP on eth0.
-flannel-iface: "eth0"
+# node has its own IP on the primary interface.
+# Set k3s_flannel_iface in host_vars/<hostname>.yml (default: eth0).
+flannel-iface: "{{ k3s_flannel_iface | default('eth0') }}"
 
 # K3s uses its own resolv.conf for CoreDNS upstream resolution.
 # The main /etc/resolv.conf (managed by systemd-resolved) is separate.

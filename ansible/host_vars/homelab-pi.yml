@@ -6,3 +6,12 @@
 # Router also has a MAC reservation for this address as a second layer.
 netplan_static_ip: "192.168.0.108"
 netplan_prefix_length: "24"
+
+# Primary network interface — used by Netplan, flannel, and the k3s
+# ExecStartPre loop. Set to "wlan0" when running over WiFi, "eth0" for LAN.
+k3s_flannel_iface: "wlan0"
+
+# WiFi credentials — SSID is non-sensitive, password lives in vault.yml.
+# Add to vault:  ansible-vault edit ansible/group_vars/vault.yml
+#   netplan_wifi_password: "your-wifi-password"
+netplan_wifi_ssid: "ACTFIBRE_5G"
