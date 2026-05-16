@@ -11,7 +11,7 @@ DEFAULT_SHELL="sh"
 
 # Components this app uses
 HAS_PVC=true
-HAS_SECRET=false
+HAS_SECRET=true
 HAS_INGRESS=true
 HAS_CONFIGMAP=false
 HAS_RBAC=true
