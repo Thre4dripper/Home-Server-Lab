@@ -61,7 +61,7 @@ k3s/
 |----------|-------------|----------|
 | 🛠️ Infra & GitOps | Cluster control plane, GitOps, secrets | ArgoCD |
 | 🌐 Network & Ingress | DNS, VPN, ingress and remote access | Pi-hole, Twingate Connector |
-| 📊 Monitoring & Stats | Cluster + host observability | Dashdot, Portainer |
+| 📊 Monitoring & Stats | Cluster + host observability | Backrest, Dashdot, Portainer |
 | 🏡 Dashboards | Landing pages and service catalogs | Homarr, Homepage |
 | 🤖 Automation | Workflow and smart-home automation | Home Assistant, n8n |
 | 🎬 Media & Entertainment | Streaming and media servers | Jellyfin |
@@ -109,10 +109,12 @@ graph LR
 
     subgraph MonitoringStats["📊 Monitoring & Stats"]
         direction TB
+        backrest[🗄️<br/>Backrest]
         dashdot[📊<br/>Dashdot]
         portainer[🐳<br/>Portainer]
-        dashdot --- portainer
+        backrest --- dashdot
     end
+    K3s --> backrest
     K3s --> dashdot
     K3s --> portainer
 
@@ -191,6 +193,7 @@ graph LR
 
 | Service | Namespace | Port | Domain | Components |
 |---------|-----------|------|--------|------------|
+| [**🗄️ Backrest**](./apps/backrest/) | `monitoring` | `9898` | `backrest.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `rbac`, `pvc` |
 | [**📊 Dashdot**](./apps/dashdot/) | `monitoring` | `8120` | `dashdot.home.ijlalahmad.dev` | `deployment`, `service`, `ingress` |
 | [**🐳 Portainer**](./apps/portainer/) | `monitoring` | `8500` | `portainer.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `rbac`, `pvc` |
 
