@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: backrest
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`backrest.home.ijlalahmad.dev`)
+      kind: Rule
+      services:
+        - name: backrest
+          port: 9898
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

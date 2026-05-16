@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backrest
+  namespace: monitoring
+  labels:
+    app: backrest
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    # Recreate avoids two instances accessing the restic repo simultaneously
+    type: Recreate
+  selector:
+    matchLabels:
+      app: backrest
+  template:
+    metadata:
+      labels:
+        app: backrest
+    spec:
+      serviceAccountName: backrest
+      # Root is required so pre-backup hooks can read all source paths and
+      # exec into database pods via kubectl.
+      securityContext:
+        runAsUser: 0
+      containers:
+        - name: backrest
+          image: ghcr.io/garethgeorge/backrest:v1.13.0
+          ports:
+            - containerPort: 9898
+              name: web
+          env:
+            - name: BACKREST_PORT
+              value: "9898"
+            - name: BACKREST_DATA
+              value: /data
+            # Config file must be explicitly pointed at the PVC — without this
+            # Backrest defaults to /config/config.json (ephemeral, lost on restart)
+            - name: BACKREST_CONFIG
+              value: /data/config.json
+            # Cache kept inside the data PVC so it survives pod restarts
+            - name: XDG_CACHE_HOME
+              value: /data/.cache
+            - name: TZ
+              value: "Asia/Kolkata"
+          volumeMounts:
+            # Backrest config, state, and DB dump staging area
+            - name: data
+              mountPath: /data
+            # Source: all k3s app volumes (read-only for safety)
+            - name: k3s-volumes
+              mountPath: /k3s-volumes
+              readOnly: true
+            # Destination: restic repo lives here on the pendrive
+            - name: pendrive-backups
+              mountPath: /pendrive-backups
+            # kubectl binary from host — used by pre-backup hook scripts
+            # to exec mongodump / pg_dumpall into the DB pods
+            - name: kubectl-bin
+              mountPath: /usr/local/bin/kubectl
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9898
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9898
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 50m
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: backrest-data
+        # All k3s app + database volumes on the SD card
+        - name: k3s-volumes
+          hostPath:
+            path: /home/pi/k3s-volumes
+            type: Directory
+        # Pendrive — restic repo destination
+        - name: pendrive-backups
+          hostPath:
+            path: /home/pi/pendrive/backups
+            type: DirectoryOrCreate
+        # kubectl binary from the host node (k3s installs it at this path)
+        - name: kubectl-bin
+          hostPath:
+            path: /usr/local/bin/kubectl
+            type: File
