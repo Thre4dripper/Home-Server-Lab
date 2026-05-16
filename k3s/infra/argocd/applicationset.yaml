@@ -14,72 +14,60 @@ spec:
             namespace: kube-system
             category: infra
             path: k3s/infra/priority-classes
-            recurse: false
 
           # ── Monitoring ─────────────────────────────────────
           - name: dashdot
             namespace: monitoring
             category: monitoring
             path: k3s/apps/dashdot
-            recurse: false
           - name: portainer
             namespace: monitoring
             category: monitoring
             path: k3s/apps/portainer
-            recurse: false
 
           # ── Dashboard / Network ────────────────────────────
           - name: homarr
             namespace: dashboard-network
             category: dashboard-network
             path: k3s/apps/homarr
-            recurse: false
           - name: pihole
             namespace: dashboard-network
             category: dashboard-network
             path: k3s/apps/pihole
-            recurse: false
           - name: twingate
             namespace: dashboard-network
             category: dashboard-network
             path: k3s/apps/twingate
-            recurse: false
           - name: homepage
             namespace: dashboard-network
             category: dashboard-network
             path: k3s/apps/homepage
-            recurse: false
 
           # ── Media ──────────────────────────────────────────
           - name: jellyfin
             namespace: media
             category: media
             path: k3s/apps/jellyfin
-            recurse: false
 
           # ── File Management ────────────────────────────────
           - name: filebrowser
             namespace: file-management
             category: file-management
             path: k3s/apps/filebrowser
-            recurse: false
           - name: samba
             namespace: file-management
             category: file-management
             path: k3s/apps/samba
-            recurse: false
 
           # ── Automation ─────────────────────────────────────
           - name: home-assistant
             namespace: automation
             category: automation
             path: k3s/apps/home-assistant
-            recurse: false
           - name: n8n
             namespace: automation
             category: automation
             path: k3s/apps/n8n
-            recurse: false
 
           # ── Databases ──────────────────────────────────────
           # NOTE: databases live at k3s/databases/* (sibling of k3s/apps/) since
@@ -88,43 +76,36 @@ spec:
             namespace: databases
             category: databases
             path: k3s/databases/mongodb
-            recurse: false
           - name: postgres
             namespace: databases
             category: databases
             path: k3s/databases/postgres
-            recurse: false
           - name: redis
             namespace: databases
             category: databases
             path: k3s/databases/redis
-            recurse: false
 
           # ── Git ────────────────────────────────────────────
           - name: forgejo
             namespace: git
             category: git
             path: k3s/apps/forgejo
-            recurse: true
 
           # ── Backups ────────────────────────────────────────
           - name: backrest
             namespace: monitoring
             category: monitoring
             path: k3s/apps/backrest
-            recurse: false
 
           # ── Downloads ──────────────────────────────────────
           - name: aria2
             namespace: downloads
             category: downloads
             path: k3s/apps/aria2
-            recurse: false
           - name: bitcomet
             namespace: downloads
             category: downloads
             path: k3s/apps/bitcomet
-            recurse: false
 
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -144,8 +125,6 @@ spec:
         repoURL: https://github.com/Thre4dripper/Home-Server-Lab.git
         targetRevision: HEAD
         path: "{{ .path }}"
-        directory:
-          recurse: {{ .recurse }}
       destination:
         server: https://kubernetes.default.svc
         namespace: "{{ .namespace }}"
