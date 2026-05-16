@@ -44,6 +44,17 @@ spec:
               value: /data/.cache
             - name: TZ
               value: "Asia/Kolkata"
+            # AWS creds for restic S3 repo (values come from backrest-secret)
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backrest-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backrest-secret
+                  key: AWS_SECRET_ACCESS_KEY
           volumeMounts:
             # Backrest config, state, and DB dump staging area
             - name: data
