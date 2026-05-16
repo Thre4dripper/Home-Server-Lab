@@ -107,6 +107,13 @@ spec:
             path: k3s/apps/forgejo
             recurse: true
 
+          # ── Backups ────────────────────────────────────────
+          - name: backrest
+            namespace: monitoring
+            category: monitoring
+            path: k3s/apps/backrest
+            recurse: false
+
           # ── Downloads ──────────────────────────────────────
           - name: aria2
             namespace: downloads
