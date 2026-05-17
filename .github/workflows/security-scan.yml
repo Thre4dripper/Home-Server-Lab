@@ -50,12 +50,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run TruffleHog (verified secrets only)
+      - name: Run TruffleHog on PR diff
+        if: github.event_name == 'pull_request'
         uses: trufflesecurity/trufflehog@v3.95.2
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified --results=verified,unknown
+
+      - name: Run TruffleHog full history scan
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        uses: trufflesecurity/trufflehog@v3.95.2
+        with:
+          path: ./
           extra_args: --only-verified --results=verified,unknown
 
   # ───────────────────────────────────────────────────────────────
