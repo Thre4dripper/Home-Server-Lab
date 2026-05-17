@@ -23,6 +23,16 @@ spec:
     spec:
       serviceAccountName: homepage
       automountServiceAccountToken: true
+      initContainers:
+        - name: init-config
+          image: busybox:latest
+          command: ['sh', '-c', 'cp /config-src/* /app/config/']
+          volumeMounts:
+            - name: config-src
+              mountPath: /config-src
+              readOnly: true
+            - name: config
+              mountPath: /app/config
       containers:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:latest
@@ -109,11 +119,11 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
       volumes:
+        - name: config-src
+          configMap:
+            name: homepage-config
         - name: config
-          hostPath:
-            path: /home/pi/Home-Server-Lab/k3s/apps/homepage/config
-            type: Directory
+          emptyDir: {}
         - name: widgets
-          hostPath:
-            path: /home/pi/Home-Server-Lab/k3s/apps/homepage/widgets
-            type: Directory
+          configMap:
+            name: homepage-widgets
