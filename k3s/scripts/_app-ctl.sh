@@ -86,6 +86,13 @@ _apply_dir() {
 # the canonical order; per-app extras live in services/ (applied after the
 # workload) so apps with multiple Service / Route manifests stay tidy.
 _apply_ordered() {
+  # If the app has a kustomization, let kustomize handle everything
+  if [[ -f "$DEPLOY_DIR/kustomization.yaml" ]]; then
+    kubectl apply -k "$DEPLOY_DIR"
+    echo -e "  ${GREEN}✓${NC} kustomize"
+    return
+  fi
+
   local files=(
     pv.yaml
     pvc.yaml
@@ -136,6 +143,13 @@ _apply_ordered() {
 
 # Delete manifests in reverse dependency order
 _delete_ordered() {
+  # If the app has a kustomization, let kustomize handle everything
+  if [[ -f "$DEPLOY_DIR/kustomization.yaml" ]]; then
+    kubectl delete -k "$DEPLOY_DIR" --ignore-not-found=true
+    echo -e "  ${GREEN}✓${NC} deleted (kustomize)"
+    return
+  fi
+
   local files=(
     ingress.yaml
     service.yaml
