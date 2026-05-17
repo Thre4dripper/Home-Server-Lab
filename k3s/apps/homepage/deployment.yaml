@@ -26,12 +26,12 @@ spec:
       initContainers:
         - name: init-config
           image: busybox:latest
-          command: ['sh', '-c', 'cp /config-src/* /app/config/']
+          command: ['sh', '-c', 'cp /config/* /app/config/']
           volumeMounts:
-            - name: config-src
-              mountPath: /config-src
-              readOnly: true
             - name: config
+              mountPath: /config
+              readOnly: true
+            - name: config-src
               mountPath: /app/config
       containers:
         - name: homepage
@@ -119,11 +119,13 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
       volumes:
-        - name: config-src
+        # From kustomization.yaml configMapGenerator
+        - name: config
           configMap:
             name: homepage-config
-        - name: config
-          emptyDir: {}
         - name: widgets
           configMap:
             name: homepage-widgets
+        # EmptyDir for hot-reloadable config (copied from config by initContainer)
+        - name: config-src
+          emptyDir: {}
