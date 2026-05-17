@@ -147,7 +147,7 @@
         showStats: true
         widget:
             type: argocd
-            url: https://argocd.home.ijlalahmad.dev
+            url: http://argocd-server.argocd.svc.cluster.local
             key: "{{HOMEPAGE_VAR_ARGOCD_KEY}}"
             fields: ["apps", "synced", "outOfSync", "healthy"]
     - Traefik:
@@ -160,7 +160,7 @@
         showStats: true
         widget:
             type: traefik
-            url: https://traefik.home.ijlalahmad.dev
+            url: http://traefik-dashboard-lb.traefik.svc.cluster.local:8090
     - Cert Manager:
         icon: mdi-certificate
         description: TLS automation
@@ -211,7 +211,7 @@
             description: Container management
             widget:
               type: portainer
-              url: https://portainer.home.ijlalahmad.dev
+              url: http://portainer.monitoring.svc.cluster.local:8500
               env: 5
               kubernetes: true
               key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
@@ -221,7 +221,7 @@
             description: File manager
             widget:
               type: filebrowser
-              url: https://files.home.ijlalahmad.dev
+              url: http://filebrowser.file-management.svc.cluster.local:8300
               username: admin
               password: "{{HOMEPAGE_VAR_FILEBROWSER_PASS}}"
               authHeader: X-My-Header
@@ -231,7 +231,7 @@
             description: Media library
             widget:
               type: jellyfin
-              url: https://jellyfin.home.ijlalahmad.dev
+              url: http://jellyfin.media.svc.cluster.local:8200
               key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
               enableBlocks: true
               enableNowPlaying: true
@@ -241,7 +241,7 @@
             description: Download manager
             widgets:
               - type: customapi
-                url: https://aria2.home.ijlalahmad.dev/jsonrpc
+                url: http://aria2.downloads.svc.cluster.local:8080/jsonrpc
                 method: POST
                 headers:
                   content-type: application/json
@@ -269,7 +269,7 @@
                     label: Waiting
                     format: number
               - type: customapi
-                url: https://aria2.home.ijlalahmad.dev/jsonrpc
+                url: http://aria2.downloads.svc.cluster.local:8080/jsonrpc
                 method: POST
                 headers:
                   content-type: application/json
