@@ -18,6 +18,8 @@ spec:
       labels:
         app: home-assistant
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: home-assistant
           image: ghcr.io/home-assistant/home-assistant:stable
@@ -35,12 +37,11 @@ spec:
               readOnly: true
             - name: dbus
               mountPath: /run/dbus
-              readOnly: true
           resources:
             requests:
-              memory: 320Mi
+              memory: 256Mi
             limits:
-              memory: 768Mi
+              memory: 512Mi
           securityContext:
             privileged: true
       volumes:
