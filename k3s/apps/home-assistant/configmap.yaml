@@ -5,12 +5,38 @@ metadata:
   namespace: automation
 data:
   configuration.yaml: |
-    # Loads default set of integrations. Do not remove.
-    default_config:
+    # Explicit components only — replaces default_config to reduce RAM usage.
 
-    # Load frontend themes from the themes folder
     frontend:
       themes: !include_dir_merge_named themes
+
+    # Bluetooth — required for smart bulb discovery
+    bluetooth:
+
+    # Recorder: 3 days only, skip noisy domains
+    recorder:
+      purge_keep_days: 3
+      commit_interval: 30
+      exclude:
+        domains:
+          - sun
+          - weather
+          - update
+          - person
+          - persistent_notification
+
+    history:
+      exclude:
+        domains:
+          - sun
+          - weather
+          - update
+
+    logbook:
+      exclude:
+        domains:
+          - sun
+          - weather
 
     # --- BEGIN setup.sh managed http block ---
     http:
