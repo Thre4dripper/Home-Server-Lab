@@ -68,8 +68,11 @@ main "$@"
 # mkdir -p "$DUMP_DIR"
 #
 # echo "[hook] Dumping MongoDB..."
+# --numParallelCollections 1: serialize collection reads so WiredTiger's
+# small cache (0.25 GB) is never split across concurrent cursors, which
+# caused eviction pressure that dropped the connection in the past.
 # kubectl -n databases exec mongodb-0 -- \
-#   mongodump --archive --gzip > "$DUMP_DIR/mongo.archive.gz"
+#   mongodump --archive --gzip --numParallelCollections 1 > "$DUMP_DIR/mongo.archive.gz"
 #
 # echo "[hook] Dumping PostgreSQL..."
 # PG_POD=$(kubectl -n databases get pod -l app=postgres \
