@@ -1,0 +1,20 @@
+# This file is managed by Ansible - do not edit manually.
+# cloud-init network management is disabled via /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+network:
+  version: 2
+  renderer: networkd
+
+  ethernets:
+    eth0:
+      dhcp4: true
+      dhcp4-overrides:
+        route-metric: {{ netplan_eth0_route_metric | default(100) }}
+
+  wifis:
+    wlan0:
+      dhcp4: true
+      dhcp4-overrides:
+        route-metric: {{ netplan_wlan0_route_metric | default(200) }}
+      access-points:
+        {{ netplan_wifi_ssid | to_json }}:
+          password: {{ netplan_wifi_password | to_json }}
