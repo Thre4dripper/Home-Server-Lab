@@ -1,0 +1,37 @@
+#!/bin/sh
+# Restart K3s when the primary interface becomes routable after a link bounce.
+#
+# After a link disconnect/reconnect, flannel partially reinitializes iptables
+# and can leave the INPUT chain in a DROP state, blocking SSH and services.
+#
+# We flush only the K3s/flannel iptables chains (not the full k3s-killall.sh
+# which tears down CNI namespaces and breaks running VS Code terminals/SSH
+# sessions). Then we restart K3s so flannel re-initializes cleanly.
+#
+# Guard: only act if K3s is in "active" (fully running) state.
+# This prevents a spurious restart at boot where networkd-dispatcher fires
+# --run-startup-triggers for already-routable interfaces while K3s is
+# still "activating" and hasn't fully started yet.
+#
+# IFACE is set by networkd-dispatcher to the interface that changed state.
+[ "$IFACE" = "{{ k3s_flannel_iface | default('eth0') }}" ] || exit 0
+[ "$(systemctl is-active k3s 2>/dev/null)" = "active" ] || exit 0
+
+# Uptime guard: ignore events within the first 5 minutes of boot.
+# On power cut, both router and Pi restart. Pi boots faster, the interface
+# goes routable while K3s is still "activating" — triggering a spurious
+# restart. This guard prevents that.
+UPTIME_SECS=$(awk '{print int($1)}' /proc/uptime 2>/dev/null || echo 0)
+[ "$UPTIME_SECS" -gt 300 ] || exit 0
+
+logger -t networkd-dispatcher "{{ k3s_flannel_iface | default('eth0') }} became routable — flushing K3s iptables, restarting k3s"
+
+# Flush stale K3s/flannel iptables chains without touching running containers.
+/usr/local/bin/k3s-flush-iptables.sh 2>/dev/null || true
+
+# Wait for the gateway to be reachable (confirms the router is up, not just
+# that the interface has its static IP).
+until ping -c1 -W3 {{ pi_gateway }} >/dev/null 2>&1; do sleep 2; done
+
+logger -t networkd-dispatcher "gateway reachable — restarting k3s"
+systemctl restart k3s
