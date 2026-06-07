@@ -25,53 +25,25 @@
         creates: /usr/local/bin/k3s
   when: not k3s_binary.stat.exists
 
-# ─── Hardened network-wait drop-in ──────────────────────────────────────────
-# Upgrades the default Wants=network-online.target (soft) to Requires= (hard)
-# and adds an ExecStartPre that verifies the static IP is on the interface.
-# This prevents K3s from starting with no node IP after a power cut, which
-# would cause flannel to leave iptables in a state that blocks all traffic.
+# ─── Remove legacy networking workarounds ────────────────────────────────────
 
-- name: Create k3s systemd drop-in directory
+- name: Remove legacy k3s gateway wait drop-in
   file:
-    path: /etc/systemd/system/k3s.service.d
-    state: directory
-    owner: root
-    group: root
-    mode: '0755'
-
-- name: Deploy k3s network-wait drop-in
-  template:
-    src: k3s-network-wait.conf.j2
-    dest: /etc/systemd/system/k3s.service.d/10-network-wait.conf
-    owner: root
-    group: root
-    mode: '0644'
+    path: /etc/systemd/system/k3s.service.d/10-network-wait.conf
+    state: absent
   notify:
     - reload systemd
     - restart k3s
 
-# ─── networkd-dispatcher: restart K3s on cable reconnect ─────────────────────
-# When the LAN cable is unplugged and replugged while the Pi is running,
-# flannel partially reinitializes iptables and can leave the INPUT chain in
-# a DROP state, blocking SSH even though the static IP comes back immediately.
-# This hook restarts K3s (which runs k3s-killall.sh as ExecStartPre, flushing
-# all stale rules) whenever eth0 becomes routable again.
+- name: Remove legacy networkd-dispatcher k3s restart hook
+  file:
+    path: /etc/networkd-dispatcher/routable.d/50-k3s-restart
+    state: absent
 
-- name: Deploy networkd-dispatcher hook to restart K3s on primary link-up
-  template:
-    src: networkd-dispatcher-k3s-restart.j2
-    dest: /etc/networkd-dispatcher/routable.d/50-k3s-restart
-    owner: root
-    group: root
-    mode: '0755'
-
-- name: Deploy targeted K3s iptables flush script
-  copy:
-    src: k3s-flush-iptables.sh
-    dest: /usr/local/bin/k3s-flush-iptables.sh
-    owner: root
-    group: root
-    mode: '0755'
+- name: Remove legacy K3s iptables flush script
+  file:
+    path: /usr/local/bin/k3s-flush-iptables.sh
+    state: absent
 
 # ─── K3s config ──────────────────────────────────────────────────────────────
 
@@ -83,7 +55,7 @@
     group: root
     mode: '0755'
 
-- name: Deploy k3s config.yaml with node-ip
+- name: Deploy k3s config.yaml
   template:
     src: k3s-config.yaml.j2
     dest: /etc/rancher/k3s/config.yaml

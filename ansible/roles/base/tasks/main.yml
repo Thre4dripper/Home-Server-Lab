@@ -1,8 +1,8 @@
 ---
 # Base system role — packages, timezone, locale, SSH hardening, firewall, network
 
-# ─── Network: static IP + DNS ─────────────────────────────────────────────────
-# Must run before package installs so DNS is healthy from the start.
+# ─── Network: DHCP + route metrics ────────────────────────────────────────────
+# Must run before package installs so network and DNS are healthy from the start.
 
 - name: Disable cloud-init network management
   copy:
@@ -12,14 +12,20 @@
     group: root
     mode: '0644'
 
-- name: Configure static IP via netplan
+- name: Configure DHCP networking via netplan
   template:
-    src: netplan-static.yaml.j2
+    src: netplan-dhcp.yaml.j2
     dest: /etc/netplan/50-cloud-init.yaml
     owner: root
     group: root
     mode: '0600'
   notify: apply netplan
+
+- name: Enable and start systemd-networkd
+  service:
+    name: systemd-networkd
+    state: started
+    enabled: yes
 
 - name: Enable and start systemd-resolved
   service:
