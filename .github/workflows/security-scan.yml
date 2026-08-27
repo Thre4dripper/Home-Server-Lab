@@ -52,7 +52,7 @@ jobs:
 
       - name: Run TruffleHog on PR diff
         if: github.event_name == 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.95.6
+        uses: trufflesecurity/trufflehog@v3.95.9
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha }}
@@ -61,7 +61,7 @@ jobs:
 
       - name: Run TruffleHog full history scan
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        uses: trufflesecurity/trufflehog@v3.95.6
+        uses: trufflesecurity/trufflehog@v3.95.9
         with:
           path: ./
           extra_args: --only-verified --results=verified,unknown
