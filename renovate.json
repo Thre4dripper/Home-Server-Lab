@@ -19,13 +19,13 @@
     "schedule": ["at any time"]
   },
   "docker-compose": {
-    "fileMatch": ["(^|/)docker-compose[^/]*\\.ya?ml$"]
+    "managerFilePatterns": ["/(^|/)docker-compose[^/]*\\.ya?ml$/"]
   },
   "kubernetes": {
-    "fileMatch": ["k3s/.+\\.ya?ml$"]
+    "managerFilePatterns": ["/k3s/.+\\.ya?ml$/"]
   },
   "helm-values": {
-    "fileMatch": ["k3s/.+values.*\\.ya?ml$"]
+    "managerFilePatterns": ["/k3s/.+values.*\\.ya?ml$/"]
   },
   "packageRules": [
     {
@@ -66,17 +66,41 @@
       "groupName": "helm charts"
     }
   ],
-  "regexManagers": [
+  "customManagers": [
     {
-      "description": "Update tool versions in Ansible group_vars",
-      "fileMatch": ["^ansible/group_vars/.+\\.ya?ml$"],
+      "customType": "regex",
+      "description": "k3s version in Ansible group_vars",
+      "managerFilePatterns": ["/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"],
       "matchStrings": [
-        "k3s_version:\\s*[\"']?(?<currentValue>v?[\\d\\.\\+\\-a-z]+)[\"']?",
-        "kubeseal_version:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?",
+        "k3s_version:\\s*[\"']?(?<currentValue>v?[\\d\\.\\+\\-a-z]+)[\"']?"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "k3s-io/k3s",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "kubeseal (sealed-secrets) version in Ansible group_vars",
+      "managerFilePatterns": ["/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"],
+      "matchStrings": [
+        "kubeseal_version:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "bitnami-labs/sealed-secrets",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "helm version in Ansible group_vars",
+      "managerFilePatterns": ["/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"],
+      "matchStrings": [
         "helm_version:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?"
       ],
       "datasourceTemplate": "github-releases",
-      "depNameTemplate": "k3s-io/k3s"
+      "depNameTemplate": "helm/helm",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "versioningTemplate": "semver"
     }
   ]
 }

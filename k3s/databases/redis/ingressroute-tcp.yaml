@@ -5,7 +5,7 @@
 ## the dedicated `redis` entrypoint (port 6379) is forwarded to Redis.
 ##
 ## Cloudflare DNS: redis.home.ijlalahmad.dev → 192.168.0.108
-## Connection string: redis://:redisRoot2024!@redis.home.ijlalahmad.dev:6379
+## Connection string: redis://:<password>@redis.home.ijlalahmad.dev:6379
 
 ---
 apiVersion: traefik.io/v1alpha1

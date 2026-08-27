@@ -85,6 +85,16 @@ spec:
             category: databases
             path: k3s/databases/redis
 
+          # MySQL is intentionally NOT deployed — Postgres is this cluster's SQL
+          # database. The manifests in k3s/databases/mysql are kept ready but
+          # parked: the Deployment is `paused: true` and has no PVC. Uncomment
+          # below only after creating mysql-pvc and removing that pause.
+          # See k3s/databases/mysql/README.md
+          # - name: mysql
+          #   namespace: databases
+          #   category: databases
+          #   path: k3s/databases/mysql
+
           # ── Git ────────────────────────────────────────────
           - name: forgejo
             namespace: git

@@ -6,8 +6,9 @@ Usage:
   python3 .github/scripts/validate-service.py <service-directory>
 
 The stack is auto-detected from the path:
-  - docker/<svc>/  → docker schema
-  - k3s/apps/<svc>/ → k3s schema
+  - docker/<svc>/         → docker schema
+  - k3s/apps/<svc>/       → k3s schema
+  - k3s/databases/<svc>/  → k3s schema
 """
 
 import sys
@@ -44,7 +45,7 @@ K3S_CATEGORIES = [
 
 def detect_stack(service_dir: Path) -> str:
     parts = service_dir.resolve().parts
-    if 'k3s' in parts and 'apps' in parts:
+    if 'k3s' in parts and ('apps' in parts or 'databases' in parts):
         return 'k3s'
     return 'docker'
 

@@ -59,7 +59,7 @@ k3s/
 
 | Category | Description | Services |
 |----------|-------------|----------|
-| 🛠️ Infra & GitOps | Cluster control plane, GitOps, secrets | ArgoCD |
+| 🛠️ Infra & GitOps | Cluster control plane, GitOps, secrets | ArgoCD, Forgejo |
 | 🌐 Network & Ingress | DNS, VPN, ingress and remote access | Pi-hole, Twingate Connector |
 | 📊 Monitoring & Stats | Cluster + host observability | Backrest, Dashdot, Portainer |
 | 🏡 Dashboards | Landing pages and service catalogs | Homarr, Homepage |
@@ -95,8 +95,11 @@ graph LR
     subgraph InfraGitOps["🛠️ Infra & GitOps"]
         direction TB
         argocd[🚀<br/>ArgoCD]
+        forgejo[🔨<br/>Forgejo]
+        argocd --- forgejo
     end
     K3s --> argocd
+    K3s --> forgejo
 
     subgraph NetworkIngress["🌐 Network & Ingress"]
         direction TB
@@ -181,6 +184,7 @@ graph LR
 | Service | Namespace | Port | Domain | Components |
 |---------|-----------|------|--------|------------|
 | [**🚀 ArgoCD**](./apps/argocd/) | `argocd` | `—` | `argocd.home.ijlalahmad.dev` | `deployment`, `statefulset`, `service`, `ingress` |
+| [**🔨 Forgejo**](./apps/forgejo/) | `git` | `8900` | `forgejo.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc`, `sealedsecret`, `configmap` |
 
 ### 🌐 Network & Ingress
 

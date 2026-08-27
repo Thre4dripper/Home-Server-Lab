@@ -289,8 +289,11 @@ graph LR
             print("Error: Could not find end of services section")
             return False
 
-        # Generate new services content
-        new_services_content = "\n## 🚀 **Available Services**\n\n"
+        # Generate new services content.
+        # No leading newline: content[:services_start] already ends with the
+        # newline(s) that preceded the header. Adding one here would insert an
+        # extra blank line on every run (non-idempotent regeneration).
+        new_services_content = "## 🚀 **Available Services**\n\n"
         new_services_content += "> **📝 Note:** This section is automatically generated from individual service README.md files. "
         new_services_content += "To update service information, edit the respective service's README.md file and the changes will be reflected here automatically.\n\n"
 
