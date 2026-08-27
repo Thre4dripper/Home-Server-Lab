@@ -5,7 +5,7 @@
 set -euo pipefail
 
 NAMESPACE="argocd"
-DOMAIN="argocd.lan"
+DOMAIN="argocd.home.ijlalahmad.dev"
 NODE_IP="${K3S_NODE_IP:-$(kubectl get node -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null | tr ' ' '\n' | grep -v ':' | head -1 || echo '192.168.0.108')}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'

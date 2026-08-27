@@ -6,7 +6,7 @@ APP="dashdot"
 NAMESPACE="monitoring"
 CONTAINER_PORT="3001"
 EXTERNAL_PORT="8120"
-DOMAIN="dashdot.lan"
+DOMAIN="dashdot.home.ijlalahmad.dev"
 DEFAULT_SHELL="sh"
 
 # Components this app uses

@@ -371,7 +371,7 @@ DOMAIN=""
 if ask_yn "Expose via LoadBalancer (direct IP:port access)?" "y"; then
   ask EXTERNAL_PORT "External port (e.g. 8600)"
 
-  if ask_yn "Route via Traefik domain (e.g. myapp.lan)?" "y"; then
+  if ask_yn "Route via Traefik domain (e.g. myapp.home.ijlalahmad.dev)?" "y"; then
     ask DOMAIN "Domain name"
   fi
 else

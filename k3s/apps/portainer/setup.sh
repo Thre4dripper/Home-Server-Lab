@@ -6,7 +6,7 @@ APP="portainer"
 NAMESPACE="monitoring"
 CONTAINER_PORT="9000"
 EXTERNAL_PORT="8500"
-DOMAIN="portainer.lan"
+DOMAIN="portainer.home.ijlalahmad.dev"
 DEFAULT_SHELL="sh"
 
 # Components this app uses

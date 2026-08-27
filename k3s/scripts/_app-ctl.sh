@@ -590,7 +590,7 @@ cmd_diff() {
   # Use kubectl to trigger a diff via ArgoCD's refresh
   kubectl get application "$APP" -n argocd -o yaml 2>/dev/null | \
     grep -A5 "targetRevision\|syncStatus\|source:" | head -30
-  info "Hint: for full diff, use ArgoCD UI → $APP → Diff tab (http://argocd.lan)"
+  info "Hint: for full diff, use ArgoCD UI → $APP → Diff tab (https://argocd.home.ijlalahmad.dev)"
 }
 
 cmd_disable() {

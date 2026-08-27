@@ -7,7 +7,7 @@ data:
   SERVERIP: "192.168.0.108"
   PIHOLE_DNS_: "1.1.1.1;1.0.0.1"
   DNSMASQ_LISTENING: "all"
-  VIRTUAL_HOST: "pihole.lan"
+  VIRTUAL_HOST: "pihole.home.ijlalahmad.dev"
   FTLCONF_LOCAL_IPV4: "192.168.0.108"
   FTLCONF_dns_listeningMode: "ALL"
   REV_SERVER: "true"

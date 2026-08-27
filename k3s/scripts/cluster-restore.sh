@@ -270,9 +270,9 @@ print_summary() {
 
   echo ""
   echo -e "  ${BOLD}Access URLs:${NC}"
-  echo "  Domain (via Traefik :80):"
-  for domain in homarr.lan pihole.lan dashdot.lan jellyfin.lan files.lan n8n.lan portainer.lan ha.lan traefik.lan; do
-    echo "    http://$domain"
+  echo "  Domain (via Traefik :443):"
+  for domain in homarr pihole dashdot jellyfin files n8n portainer ha; do
+    echo "    https://$domain.home.ijlalahmad.dev"
   done
   echo ""
   echo "  Direct IP:port:"

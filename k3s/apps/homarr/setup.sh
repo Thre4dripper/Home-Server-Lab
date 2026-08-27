@@ -6,7 +6,7 @@ APP="homarr"
 NAMESPACE="dashboard-network"
 CONTAINER_PORT="7575"
 EXTERNAL_PORT="8100"
-DOMAIN="homarr.lan"
+DOMAIN="homarr.home.ijlalahmad.dev"
 DEFAULT_SHELL="sh"
 
 # Components this app uses

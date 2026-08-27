@@ -6,7 +6,7 @@ APP="jellyfin"
 NAMESPACE="media"
 CONTAINER_PORT="8096"
 EXTERNAL_PORT="8200"
-DOMAIN="jellyfin.lan"
+DOMAIN="jellyfin.home.ijlalahmad.dev"
 DEFAULT_SHELL="bash"
 
 # Components this app uses

@@ -3,7 +3,7 @@
 
 global:
   # ARM64 images are available by default in the official ArgoCD distribution
-  domain: argocd.lan
+  domain: argocd.home.ijlalahmad.dev
 
 # Serve over HTTP — Traefik handles routing; no end-to-end TLS needed in LAN
 configs:

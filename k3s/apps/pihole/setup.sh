@@ -6,7 +6,7 @@ APP="pihole"
 NAMESPACE="dashboard-network"
 CONTAINER_PORT="80"
 EXTERNAL_PORT="8110"
-DOMAIN="pihole.lan"
+DOMAIN="pihole.home.ijlalahmad.dev"
 DEFAULT_SHELL="sh"
 
 # Components this app uses

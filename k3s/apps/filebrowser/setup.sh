@@ -6,7 +6,7 @@ APP="filebrowser"
 NAMESPACE="file-management"
 CONTAINER_PORT="80"
 EXTERNAL_PORT="8300"
-DOMAIN="files.lan"
+DOMAIN="files.home.ijlalahmad.dev"
 DEFAULT_SHELL="sh"
 
 # Components this app uses
