@@ -1,0 +1,66 @@
+## Dedicated Valkey for Immich's job queues (BullMQ requires noeviction,
+## which is instance-global — a dedicated instance keeps the shared redis
+## free for LRU caching). Queue state is disposable: on restart immich
+## re-queues, so no PVC. ClusterIP-only, no auth (never leaves the cluster).
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-valkey
+  namespace: media
+  labels:
+    app: immich-valkey
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: immich-valkey
+  template:
+    metadata:
+      labels:
+        app: immich-valkey
+    spec:
+      # k8s injects IMMICH_PORT=tcp://... style service-link envs, which
+      # immich parses as its own config — disable them
+      enableServiceLinks: false
+      containers:
+        - name: valkey
+          image: valkey/valkey:9.1-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+          args:
+            # ~10x headroom over real queue depth; bump when the library
+            # grows huge (hitting the cap errors writes — immich retries)
+            - --maxmemory
+            - 256mb
+            - --maxmemory-policy
+            - noeviction
+            # queues are re-created on restart — no persistence
+            - --save
+            - ""
+            - --appendonly
+            - "no"
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 25m
+            limits:
+              # maxmemory 256mb + process overhead
+              memory: 320Mi
+              cpu: 300m
+          livenessProbe:
+            exec:
+              command: ["valkey-cli", "ping"]
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["valkey-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5

@@ -64,7 +64,7 @@ k3s/
 | 📊 Monitoring & Stats | Cluster + host observability | Backrest, Dashdot, Portainer |
 | 🏡 Dashboards | Landing pages and service catalogs | Homarr, Homepage |
 | 🤖 Automation | Workflow and smart-home automation | Home Assistant, n8n |
-| 🎬 Media & Entertainment | Streaming and media servers | Jellyfin |
+| 🎬 Media & Entertainment | Streaming and media servers | Immich, Jellyfin |
 | 📁 Files & Storage | Persistent file storage and sharing | FileBrowser, Samba |
 | 🧲 Downloads | Torrents, downloaders and grabbers | Aria2, BitComet |
 <!-- AUTOGEN:CATEGORIES:END -->
@@ -141,8 +141,11 @@ graph LR
 
     subgraph MediaEntertainment["🎬 Media & Entertainment"]
         direction TB
+        immich[📸<br/>Immich]
         jellyfin[🎬<br/>Jellyfin]
+        immich --- jellyfin
     end
+    K3s --> immich
     K3s --> jellyfin
 
     subgraph FilesStorage["📁 Files & Storage"]
@@ -219,6 +222,7 @@ graph LR
 
 | Service | Namespace | Port | Domain | Components |
 |---------|-----------|------|--------|------------|
+| [**📸 Immich**](./apps/immich/) | `media` | `9100` | `immich.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc`, `sealedsecret` |
 | [**🎬 Jellyfin**](./apps/jellyfin/) | `media` | `8200` | `jellyfin.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc` |
 
 ### 📁 Files & Storage

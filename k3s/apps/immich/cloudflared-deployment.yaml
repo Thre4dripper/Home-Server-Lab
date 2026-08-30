@@ -1,0 +1,65 @@
+## Public access — remote-managed Cloudflare tunnel (photos.ijlalahmad.dev).
+## Hostname → service mapping lives in the CF Zero Trust dashboard; the pod
+## only needs TUNNEL_TOKEN. Ships at replicas: 0 — set 1 after sealing a real
+## token. CF caps uploads at 100MB; the LAN URL bypasses that at home.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-cloudflared
+  namespace: media
+  labels:
+    app: immich-cloudflared
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: immich-cloudflared
+  template:
+    metadata:
+      labels:
+        app: immich-cloudflared
+    spec:
+      # k8s injects IMMICH_PORT=tcp://... style service-link envs, which
+      # immich parses as its own config — disable them
+      enableServiceLinks: false
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:2026.8.2
+          imagePullPolicy: IfNotPresent
+          args:
+            - tunnel
+            - --no-autoupdate
+            - --metrics
+            - 0.0.0.0:2000
+            - run
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: immich-secret
+                  key: TUNNEL_TOKEN
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 25m
+            limits:
+              memory: 128Mi
+              cpu: 200m
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            initialDelaySeconds: 10
+            periodSeconds: 15

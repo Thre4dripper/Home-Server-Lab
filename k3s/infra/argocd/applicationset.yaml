@@ -48,6 +48,10 @@ spec:
             namespace: media
             category: media
             path: k3s/apps/jellyfin
+          - name: immich
+            namespace: media
+            category: media
+            path: k3s/apps/immich
 
           # ── File Management ────────────────────────────────
           - name: filebrowser

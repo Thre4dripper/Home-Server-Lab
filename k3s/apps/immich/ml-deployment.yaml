@@ -1,0 +1,75 @@
+## Immich ML — smart search (CLIP) + face recognition.
+## Separate Deployment so it's pausable in git (replicas: 0) without touching
+## the server; immich queues ML jobs until it returns.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-machine-learning
+  namespace: media
+  labels:
+    app: immich-machine-learning
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: immich-machine-learning
+  template:
+    metadata:
+      labels:
+        app: immich-machine-learning
+    spec:
+      # k8s injects IMMICH_PORT=tcp://... style service-link envs, which
+      # immich parses as its own config — disable them
+      enableServiceLinks: false
+      containers:
+        - name: immich-machine-learning
+          # Keep on the SAME version as deployment.yaml
+          image: ghcr.io/immich-app/immich-machine-learning:v3.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3003
+          env:
+            - name: TZ
+              value: Asia/Kolkata
+            - name: MACHINE_LEARNING_CACHE_FOLDER
+              value: /cache
+            # Pi guardrails: unload models after 5 min idle, single worker
+            - name: MACHINE_LEARNING_MODEL_TTL
+              value: "300"
+            - name: MACHINE_LEARNING_WORKERS
+              value: "1"
+          volumeMounts:
+            - name: cache
+              mountPath: /cache
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+            limits:
+              memory: 2Gi
+              cpu: "2"
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 3003
+            # First job downloads ~1GB of models — be patient
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 3003
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: cache
+          persistentVolumeClaim:
+            claimName: immich-ml-cache

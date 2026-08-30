@@ -1,0 +1,105 @@
+## Three volumes across the two storage tiers:
+##   immich-media    — originals on the pendrive ("HDD"). `type: Directory` on
+##                     purpose: if the pendrive isn't mounted the dir doesn't
+##                     exist and the pod fails to start instead of writing to
+##                     the SD card.
+##   immich-thumbs   — thumbnails/previews (hot reads) on the SD card ("SSD"),
+##                     mounted over /data/thumbs. Regenerable.
+##   immich-ml-cache — ML models on the SD card; avoids ~1GB re-download on
+##                     every restart. Regenerable.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-media
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/pendrive/immich
+    type: Directory
+  claimRef:
+    name: immich-media
+    namespace: media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-media
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: immich-media
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-thumbs
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/k3s-volumes/apps/immich/thumbs
+    type: DirectoryOrCreate
+  claimRef:
+    name: immich-thumbs
+    namespace: media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-thumbs
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: immich-thumbs
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-ml-cache
+spec:
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/k3s-volumes/apps/immich/ml-cache
+    type: DirectoryOrCreate
+  claimRef:
+    name: immich-ml-cache
+    namespace: media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-ml-cache
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: immich-ml-cache
+  resources:
+    requests:
+      storage: 8Gi

@@ -1,0 +1,18 @@
+## Name is load-bearing: the server's default ML URL is
+## http://immich-machine-learning:3003 — do not rename.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-machine-learning
+  namespace: media
+  labels:
+    app: immich-machine-learning
+spec:
+  type: ClusterIP
+  selector:
+    app: immich-machine-learning
+  ports:
+    - port: 3003
+      targetPort: 3003
+      protocol: TCP
