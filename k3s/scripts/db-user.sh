@@ -49,18 +49,19 @@ postgres_create() {
   local user="$1" pass="$2" dbs="$3"
   [[ -z "$dbs" ]] && die "Postgres requires at least one database name"
 
-  local sql="CREATE ROLE ${user} WITH LOGIN PASSWORD '${pass}';"
-  IFS=',' read -ra DB_ARRAY <<< "$dbs"
-  for db in "${DB_ARRAY[@]}"; do
-    sql+="
-CREATE DATABASE ${db} OWNER ${user};
-GRANT ALL PRIVILEGES ON DATABASE ${db} TO ${user};
-REVOKE ALL ON DATABASE ${db} FROM PUBLIC;"
-  done
-
+  # Each statement in its own psql -c: multi-statement -c runs in one
+  # implicit transaction, and CREATE DATABASE refuses to run inside one
   echo "Creating Postgres user '${user}' with databases: ${dbs}"
   kubectl exec -n "$NAMESPACE" deploy/postgres -- \
-    psql -U postgres -c "$sql"
+    psql -U postgres -c "CREATE ROLE ${user} WITH LOGIN PASSWORD '${pass}';"
+  IFS=',' read -ra DB_ARRAY <<< "$dbs"
+  for db in "${DB_ARRAY[@]}"; do
+    kubectl exec -n "$NAMESPACE" deploy/postgres -- \
+      psql -U postgres \
+        -c "CREATE DATABASE ${db} OWNER ${user};" \
+        -c "GRANT ALL PRIVILEGES ON DATABASE ${db} TO ${user};" \
+        -c "REVOKE ALL ON DATABASE ${db} FROM PUBLIC;"
+  done
   echo "Done."
 }
 
