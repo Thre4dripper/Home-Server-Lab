@@ -2,7 +2,7 @@
 name: "PostgreSQL"
 category: "🗄️ Databases"
 purpose: "Relational Database"
-description: "Shared Postgres 15 instance for cluster apps, tuned for the Pi's memory budget. Exposed on the LAN via LoadBalancer and provisioned per-app with isolated roles and databases."
+description: "Shared Postgres 15 instance for cluster apps, tuned for the Pi's memory budget. Runs VectorChord's build of postgres:15 (vchord + pgvector available). Exposed on the LAN via LoadBalancer and provisioned per-app with isolated roles and databases."
 icon: "🐘"
 namespace: "databases"
 external_port: "5432"
@@ -14,6 +14,7 @@ components:
   - configmap
 features:
   - "Postgres 15 with Pi-tuned postgresql.conf"
+  - "Vector search: VectorChord + pgvector extensions available"
   - "Per-app isolated roles + databases via db-user.sh"
   - "PUBLIC connect revoked on template1 by default"
   - "LoadBalancer access from the LAN on 5432"
@@ -26,11 +27,12 @@ resource_usage: "~150MB RAM"
 
 The cluster's primary SQL database. Runs as a single-replica `Deployment` with a **retained** hostPath PV, so a `k3s` rebuild or `teardown` never destroys the data directory.
 
-Currently backs **Forgejo**; new apps get their own role + database rather than sharing one.
+Currently backs **Forgejo**, **n8n** and **Immich**; new apps get their own role + database rather than sharing one.
 
 ## Features
 
-- **Postgres 15**, config file mounted from a ConfigMap and passed via `-c config_file=`
+- **Postgres 15** (`tensorchord/vchord-postgres` — VectorChord's build of the official postgres:15 base), config file mounted from a ConfigMap and passed via `-c config_file=`
+- **Vector search**: `vchord` + `pgvector` available; preloaded via `shared_preload_libraries = 'vchord.so'`. After a vchord image bump, run `ALTER EXTENSION vchord UPDATE;` as superuser in each DB using it (immich)
 - **Pi-tuned memory**: `shared_buffers 64MB`, `effective_cache_size 256MB`, `work_mem 4MB`, `max_connections 50`
 - **Slow-query logging** at `log_min_duration_statement = 1000` (1s)
 - **Locked-down defaults**: `REVOKE CONNECT ON DATABASE template1 FROM PUBLIC` — new roles can't reach other apps' databases
@@ -90,7 +92,7 @@ cd k3s/databases/postgres
 
 | File | What's inside |
 |------|---------------|
-| `deployment.yaml` | postgres:15, uid 999, custom config file, `pg_isready` probes |
+| `deployment.yaml` | tensorchord/vchord-postgres (postgres:15 + vchord), uid 999, custom config file, `pg_isready` probes |
 | `service.yaml` | LoadBalancer on TCP `5432` |
 | `pvc.yaml` | `Retain` hostPath PV + 20Gi PVC |
 | `configmap.yaml` | `postgresql.conf` (Pi tuning) and `01-init.sql` |
@@ -129,7 +131,7 @@ Physical backups of the hostPath directory are handled by **Backrest**; take a l
 - **`FATAL: password authentication failed`** → the SealedSecret was re-sealed with a new key but `PGDATA` still holds the old password. Postgres only reads `POSTGRES_PASSWORD` on *first* init; change it with `ALTER USER postgres PASSWORD '…';` instead.
 - **Pod `Pending`** → the PV is `Retain` and bound to a previous claim. Check `kubectl get pv postgres-pv` and clear a stale `claimRef` if needed.
 - **`too many connections`** → `max_connections` is 50 by design on the Pi. Add pooling in the app rather than raising it.
-- **`OOMKilled`** → the 384Mi limit is tight for large joins; lower `work_mem` or raise the limit in `deployment.yaml`.
+- **`OOMKilled`** → the 512Mi limit is tight for large joins; lower `work_mem` or raise the limit in `deployment.yaml`.
 - **Slow queries after a restore** → run `ANALYZE;` — statistics aren't included in a logical dump.
 
 ## Links

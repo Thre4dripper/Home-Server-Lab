@@ -25,3 +25,5 @@ data:
     log_timezone                    = 'UTC'
     # Connections
     listen_addresses                = '*'
+    # VectorChord (Immich smart search) — extension lib must be preloaded
+    shared_preload_libraries        = 'vchord.so'

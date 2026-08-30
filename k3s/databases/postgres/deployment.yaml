@@ -25,7 +25,10 @@ spec:
         fsGroup: 999
       containers:
         - name: postgres
-          image: postgres:15
+          # VectorChord's official build: postgres:15 base + vchord/pgvector
+          # compiled in (needed by Immich; no official image has vector exts).
+          # Drop-in PGDATA-compatible; extensions activate per-DB only.
+          image: tensorchord/vchord-postgres:pg15-v1.1.1
           ports:
             - containerPort: 5432
           env:
@@ -50,10 +53,12 @@ spec:
             - config_file=/etc/postgresql/postgresql.conf
           resources:
             requests:
-              memory: 64Mi
+              memory: 192Mi
               cpu: 100m
             limits:
-              memory: 384Mi
+              # 1Gi: immich's first-boot geodata import issues single INSERTs
+              # with ~46k bind params — OOMKilled at 384/512/640Mi
+              memory: 1Gi
               cpu: 500m
           livenessProbe:
             exec:
