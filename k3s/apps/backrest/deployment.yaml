@@ -66,6 +66,10 @@ spec:
             # Destination: restic repo lives here on the pendrive
             - name: pendrive-backups
               mountPath: /pendrive-backups
+            # Immich volume on the pendrive (read-only)
+            - name: immich-data
+              mountPath: /immich-data
+              readOnly: true
             # kubectl binary from host — used by pre-backup hook scripts
             # to exec mongodump / pg_dumpall into the DB pods
             - name: kubectl-bin
@@ -89,6 +93,7 @@ spec:
               cpu: 50m
             limits:
               memory: 512Mi
+              cpu: 500m
       volumes:
         - name: data
           persistentVolumeClaim:
@@ -102,7 +107,12 @@ spec:
         - name: pendrive-backups
           hostPath:
             path: /home/pi/pendrive/backups
-            type: DirectoryOrCreate
+            type: Directory
+        # Immich volume on the pendrive (read-only)
+        - name: immich-data
+          hostPath:
+            path: /home/pi/pendrive/immich
+            type: Directory
         # kubectl binary from the host node (k3s installs it at this path)
         - name: kubectl-bin
           hostPath:
