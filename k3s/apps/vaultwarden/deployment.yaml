@@ -1,0 +1,158 @@
+## SQLite on own PVC, not shared Postgres: whole vault (db + attachments +
+## rsa_key + config) is one dir under /k3s-volumes, so Backrest covers it and
+## restore is one directory. `/vaultwarden backup` = VACUUM INTO, no sqlite3
+## binary needed. See README.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultwarden
+  namespace: security
+  labels:
+    app: vaultwarden
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: vaultwarden
+  template:
+    metadata:
+      labels:
+        app: vaultwarden
+    spec:
+      # Entirely env-configured app — keep env to what's declared here.
+      enableServiceLinks: false
+      securityContext:
+        # Non-root + ROCKET_PORT 8080 avoids NET_BIND_SERVICE. fsGroup is inert
+        # on hostPath (kubelet skips it) — the initContainer does the work.
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        # Fresh DirectoryOrCreate hostPath is root:root 0755 -> PermissionDenied.
+        # Done here, not chowned on the host like the older apps: that isn't in
+        # git and cluster-restore.sh won't replay it. 0700, not their 0777.
+        - name: fix-perms
+          image: busybox:1.37
+          command: ["sh", "-c", "chown -R 1000:1000 /data && chmod 700 /data"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: 8Mi
+              cpu: 10m
+            limits:
+              memory: 32Mi
+              cpu: 50m
+      containers:
+        - name: vaultwarden
+          # Read release notes before bumping: 1.37.0 fixed SSRF, cross-org
+          # cipher access, policy bypass, websocket flooding.
+          image: vaultwarden/server:1.37.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: web
+          env:
+            - name: TZ
+              value: Asia/Kolkata
+
+            # Must match the URL clients use — WebAuthn and push bind to it.
+            # Unchanged by Twingate: same hostname on and off LAN.
+            - name: DOMAIN
+              value: "https://vault.home.ijlalahmad.dev"
+            - name: ROCKET_ADDRESS
+              value: "0.0.0.0"
+            - name: ROCKET_PORT
+              value: "8080"
+
+            # ─── SQLite ─────────────────────────────────────────────────────
+            - name: DATA_FOLDER
+              value: "/data"
+            # sqlite:// scheme required to CREATE a db; a bare path only works
+            # if the file already exists. 3 slashes = scheme + absolute /data.
+            - name: DATABASE_URL
+              value: "sqlite:///data/db.sqlite3"
+
+            # ─── Access control ─────────────────────────────────────────────
+            # Flip to "false" and commit once the account exists — until then
+            # anyone on the LAN can register.
+            - name: SIGNUPS_ALLOWED
+              value: "true"
+            - name: INVITATIONS_ALLOWED
+              value: "false"
+            # Hints are served unauthenticated.
+            - name: SHOW_PASSWORD_HINT
+              value: "false"
+            # Default burst is 10.
+            - name: LOGIN_RATELIMIT_SECONDS
+              value: "60"
+            - name: LOGIN_RATELIMIT_MAX_BURST
+              value: "5"
+
+            # ADMIN_TOKEN omitted on purpose: disables /admin, and avoids
+            # config.json, which would override every env var set here.
+
+            # ─── Features ───────────────────────────────────────────────────
+            - name: WEB_VAULT_ENABLED
+              value: "true"
+            # Live sync, main port since 1.30 (no separate 3012).
+            - name: ENABLE_WEBSOCKET
+              value: "true"
+            # Not a third-party service — that discloses every vault domain.
+            - name: ICON_SERVICE
+              value: "internal"
+            # Mobile sync + log-in-with-device. Outbound only (Pi -> relay ->
+            # APNs/Firebase), so needs no inbound exposure; relay sees sync
+            # signals, not vault data. Creds: bitwarden.com/host, US region —
+            # EU ids also need PUSH_RELAY_URI + PUSH_IDENTITY_URI.
+            - name: PUSH_ENABLED
+              value: "true"
+            - name: PUSH_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secret
+                  key: PUSH_INSTALLATION_ID
+            - name: PUSH_INSTALLATION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secret
+                  key: PUSH_INSTALLATION_KEY
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            # Measured 6Mi/1m idle, empty vault. 256Mi sizes web-vault traffic,
+            # not idle; recheck with `kubectl top pod -n security` when in use.
+            requests:
+              memory: 64Mi
+              cpu: 50m
+            limits:
+              memory: 256Mi
+              cpu: 500m
+          livenessProbe:
+            httpGet:
+              path: /alive
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /alive
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: vaultwarden-data

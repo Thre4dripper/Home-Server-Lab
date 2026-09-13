@@ -105,6 +105,12 @@ spec:
             category: git
             path: k3s/apps/forgejo
 
+          # ── Security ───────────────────────────────────────
+          - name: vaultwarden
+            namespace: security
+            category: security
+            path: k3s/apps/vaultwarden
+
           # ── Backups ────────────────────────────────────────
           - name: backrest
             namespace: monitoring

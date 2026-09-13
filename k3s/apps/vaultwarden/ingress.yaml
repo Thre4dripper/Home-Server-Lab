@@ -1,0 +1,21 @@
+## LAN-only: the public wildcard A record points this host at 192.168.0.108,
+## unroutable from outside. Twingate routing that address is the only change
+## needed for remote access — this file and DOMAIN stay as-is.
+## No Middleware: Vaultwarden sets its own security headers and rate-limits.
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vaultwarden
+  namespace: security
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`vault.home.ijlalahmad.dev`)
+      kind: Rule
+      services:
+        - name: vaultwarden
+          port: 9200
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

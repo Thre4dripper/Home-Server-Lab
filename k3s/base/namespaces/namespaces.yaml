@@ -53,3 +53,10 @@ metadata:
   name: git
   labels:
     category: git
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: security
+  labels:
+    category: security

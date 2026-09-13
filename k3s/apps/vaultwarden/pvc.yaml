@@ -1,0 +1,36 @@
+## Entire vault in one volume: db.sqlite3, attachments/, sends/, rsa_key.pem,
+## config.json. Under /k3s-volumes so Backrest's existing plan path covers it
+## with no config change. 2Gi: db is a few MB, only attachments grow.
+## Retain — the one volume here whose loss is unrecoverable.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: vaultwarden-data
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /home/pi/k3s-volumes/apps/vaultwarden/data
+    type: DirectoryOrCreate
+  claimRef:
+    name: vaultwarden-data
+    namespace: security
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vaultwarden-data
+  namespace: security
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: vaultwarden-data
+  resources:
+    requests:
+      storage: 2Gi

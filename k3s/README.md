@@ -67,6 +67,7 @@ k3s/
 | 🎬 Media & Entertainment | Streaming and media servers | Immich, Jellyfin |
 | 📁 Files & Storage | Persistent file storage and sharing | FileBrowser, Samba |
 | 🧲 Downloads | Torrents, downloaders and grabbers | Aria2, BitComet |
+| 🔐 Security & Secrets | Credential and secret management | Vaultwarden |
 <!-- AUTOGEN:CATEGORIES:END -->
 
 ## 🏗️ **Cluster Architecture**
@@ -166,6 +167,12 @@ graph LR
     K3s --> aria2
     K3s --> bitcomet
 
+    subgraph SecuritySecrets["🔐 Security & Secrets"]
+        direction TB
+        vaultwarden[🔐<br/>Vaultwarden]
+    end
+    K3s --> vaultwarden
+
     classDef coreInfra fill:#ffffff,stroke:#2196f3,stroke-width:2px,color:#000000
     classDef gitops fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000000
     class Internet,Twingate,Router,Pi,K3s coreInfra
@@ -238,6 +245,12 @@ graph LR
 |---------|-----------|------|--------|------------|
 | [**⬇️ Aria2**](./apps/aria2/) | `downloads` | `8080` | `aria2.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc` |
 | [**🧲 BitComet**](./apps/bitcomet/) | `dashboard-network` | `8700` | `bitcomet.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `sealedsecret`, `pvc` |
+
+### 🔐 Security & Secrets
+
+| Service | Namespace | Port | Domain | Components |
+|---------|-----------|------|--------|------------|
+| [**🔐 Vaultwarden**](./apps/vaultwarden/) | `security` | `9200` | `vault.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc`, `sealedsecret` |
 <!-- AUTOGEN:SERVICES:END -->
 
 ---

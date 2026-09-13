@@ -57,9 +57,9 @@ Every choice is benchmarked for an **8 GB homelab server** (tested on Raspberry 
 | **Updates** | `docker compose pull && up -d` | `git push` → ArgoCD auto-syncs |
 | **Rollback** | Edit compose / re-pull old tag | `git revert` → ArgoCD un-applies |
 | **Recovery** | Re-run `setup.sh`, restore bind mounts | `cluster-restore.sh` + PVCs |
-| **Per-service docs** | <!-- AUTOGEN:DOCKER_COUNT -->28<!-- /AUTOGEN:DOCKER_COUNT --> self-contained READMEs | <!-- AUTOGEN:K3S_COUNT -->17<!-- /AUTOGEN:K3S_COUNT --> self-contained READMEs |
+| **Per-service docs** | <!-- AUTOGEN:DOCKER_COUNT -->28<!-- /AUTOGEN:DOCKER_COUNT --> self-contained READMEs | <!-- AUTOGEN:K3S_COUNT -->18<!-- /AUTOGEN:K3S_COUNT --> self-contained READMEs |
 | **Resource overhead** | Just Docker daemon (~50 MB RAM) | k3s control plane (~500 MB RAM) |
-| **Service count** | **<!-- AUTOGEN:DOCKER_COUNT -->28<!-- /AUTOGEN:DOCKER_COUNT -->** | **<!-- AUTOGEN:K3S_COUNT -->17<!-- /AUTOGEN:K3S_COUNT -->** (and growing) |
+| **Service count** | **<!-- AUTOGEN:DOCKER_COUNT -->28<!-- /AUTOGEN:DOCKER_COUNT -->** | **<!-- AUTOGEN:K3S_COUNT -->18<!-- /AUTOGEN:K3S_COUNT -->** (and growing) |
 
 > **TL;DR** — Use the Docker stack to try things out. Promote what works to the k3s stack and let ArgoCD run it for you. They share the same Pi, the same Pi-hole DNS, and the same Twingate connector.
 
@@ -98,7 +98,7 @@ graph TB
     %% ─── TIER 4 · the Pi ────────────────────────────────────────────────
     Docker[🐳 <b>Docker stack</b><br/>28 services · prototyping<br/>docker compose + setup.sh<br/>NPM for TLS / reverse-proxy]
     Argo[🚀 <b>ArgoCD</b><br/>GitOps controller<br/>pulls main every 3 min]
-    K3s[☸️ <b>k3s cluster</b><br/>17 apps · production<br/>Traefik IngressRoute<br/>cert-manager · SealedSecrets]
+    K3s[☸️ <b>k3s cluster</b><br/>18 apps · production<br/>Traefik IngressRoute<br/>cert-manager · SealedSecrets]
 
 
     %% ─── TIER 5 · self-hosted workloads (auto-generated) ────────────────
@@ -109,6 +109,7 @@ graph TB
     W5[🧲 <b>Downloads</b><br/>Aria2 · BitComet · Deluge · qBittorrent]
     W6[📊 <b>Monitoring</b><br/>Dashdot · Netdata · Portainer · Backrest]
     W7[🛠️ <b>Dev tooling</b><br/>Forgejo · Gitea · GitLab · LocalStack]
+    W8[🔐 <b>Security</b><br/>Vaultwarden]
 
     %% ─── HEADER ANCHORS (invisible) ─────────────────────────────────────
     H1 ~~~ Dev
@@ -139,8 +140,8 @@ graph TB
     Pihole --> K3s
 
     %% ─── FLOWS · stacks → workloads ─────────────────────────────────────
-    Docker --> W1 & W2 & W3 & W4 & W5 & W6 & W7
-    K3s    --> W1 & W2 & W3 & W4 & W5 & W6 & W7
+    Docker --> W1 & W2 & W3 & W4 & W5 & W6 & W7 & W8
+    K3s    --> W1 & W2 & W3 & W4 & W5 & W6 & W7 & W8
 
     %% ─── STYLES ─────────────────────────────────────────────────────────
     classDef header   fill:#263238,stroke:#263238,color:#ffffff,font-size:18px,font-weight:bold
@@ -157,7 +158,7 @@ graph TB
     class Router,TGConn,Pihole edge
     class Docker,K3s stack
     class Argo gitops
-    class W1,W2,W3,W4,W5,W6,W7 workload
+    class W1,W2,W3,W4,W5,W6,W7,W8 workload
 ```
 
 **How to read this diagram:**
@@ -231,7 +232,7 @@ Both stacks publish auto-generated catalog pages with mermaid diagrams and per-c
 | Stack | Catalog | Services | Categories |
 |-------|---------|----------|------------|
 | 🐳 Docker | **[docker/README.md →](./docker/README.md)** | 28 ready-to-run Compose stacks | 7 |
-| ☸️ k3s | **[k3s/README.md →](./k3s/README.md)** | 17 GitOps-managed Kubernetes apps | 8 |
+| ☸️ k3s | **[k3s/README.md →](./k3s/README.md)** | 18 GitOps-managed Kubernetes apps | 9 |
 <!-- /AUTOGEN:CATALOG_TABLE -->
 
 Both pages **regenerate automatically** from per-service `README.md` frontmatter via GitHub Actions — see [Automation](#-automation).
@@ -517,7 +518,7 @@ Home-Server-Lab/
 ├── docker/                       🐳 Docker Compose stack — <!-- AUTOGEN:DOCKER_COUNT -->28<!-- /AUTOGEN:DOCKER_COUNT --> services
 │   ├── README.md                     auto-generated catalog + mermaid
 │   └── <service>/                    docker-compose.yml + setup.sh + README.md (frontmatter)
-├── k3s/                          ☸️  k3s + ArgoCD stack — <!-- AUTOGEN:K3S_COUNT -->17<!-- /AUTOGEN:K3S_COUNT --> apps
+├── k3s/                          ☸️  k3s + ArgoCD stack — <!-- AUTOGEN:K3S_COUNT -->18<!-- /AUTOGEN:K3S_COUNT --> apps
 │   ├── README.md                     auto-generated catalog + mermaid + bootstrap docs
 │   ├── base/                         shared namespaces
 │   ├── infra/                        Traefik · SealedSecrets · cert-manager · ArgoCD

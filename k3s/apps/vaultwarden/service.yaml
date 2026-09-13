@@ -1,0 +1,18 @@
+## 9200: next free in the x00 series. NOT 8600 — that's argocd-server-lb,
+## declared in k3s/infra/argocd/service.yaml so it's invisible to a sweep of
+## app setup.sh EXTERNAL_PORTs.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultwarden
+  namespace: security
+spec:
+  type: LoadBalancer
+  selector:
+    app: vaultwarden
+  ports:
+    - name: web
+      port: 9200
+      targetPort: 8080
+      protocol: TCP
