@@ -51,6 +51,7 @@ TOPICS: List[Tuple[str, str, List[str]]] = [
     ("Monitoring",  "📊 <b>Monitoring</b>",       ["monitor", "stats"]),
     ("Devtools",    "🛠️ <b>Dev tooling</b>",      ["dev", "devops", "gitops"]),
     ("Network",     "🌐 <b>Network &amp; Edge</b>", ["network", "ingress"]),
+    ("Security",    "🔐 <b>Security</b>",         ["security", "secret"]),
     ("Databases",   "🗄️ <b>Databases</b>",        ["database"]),
 ]
 

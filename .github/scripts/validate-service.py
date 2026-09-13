@@ -39,6 +39,7 @@ K3S_CATEGORIES = [
     '🎬 Media & Entertainment',
     '📁 Files & Storage',
     '🧲 Downloads',
+    '🔐 Security & Secrets',
     '🗄️ Databases',
 ]
 

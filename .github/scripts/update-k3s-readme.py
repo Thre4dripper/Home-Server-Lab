@@ -48,6 +48,7 @@ CATEGORY_DESCRIPTIONS = {
     "🎬 Media & Entertainment": "Streaming and media servers",
     "📁 Files & Storage":     "Persistent file storage and sharing",
     "🧲 Downloads":            "Torrents, downloaders and grabbers",
+    "🔐 Security & Secrets":   "Credential and secret management",
     "🗄️ Databases":            "Stateful data stores",
 }
 
