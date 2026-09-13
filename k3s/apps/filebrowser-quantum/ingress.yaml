@@ -1,0 +1,27 @@
+## LAN-only: the public wildcard A record points this host at 192.168.0.108,
+## unroutable from outside. Twingate routing that address is the only change
+## needed for remote access — this file and DOMAIN stay as-is.
+##
+## No Middleware: Quantum sets its own security headers and rate-limits
+## (http.disableRateLimit: false), and http.trustProxyHeaders: true makes it
+## read the real client IP from Traefik's X-Forwarded-For.
+##
+## This route also carries WebDAV at /dav/<source>/<path> — no separate rule
+## needed, it is the same HTTP listener.
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: filebrowser-quantum
+  namespace: file-management
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`explorer.home.ijlalahmad.dev`)
+      kind: Rule
+      services:
+        - name: filebrowser-quantum
+          port: 8310
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

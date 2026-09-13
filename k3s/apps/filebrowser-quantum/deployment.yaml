@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser-quantum
+  namespace: file-management
+  labels:
+    app: filebrowser-quantum
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    # SQLite index + activity DB on a single-writer hostPath volume. Two pods
+    # sharing it would corrupt the WAL, so never roll a new pod alongside the old.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: filebrowser-quantum
+  template:
+    metadata:
+      labels:
+        app: filebrowser-quantum
+    spec:
+      # /home/pi and the pendrive hold files owned by several UIDs (pi, root,
+      # and the exFAT mount's own ownership), so the pod runs as root to read
+      # and write all of them. It no longer sees anything outside those two
+      # trees — the host-root mount was removed.
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      containers:
+        - name: filebrowser-quantum
+          # Quantum v2 is beta-only for now; `stable`/`latest` still track the
+          # 1.5.x line. arm64 is published for this tag.
+          image: gtstef/filebrowser:2.0.6-beta
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: web
+          env:
+            - name: FILEBROWSER_CONFIG
+              value: "/home/filebrowser/config.yaml"
+            - name: TZ
+              value: "UTC"
+            # Every secret below overrides the empty placeholder in config.yaml.
+            # loadEnvConfig() runs after the YAML is parsed, so env always wins.
+            - name: FILEBROWSER_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: filebrowser-quantum-secret
+                  key: FILEBROWSER_ADMIN_PASSWORD
+            - name: FILEBROWSER_JWT_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: filebrowser-quantum-secret
+                  key: FILEBROWSER_JWT_TOKEN_SECRET
+            - name: FILEBROWSER_TOTP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: filebrowser-quantum-secret
+                  key: FILEBROWSER_TOTP_SECRET
+            - name: FILEBROWSER_ONLYOFFICE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: filebrowser-quantum-secret
+                  key: FILEBROWSER_ONLYOFFICE_SECRET
+          volumeMounts:
+            - name: config
+              mountPath: /home/filebrowser/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: data
+              mountPath: /home/filebrowser/data
+            # HostToContainer propagation on both: the pendrive is a separate
+            # filesystem the host mounts at /home/pi/pendrive, and without
+            # propagation a pod that outlives an unplug/replug keeps looking at
+            # the empty directory underneath the mount instead of the drive.
+            - name: host-home
+              mountPath: /mnt/pi/home
+              mountPropagation: HostToContainer
+            - name: host-storage
+              mountPath: /mnt/pi/storage
+              mountPropagation: HostToContainer
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: web
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: web
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # The first full scan is the memory high-water mark. After that the
+          # index is reused from disk across restarts
+          # (server.indexSqlConfig.disableReuse: false) and RSS settles far
+          # lower — ~210Mi in practice. The 1Gi ceiling is headroom for a cold
+          # re-index of the pendrive, not a working-set figure.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: config
+          configMap:
+            name: filebrowser-quantum-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: filebrowser-quantum-data
+        - name: host-home
+          hostPath:
+            path: /home/pi
+            type: Directory
+        - name: host-storage
+          hostPath:
+            path: /home/pi/pendrive
+            type: DirectoryOrCreate

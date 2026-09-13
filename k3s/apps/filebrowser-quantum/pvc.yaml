@@ -1,0 +1,41 @@
+# Holds the SQLite index, the activity log, and the thumbnail cache.
+#
+# Sized for the index rather than the data: indexing the whole Pi root
+# filesystem plus home and external storage produces a database in the low
+# hundreds of MB, and the thumbnail/diskcache directory grows with how much
+# media actually gets previewed. 5Gi leaves room for both without being
+# something you have to think about again.
+#
+# Retain + explicit claimRef, matching every other app in this cluster: the
+# host directory survives a teardown and the PV can only ever bind to this PVC.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: filebrowser-quantum-data
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /home/pi/k3s-volumes/apps/filebrowser-quantum/data
+    type: DirectoryOrCreate
+  claimRef:
+    name: filebrowser-quantum-data
+    namespace: file-management
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebrowser-quantum-data
+  namespace: file-management
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: filebrowser-quantum-data
+  resources:
+    requests:
+      storage: 5Gi

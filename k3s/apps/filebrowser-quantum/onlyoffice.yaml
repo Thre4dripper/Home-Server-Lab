@@ -1,0 +1,137 @@
+# ===========================================================================
+# OnlyOffice Document Server — in-browser docx/xlsx/pptx editing.
+#
+# PARKED AT replicas: 0 ON PURPOSE.
+#
+# This pod wants ~2GB of RAM and takes 1-2 minutes to become healthy. On an
+# 8GB Pi that already runs immich (2Gi limit), bitcomet (1.5Gi), jellyfin and
+# n8n (1Gi each), starting it unconditionally risks OOM-killing something that
+# matters more. The manifests are kept complete and ready so enabling it is a
+# one-line change rather than an afternoon.
+#
+# To enable:
+#   1. replicas: 0 -> 1 below
+#   2. config/config.yaml: userDefaults.preview.office -> true
+#   3. commit + push (ArgoCD applies it), or ./setup.sh deploy
+#
+# Note `./setup.sh disable` / `enable` only touch deployment.yaml, so they will
+# not interfere with this file.
+#
+# Storage is emptyDir, not a PVC: everything here is a regenerable cache. The
+# authoritative documents live in the source volumes, and OnlyOffice re-fetches
+# them from FileBrowser over http.internalUrl on each open.
+# ===========================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser-quantum-onlyoffice
+  namespace: file-management
+  labels:
+    app: filebrowser-quantum-onlyoffice
+spec:
+  replicas: 0
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: filebrowser-quantum-onlyoffice
+  template:
+    metadata:
+      labels:
+        app: filebrowser-quantum-onlyoffice
+    spec:
+      containers:
+        - name: onlyoffice
+          image: onlyoffice/documentserver:9.4.0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            # JWT_SECRET must equal integrations.office.secret on the
+            # FileBrowser side — both read the same SealedSecret key.
+            - name: JWT_ENABLED
+              value: "true"
+            - name: JWT_HEADER
+              value: "Authorization"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: filebrowser-quantum-secret
+                  key: FILEBROWSER_ONLYOFFICE_SECRET
+          volumeMounts:
+            - name: oo-data
+              mountPath: /var/www/onlyoffice/Data
+            - name: oo-log
+              mountPath: /var/log/onlyoffice
+            - name: oo-cache
+              mountPath: /var/lib/onlyoffice/documentserver/App_Data/cache/files
+            - name: oo-tmp
+              mountPath: /var/lib/onlyoffice/documentserver-example/public/files
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 180
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+      volumes:
+        - name: oo-data
+          emptyDir: {}
+        - name: oo-log
+          emptyDir: {}
+        - name: oo-cache
+          emptyDir: {}
+        - name: oo-tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: filebrowser-quantum-onlyoffice
+  namespace: file-management
+spec:
+  type: ClusterIP
+  selector:
+    app: filebrowser-quantum-onlyoffice
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+---
+# The browser talks to OnlyOffice directly (it loads the editor bundle and
+# opens a websocket), so it needs its own externally reachable hostname —
+# integrations.office.url in config.yaml must match this Host rule.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: filebrowser-quantum-onlyoffice
+  namespace: file-management
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`office.home.ijlalahmad.dev`)
+      kind: Rule
+      services:
+        - name: filebrowser-quantum-onlyoffice
+          port: 80
+  tls:
+    secretName: wildcard-home-ijlalahmad-dev-tls

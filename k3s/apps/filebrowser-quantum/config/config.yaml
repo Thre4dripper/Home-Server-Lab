@@ -1,0 +1,423 @@
+# ===========================================================================
+# FileBrowser Quantum — Raspberry Pi 5 homelab configuration
+#
+# Rendered into the ConfigMap `filebrowser-quantum-config` by kustomize
+# (see kustomization.yaml) and mounted read-only at
+# /home/filebrowser/config.yaml.
+#
+# Secrets are deliberately EMPTY here. loadEnvConfig() in the backend runs
+# after this file is parsed, so the FILEBROWSER_* env vars sourced from the
+# SealedSecret win. Never put a real secret in this file — it is committed.
+#
+# Changing this file changes the ConfigMap hash, which changes the Deployment
+# pod template, which rolls the pod. That is intentional: Quantum reads the
+# config once at startup and has no hot reload.
+# ===========================================================================
+
+server:
+  minSearchLength: 3
+  disableUpdateCheck: false
+  # Pi 5 has 4 cores. This is the image thumbnailer pool AND the input to the
+  # ffmpeg pool: the backend derives ffmpeg concurrency as (n + 1) / 2, so the
+  # old value of 2 left exactly ONE ffmpeg worker for the whole server. A single
+  # slow 1080p x265 thumbnail then blocked every other video preview and every
+  # subtitle request behind it until they hit the 30s / 60s request timeouts.
+  # 4 gives two ffmpeg workers and still leaves two cores for the indexer.
+  numImageProcessors: 4
+  disablePreviews: false
+  disablePreviewResize: false
+  disableTypeDetectionByHeader: false
+
+  logging:
+    - levels: "info|error|warning"
+      apiLevels: "info|error|warning"
+      output: "stdout"
+      noColors: true            # no TTY in a container; colour codes just corrupt kubectl logs
+      json: false
+      utc: true                 # cluster logs are UTC everywhere else
+      apiFilter: '^/health|^/favicon.ico|^/static|^/public/static'
+
+  # -------------------------------------------------------------------------
+  # SOURCES — `path` is the path INSIDE the container. These line up exactly
+  # with the volumeMounts in deployment.yaml:
+  #
+  #   /mnt/pi/home      <- host /home/pi          (read-write)
+  #   /mnt/pi/storage   <- host /home/pi/pendrive (read-write)
+  #
+  # There is deliberately NO source for the host root. Upstream advises against
+  # rooting a source at `/` or anything containing /var, and the exclusion list
+  # it needed (proc, sys, dev, run, containerd, kubelet, rancher, docker, tmp,
+  # cache, spool…) was most of this file. Use kubectl or ssh to read /etc.
+  #
+  # Storage IS a subtree of Home on disk, and stays a separate source anyway:
+  # it is a separate physical disk, so it gets its own used-percentage readout,
+  # its own search scope, and its own permission surface for future non-admin
+  # users. It is excluded from the Home index (but left `viewable`) so the same
+  # bytes are never indexed twice.
+  #
+  # Each rule field is a SINGLE string, so excluding five folders means five
+  # separate list entries.
+  # -------------------------------------------------------------------------
+  sources:
+    # ── 1. Pi home directory, read-write ──────────────────────────────────
+    - path: "/mnt/pi/home"
+      name: "Home"
+      config:
+        defaultEnabled: true
+        defaultUserScope: "/"
+        createUserDir: false
+        useLogicalSize: false
+        denyByDefault: false
+        private: false
+        readOnly: false
+        disabled: false
+        defaultPermissions:
+          view: true
+          download: true
+          modify: true
+          create: true
+          delete: true
+          configured: true
+        rules:
+          - ignoreSymlinks: true
+          - ignoreZeroSizeFolders: false
+          - ignoreHidden: false
+
+          # Indexed by the Storage source instead — excluding it here stops the
+          # pendrive being indexed twice. `viewable: true` is what keeps the
+          # folder VISIBLE in the Home listing: without it the rule hides the
+          # directory entirely, which is why the pendrive looked missing from
+          # ~/ in the UI while sitting right there on disk.
+          - folderPath: "/pendrive"
+            viewable: true
+
+          # PV data for every other app on the cluster. Browsable on purpose
+          # (handy for poking at a container's files) but not indexed: it is
+          # large, churns constantly, and search hits in it are never useful.
+          - folderPath: "/k3s-volumes"
+            viewable: true
+
+          # Credentials that n8n and rclone mount. Visible to a logged-in admin
+          # by design, but keeping them out of the search index means they
+          # cannot surface in an autocomplete or a shared search result.
+          - folderPath: "/.ssh"
+            viewable: true
+          - folderPath: "/.aws"
+            viewable: true
+          - folderPath: "/.config/rclone"
+            viewable: true
+          - folderPath: "/.kube"
+            viewable: true
+
+          - folderName: "node_modules"
+          - folderName: ".git"
+          - folderName: "__pycache__"
+          - folderName: ".venv"
+          - folderName: ".cache"
+
+    # ── 2. External USB storage, read-write ───────────────────────────────
+    - path: "/mnt/pi/storage"
+      name: "Storage"
+      config:
+        defaultEnabled: true
+        defaultUserScope: "/"
+        createUserDir: false
+        useLogicalSize: false
+        denyByDefault: false
+        private: false
+        readOnly: false
+        disabled: false
+        defaultPermissions:
+          view: true
+          download: true
+          modify: true
+          create: true
+          delete: true
+          configured: true
+        rules:
+          - ignoreSymlinks: true
+          - ignoreZeroSizeFolders: false
+          - ignoreHidden: false
+
+          # restic repository: ~100k content-addressed blobs, all opaque.
+          # Indexing it would double the index size for zero searchable value.
+          - folderPath: "/backups"
+            viewable: true
+
+          - folderName: ".Trash-1000"
+          - folderName: "lost+found"
+          - fileName: ".DS_Store"
+
+  cacheDir: "/home/filebrowser/data/cache"
+  # MUST stay false here. This does not mean "tidy up stale entries" — the
+  # backend calls ClearCacheDir() on both startup AND shutdown, which is
+  # os.RemoveAll over every entry in cacheDir: the thumbnail cache, the HEIC
+  # cache, the generated icons AND sql/, which is the search index. With it on,
+  # every pod roll threw away the whole cache and re-indexed from scratch, so
+  # indexSqlConfig.disableReuse: false below was doing nothing and thumbnails
+  # vanished after each restart. Upstream defaults it to false and documents it
+  # as the option for deployments with no persistent volume — the exact
+  # opposite of this one, where cacheDir lives on a 5Gi PVC.
+  cacheDirCleanup: false
+  maxArchiveSize: 10                   # GB ceiling on zip/unzip — the Pi has limited scratch space
+
+  filesystem:
+    createFilePermission: "644"
+    createDirectoryPermission: "755"
+
+  indexSqlConfig:
+    batchSize: 1000
+    cacheSizeMB: 32                    # SQLite page cache; keep modest, the Pi has 8GB total
+    walMode: true
+    disableReuse: false                # reuse the index across restarts — a cold rootfs scan is slow
+    startupIntegrityCheck: "quickCheck"
+
+  database:
+    path: "/home/filebrowser/data/filebrowser.sqlite"
+    migrateFrom: ""                    # see README: importing the old FileBrowser database
+    activity:
+      disabled: false
+      retentionDays: 30
+      flushIntervalSeconds: 10
+      maxBufferSize: 10000
+
+auth:
+  tokenExpirationHours: 2
+  key: ""                              # <- FILEBROWSER_JWT_TOKEN_SECRET
+  adminUsername: "admin"
+  adminPassword: ""                    # <- FILEBROWSER_ADMIN_PASSWORD
+  totpSecret: ""                       # <- FILEBROWSER_TOTP_SECRET
+
+  methods:
+    noauth: false                      # NEVER true — the whole rootfs is mounted
+    password:
+      enabled: true
+      minLength: 12
+      signup: false
+      enforcedOtp: false
+      recaptcha:
+        host: ""
+        key: ""
+        secret: ""                     # <- FILEBROWSER_RECAPTCHA_SECRET
+    passkey:
+      enabled: true
+      rpDisplayName: "Homelab Files"
+      rpId: "explorer.home.ijlalahmad.dev"     # bare hostname, no scheme or port
+      rpOrigins:
+        - "https://explorer.home.ijlalahmad.dev"
+      loginButtonText: "Use a passkey"
+
+    # ---- shapes are correct; flip `enabled` when a provider exists ----
+    oidc:
+      enabled: false
+      clientId: ""                     # <- FILEBROWSER_OIDC_CLIENT_ID
+      clientSecret: ""                 # <- FILEBROWSER_OIDC_CLIENT_SECRET
+      issuerUrl: ""
+      scopes: "openid email profile"
+      userIdentifier: "preferred_username"
+      groupsClaim: "groups"
+      adminGroup: ""
+      userGroups: []
+      disableVerifyTLS: false
+      logoutRedirectUrl: ""
+    ldap:
+      enabled: false
+      server: ""
+      baseDN: ""
+      userDN: ""
+      userPassword: ""                 # <- FILEBROWSER_LDAP_USER_PASSWORD
+      userFilter: ""
+      userIdentifier: ""
+      groupsClaim: ""
+      adminGroup: ""
+      userGroups: []
+      disableVerifyTLS: false
+      logoutRedirectUrl: ""
+    jwt:
+      enabled: false
+      header: "X-JWT-Assertion"
+      secret: ""
+      algorithm: "HS256"
+      userIdentifier: "sub"
+      groupsClaim: "groups"
+      adminGroup: ""
+      userGroups: []
+      disableVerifyTLS: false
+      logoutRedirectUrl: ""
+    proxy:
+      enabled: false                   # only behind an auth proxy you control
+      header: "Remote-User"
+      userIdentifier: ""
+      groupsClaim: ""
+      adminGroup: ""
+      userGroups: []
+      disableVerifyTLS: false
+      logoutRedirectUrl: ""
+
+frontend:
+  name: "Homelab Files"                # doubles as the PWA name (30 char cap)
+  description: "Raspberry Pi homelab file system"
+  disableDefaultLinks: false
+  disableUsedPercentage: false
+  disableNavButtons: false
+  disablePWAInstall: false
+  favicon: ""
+  loginIcon: ""
+  loginButtonText: "Sign in"
+  oidcLoginButtonText: "Sign in with SSO"
+  externalLinks:
+    - text: "Homarr"
+      title: "Homelab dashboard"
+      url: "https://homarr.home.ijlalahmad.dev"
+    - text: "Docs"
+      title: "FileBrowser Quantum documentation"
+      url: "https://filebrowserquantum.com/en/docs/"
+    - text: "Help"
+      title: ""
+      url: "help prompt"               # magic value: opens the built-in help dialog
+  styling:
+    disableEventThemes: false
+    customCSS: ""
+    lightBackground: "#f5f5f5"
+    darkBackground: "#141D24"
+    customThemes:
+      default:
+        description: "The default theme"
+        css: ""
+      alternative:
+        description: "Reduce rounded corners"
+        css: "reduce-rounded-corners.css"
+
+# Applied to NEW users only; existing users keep their own preferences.
+userDefaults:
+  sidebar:
+    disableQuickToggles: false
+    hideFileActions: false
+    disableHideOnPreview: false
+    sticky: true
+    hideFiles: false
+    showTools: true
+  listing:
+    deleteWithoutConfirming: false     # keep false: this tree includes /etc
+    dateFormat: false
+    showHidden: true
+    quickDownload: true
+    showSelectMultiple: true
+    singleClick: false
+    hideFileExt: ""
+    showCopyPath: true
+    deleteAfterArchive: true
+    viewMode: "normal"
+    gallerySize: 3
+  preview:
+    image: true
+    video: true
+    audio: true
+    # OnlyOffice runs at replicas: 0 by default — see onlyoffice.yaml. Flip this
+    # to true at the same time you scale it up, otherwise every office file
+    # shows a broken preview pane.
+    office: false
+    models: true
+    folder: true
+    popup: true
+    motionVideoPreview: true
+    highQuality: false                 # cheaper thumbnails; the Pi is CPU-bound
+    disablePreviewExt: ""
+  fileViewer:
+    editorQuickSave: true
+    autoplayMedia: true
+    disableViewingExt: ""
+    disableOnlyOfficeExt: ".md .txt .pdf .html .xml .yaml .yml .json .conf"
+    preferEditorForMarkdown: false
+    debugOffice: false
+  search:
+    disableOptions: false
+  ui:
+    darkMode: true
+    themeColor: "var(--blue)"
+    customTheme: ""
+    locale: "en"
+  fileLoading:
+    maxConcurrentUpload: 5             # 10 saturates the Pi's USB bus on big transfers
+    uploadChunkSizeMb: 10
+    downloadChunkSizeMb: 0
+    clearAll: false
+  account:
+    permissions:
+      api: true
+      admin: false
+      share: true
+      realtime: true
+    lockPassword: false
+    disableSettings: false
+    loginMethod: "password"
+    disableUpdateNotifications: false
+
+integrations:
+  office:
+    # Browser-facing URL — must resolve from the CLIENT, not from the cluster.
+    url: "https://office.home.ijlalahmad.dev"
+    # Cluster-internal, used for server-to-server document fetches.
+    internalUrl: "http://filebrowser-quantum-onlyoffice"
+    secret: ""                         # <- FILEBROWSER_ONLYOFFICE_SECRET (== JWT_SECRET on the OnlyOffice pod)
+    viewOnly: false
+
+  media:
+    ffmpegPath: "/usr/local/bin"       # present in the non-slim image
+    debug: false
+    # OFF because Quantum offers the player EVERY subtitle stream in a file,
+    # including bitmap formats (hdmv_pgs_subtitle on Blu-ray rips, dvd_subtitle
+    # on DVD rips). ffmpeg cannot turn a bitmap track into WebVTT — "subtitle
+    # encoding currently only possible from text to text or bitmap to bitmap" —
+    # so every such track returns a 500 and the UI raises a full-screen error
+    # toast carrying the whole ffmpeg banner. The backend records each track's
+    # codec but never filters on it, and there is no config knob for it, so the
+    # only lever here is all-or-nothing.
+    #
+    # What this costs: embedded text tracks (subrip/ASS) are no longer offered
+    # in FileBrowser's preview player. Sidecar files (movie.srt next to
+    # movie.mkv) still work, and Jellyfin — which handles PGS properly by
+    # burning it in during transcode — is the right place to actually watch a
+    # film. Flip back to true once upstream filters non-text codecs.
+    extractEmbeddedSubtitles: false
+    hardwareAcceleration: false        # no VAAPI passthrough configured on this node
+    convert:
+      imagePreview:
+        heic: true
+        jpeg: true
+      videoPreview:
+        3g2: true
+        3gp: true
+        asf: true
+        avi: true
+        f4v: true
+        flv: true
+        m2ts: true
+        m4v: true
+        mkv: true
+        mov: true
+        mp4: true
+        mpeg: true
+        mpg: true
+        ogv: true
+        ts: true
+        vob: true
+        webm: true
+        wmv: true
+
+http:
+  port: 80
+  listen: ""
+  baseURL: "/"
+  externalUrl: "https://explorer.home.ijlalahmad.dev"   # used to build share links
+  # How OnlyOffice calls back to fetch a document. Must carry the Service port
+  # (8310), NOT the containerPort — service.yaml maps 8310 -> 80, and omitting
+  # it here would send the callback to port 80 on the Service, where nothing
+  # is listening.
+  internalUrl: "http://filebrowser-quantum:8310"
+  socket: ""
+  tlsCert: ""                          # TLS terminates at Traefik
+  tlsKey: ""
+  disableWebDAV: false                 # WebDAV served at /dav/<source>/<path>
+  trustProxyHeaders: true              # Traefik is the only ingress path; needed for real client IPs
+  disableRateLimit: false

@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: file-management
+
+resources:
+  - pvc.yaml
+  - sealedsecret.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - onlyoffice.yaml
+
+# NOTE: the name suffix hash is deliberately LEFT ON here (unlike
+# k3s/apps/homepage, which disables it).
+#
+# Quantum parses config.yaml exactly once at startup and has no hot reload.
+# With the hash, editing config.yaml produces a new ConfigMap name, which
+# changes the Deployment pod template, which makes ArgoCD roll the pod on its
+# own. Without it, a pushed config change would sit in the cluster doing
+# nothing until something else happened to restart the pod.
+#
+# The stale ConfigMaps this leaves behind are cleaned up by the ApplicationSet's
+# `prune: true`.
+configMapGenerator:
+  - name: filebrowser-quantum-config
+    files:
+      - config/config.yaml

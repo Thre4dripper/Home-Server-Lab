@@ -65,7 +65,7 @@ k3s/
 | 🏡 Dashboards | Landing pages and service catalogs | Homarr, Homepage |
 | 🤖 Automation | Workflow and smart-home automation | Home Assistant, n8n |
 | 🎬 Media & Entertainment | Streaming and media servers | Immich, Jellyfin |
-| 📁 Files & Storage | Persistent file storage and sharing | FileBrowser, Samba |
+| 📁 Files & Storage | Persistent file storage and sharing | FileBrowser, FileBrowser Quantum, Samba |
 | 🧲 Downloads | Torrents, downloaders and grabbers | Aria2, BitComet |
 | 🔐 Security & Secrets | Credential and secret management | Vaultwarden |
 <!-- AUTOGEN:CATEGORIES:END -->
@@ -152,10 +152,12 @@ graph LR
     subgraph FilesStorage["📁 Files & Storage"]
         direction TB
         filebrowser[📂<br/>FileBrowser]
+        filebrowserquantum[🗂️<br/>FileBrowser Quantum]
         samba[🗂️<br/>Samba]
-        filebrowser --- samba
+        filebrowser --- filebrowserquantum
     end
     K3s --> filebrowser
+    K3s --> filebrowserquantum
     K3s --> samba
 
     subgraph Downloads["🧲 Downloads"]
@@ -237,6 +239,7 @@ graph LR
 | Service | Namespace | Port | Domain | Components |
 |---------|-----------|------|--------|------------|
 | [**📂 FileBrowser**](./apps/filebrowser/) | `file-management` | `8300` | `files.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc` |
+| [**🗂️ FileBrowser Quantum**](./apps/filebrowser-quantum/) | `file-management` | `8310` | `explorer.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc`, `configmap`, `sealedsecret` |
 | [**🗂️ Samba**](./apps/samba/) | `file-management` | `445` | `—` | `deployment`, `service`, `configmap`, `sealedsecret`, `pvc` |
 
 ### 🧲 Downloads
