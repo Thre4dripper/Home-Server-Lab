@@ -45,6 +45,24 @@ jobs:
           echo "n8n=$V" >> "$GITHUB_OUTPUT"
           echo "Building n8n $V"
 
+      # The base image and n8n move together: n8n pulls isolated-vm, whose
+      # native code tracks the V8 C++ API, so a Node mismatch fails as hundreds
+      # of node-gyp compile errors minutes into the build. Ask the official
+      # image what runtime this release is actually tested on — n8n's
+      # engines.node is only a minimum (">=22.16"), so it cannot catch a
+      # too-NEW Node, which is exactly how node 26 + n8n 2.20.7 slipped through.
+      - name: Base image must match n8n's tested runtime
+        run: |
+          set -euo pipefail
+          V='${{ steps.read.outputs.n8n }}'
+          NEED=$(docker run --rm --entrypoint node "n8nio/n8n:$V" --version | sed 's/^v//' | cut -d. -f1)
+          HAVE=$(grep -oP '^FROM node:\K[0-9]+' docker/n8n/Dockerfile)
+          echo "n8n $V is tested on node $NEED; Dockerfile builds on node $HAVE"
+          if [[ "$NEED" != "$HAVE" ]]; then
+            echo "::error::n8n $V ships on node $NEED but the Dockerfile FROM says node $HAVE. Change it to 'FROM node:$NEED-bookworm-slim' in this same PR."
+            exit 1
+          fi
+
   build:
     name: Build ${{ matrix.platform }}
     needs: version
