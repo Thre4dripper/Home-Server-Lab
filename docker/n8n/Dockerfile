@@ -1,6 +1,12 @@
 # Start from official Node.js image (already has Debian base)
 FROM node:26-bookworm-slim
 
+# Pinned so the image is reproducible and Renovate can track it. Must be
+# declared after FROM to be visible in this stage. The published image is
+# tagged with this exact value — see .github/workflows/build-n8n-image.yml.
+# renovate: datasource=npm depName=n8n
+ARG N8N_VERSION=2.20.7
+
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -51,8 +57,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install n8n globally (after python3 + build-essential are available for node-gyp)
-RUN npm install -g n8n
+# Install n8n globally (after python3 + build-essential are available for node-gyp).
+# Pinned: an unpinned `npm install -g n8n` once resolved to a 2.20.7-exp.0
+# prerelease, which then ran in production unnoticed.
+RUN npm install -g "n8n@${N8N_VERSION}"
 
 # Install Docker CLI (needed to communicate with Docker socket)
 RUN install -m 0755 -d /etc/apt/keyrings && \

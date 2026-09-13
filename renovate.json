@@ -8,29 +8,49 @@
     ":prHourlyLimit4",
     "schedule:weekly"
   ],
-  "description": "Renovate config for Home-Server-Lab — auto-updates Docker image tags, Helm charts, and k8s manifests.",
-  "labels": ["dependencies", "renovate"],
-  "assignees": ["@Thre4dripper"],
+  "description": "Renovate config for Home-Server-Lab \u2014 auto-updates Docker image tags, Helm charts, and k8s manifests.",
+  "labels": [
+    "dependencies",
+    "renovate"
+  ],
+  "assignees": [
+    "@Thre4dripper"
+  ],
   "rangeStrategy": "bump",
   "prConcurrentLimit": 5,
   "rebaseWhen": "behind-base-branch",
   "vulnerabilityAlerts": {
-    "labels": ["security", "vulnerability"],
-    "schedule": ["at any time"]
+    "labels": [
+      "security",
+      "vulnerability"
+    ],
+    "schedule": [
+      "at any time"
+    ]
   },
   "docker-compose": {
-    "managerFilePatterns": ["/(^|/)docker-compose[^/]*\\.ya?ml$/"]
+    "managerFilePatterns": [
+      "/(^|/)docker-compose[^/]*\\.ya?ml$/"
+    ]
   },
   "kubernetes": {
-    "managerFilePatterns": ["/k3s/.+\\.ya?ml$/"]
+    "managerFilePatterns": [
+      "/k3s/.+\\.ya?ml$/"
+    ]
   },
   "helm-values": {
-    "managerFilePatterns": ["/k3s/.+values.*\\.ya?ml$/"]
+    "managerFilePatterns": [
+      "/k3s/.+values.*\\.ya?ml$/"
+    ]
   },
   "packageRules": [
     {
       "description": "Auto-merge patch + minor updates after CI passes",
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
@@ -38,16 +58,30 @@
     },
     {
       "description": "Group all non-major Docker image updates",
-      "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
       "groupName": "docker images (non-major)"
     },
     {
       "description": "Major Docker bumps stay separate + need review",
-      "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["major"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false,
-      "labels": ["dependencies", "docker", "major-update"]
+      "labels": [
+        "dependencies",
+        "docker",
+        "major-update"
+      ]
     },
     {
       "description": "Pin core infra images explicitly",
@@ -58,19 +92,53 @@
         "bitnami/sealed-secrets-controller"
       ],
       "automerge": false,
-      "labels": ["dependencies", "core-infra"]
+      "labels": [
+        "dependencies",
+        "core-infra"
+      ]
     },
     {
       "description": "Group Helm chart updates",
-      "matchDatasources": ["helm"],
+      "matchDatasources": [
+        "helm"
+      ],
       "groupName": "helm charts"
+    },
+    {
+      "description": "n8n publishes next/beta/rc without a semver prerelease suffix, so ignoreUnstable cannot filter them. Follow the dist-tag n8n itself marks stable \u2014 an unpinned install previously landed on 2.20.7-exp.0.",
+      "matchDatasources": [
+        "npm"
+      ],
+      "matchPackageNames": [
+        "n8n"
+      ],
+      "followTag": "stable"
+    },
+    {
+      "description": "codeberg.org and code.forgejo.org do not serve a tag-list API; data.forgejo.org is the registry that does.",
+      "matchPackageNames": [
+        "codeberg.org/forgejo/forgejo",
+        "code.forgejo.org/forgejo/runner"
+      ],
+      "registryUrls": [
+        "https://data.forgejo.org"
+      ]
+    },
+    {
+      "description": "LAN-only registry, unreachable from Renovate's cloud runners (caused 'Error obtaining docker token').",
+      "matchPackageNames": [
+        "forgejo.home.ijlalahmad.dev/**"
+      ],
+      "enabled": false
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
       "description": "k3s version in Ansible group_vars",
-      "managerFilePatterns": ["/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"],
+      "managerFilePatterns": [
+        "/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"
+      ],
       "matchStrings": [
         "k3s_version:\\s*[\"']?(?<currentValue>v?[\\d\\.\\+\\-a-z]+)[\"']?"
       ],
@@ -81,7 +149,9 @@
     {
       "customType": "regex",
       "description": "kubeseal (sealed-secrets) version in Ansible group_vars",
-      "managerFilePatterns": ["/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"],
+      "managerFilePatterns": [
+        "/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"
+      ],
       "matchStrings": [
         "kubeseal_version:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?"
       ],
@@ -93,7 +163,9 @@
     {
       "customType": "regex",
       "description": "helm version in Ansible group_vars",
-      "managerFilePatterns": ["/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"],
+      "managerFilePatterns": [
+        "/^ansible/(inventory|(group_vars|host_vars)/.+)\\.ya?ml$/"
+      ],
       "matchStrings": [
         "helm_version:\\s*[\"']?(?<currentValue>[\\d\\.]+)[\"']?"
       ],
@@ -101,6 +173,18 @@
       "depNameTemplate": "helm/helm",
       "extractVersionTemplate": "^v(?<version>.+)$",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "n8n version pinned in the custom image Dockerfile",
+      "managerFilePatterns": [
+        "/^docker/n8n/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG N8N_VERSION=(?<currentValue>[\\d.]+)"
+      ],
+      "datasourceTemplate": "npm",
+      "depNameTemplate": "n8n"
     }
   ]
 }

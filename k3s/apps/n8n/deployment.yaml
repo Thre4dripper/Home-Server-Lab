@@ -31,10 +31,11 @@ spec:
         - name: n8n
           # Custom image built from docker/n8n/Dockerfile — includes aws, kubectl, helm,
           # terraform, rclone, python3, docker CLI, yq, jq and all n8n env defaults.
-          # Build: docker build -t forgejo.home.ijlalahmad.dev/<user>/n8n-custom:latest docker/n8n/
-          # Push:  docker push forgejo.home.ijlalahmad.dev/<user>/n8n-custom:latest
-          image: forgejo.home.ijlalahmad.dev/ijlal/n8n-custom:latest
-          imagePullPolicy: Always
+          # Built and published by .github/workflows/build-n8n-image.yml as a
+          # multi-arch (amd64+arm64) manifest; the tag is the pinned n8n version,
+          # so Renovate can propose upgrades here. Do not build this by hand.
+          image: ghcr.io/thre4dripper/n8n-custom:2.20.7
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5678
               name: web

@@ -80,6 +80,45 @@ Open `https://n8n.home.ijlalahmad.dev` (or `http://<node-ip>:8400`) and create t
 | `sealedsecret.yaml` | `N8N_ENCRYPTION_KEY` + DB credentials |
 | `pvc.yaml` | `ReadWriteOnce` PVC for binary data |
 
+## Custom image
+
+n8n runs from a custom image built out of [`docker/n8n/Dockerfile`](../../../docker/n8n/Dockerfile),
+which adds aws, kubectl, helm, terraform, rclone, docker CLI, yq and jq so
+workflows can drive the homelab directly.
+
+It is **not built by hand**. `.github/workflows/build-n8n-image.yml` builds it on
+GitHub's free native runners — amd64 and arm64 in parallel, merged into one
+manifest list — and publishes to `ghcr.io/thre4dripper/n8n-custom`. Building on
+the Pi is avoided deliberately: `npm install -g n8n` compiles native addons via
+node-gyp and would risk OOM-killing co-tenant workloads.
+
+The image tag **is** the n8n version, pinned by `ARG N8N_VERSION` in the
+Dockerfile. The update loop:
+
+1. Renovate spots a new stable n8n → tick its checkbox on the Dependency
+   Dashboard → it opens a PR bumping `ARG N8N_VERSION`
+2. Review and merge → the workflow builds and pushes `n8n-custom:<version>`
+3. Renovate spots the new tag → PR bumping `image:` here
+4. Merge → ArgoCD rolls it
+
+Renovate follows n8n's `stable` dist-tag specifically. n8n publishes
+`next`/`beta`/`rc` builds *without* a semver prerelease suffix, so the normal
+unstable filter cannot catch them — which is how this instance previously ended
+up running `2.20.7-exp.0` in production.
+
+`workflow_dispatch` rebuilds the same version on demand, which is how you pick
+up new terraform/kubectl/helm/rclone releases (those are still unpinned and
+resolve at build time — the `:<version>-<sha>` tag exists to tell such builds
+apart).
+
+n8n runs schema migrations on version change. **Dump the database before any
+version bump:**
+
+```bash
+kubectl -n databases exec deploy/postgres -- pg_dump -U postgres n8n \
+  | gzip > n8n-pre-upgrade.sql.gz
+```
+
 ## Important Environment
 
 | Variable | Purpose |
