@@ -31,11 +31,13 @@ spec:
         - name: n8n
           # Custom image built from docker/n8n/Dockerfile — includes aws, kubectl, helm,
           # terraform, rclone, python3, docker CLI, yq, jq and all n8n env defaults.
-          # Built and published by .github/workflows/build-n8n-image.yml as a
-          # multi-arch (amd64+arm64) manifest; the tag is the pinned n8n version,
-          # so Renovate can propose upgrades here. Do not build this by hand.
-          image: ghcr.io/thre4dripper/n8n-custom:2.20.7
-          imagePullPolicy: IfNotPresent
+          # TEMPORARY: back on the hand-built Forgejo image until the GHCR
+          # pipeline publishes its first tag. Switch to
+          # ghcr.io/thre4dripper/n8n-custom:<version> only once that tag exists
+          # — pointing here first cost an ImagePullBackOff outage.
+          # See .github/workflows/build-n8n-image.yml
+          image: forgejo.home.ijlalahmad.dev/ijlal/n8n-custom:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5678
               name: web
