@@ -80,12 +80,20 @@ main "$@"
 # kubectl -n databases exec "$PG_POD" -- \
 #   pg_dumpall -U postgres | gzip > "$DUMP_DIR/postgres.sql.gz"
 #
-# echo "[hook] Backing up n8n SQLite..."
-# N8N_POD=$(kubectl -n automation get pod -l app=n8n \
+# echo "[hook] Snapshotting Vaultwarden SQLite..."
+# Vaultwarden's own `backup` subcommand runs VACUUM INTO, which folds in any
+# pending WAL — so restic never copies a torn database. No sqlite3 binary
+# needed, and the output lands inside the PVC, which /k3s-volumes already
+# covers; nothing extra to add to the plan paths.
+# VW_POD=$(kubectl -n security get pod -l app=vaultwarden \
 #   -o jsonpath='{.items[0].metadata.name}')
-# kubectl -n automation exec "$N8N_POD" -- \
-#   sqlite3 /home/node/.n8n/database.sqlite ".backup /tmp/n8n.sqlite"
-# kubectl -n automation cp "$N8N_POD":/tmp/n8n.sqlite "$DUMP_DIR/n8n.sqlite"
+# kubectl -n security exec "$VW_POD" -- /vaultwarden backup
+# Each run writes a new db_YYYYMMDD_HHMMSS.sqlite3 — prune so they don't pile up.
+# kubectl -n security exec "$VW_POD" -- \
+#   sh -c 'find /data -name "db_*.sqlite3" -mtime +7 -delete'
+#
+# NOTE: n8n no longer needs a SQLite stanza here — it moved to Postgres and is
+# covered by the pg_dumpall above.
 #
 # echo "[hook] DB dumps complete."
 # --------------------------------------------------------------------------
@@ -113,7 +121,10 @@ main "$@"
 #     dump latest /data/db-dumps/postgres.sql.gz \
 #     | gunzip | psql -U postgres
 #
-# Restore n8n SQLite:
+# Restore Vaultwarden (the vault is the whole data dir, not just the db):
 #   restic -r /home/pi/pendrive/backups/restic-repo \
-#     dump latest /data/db-dumps/n8n.sqlite > /tmp/n8n-restore.sqlite
-#   # then kubectl cp back into the pod
+#     restore latest --target / --path /k3s-volumes/apps/vaultwarden
+#   # scale vaultwarden to 0 first, then inside that data dir:
+#   #   mv db_YYYYMMDD_HHMMSS.sqlite3 db.sqlite3
+#   #   rm -f db.sqlite3-wal      # MUST be removed or the db tears
+#   # attachments/, sends/ and rsa_key.pem come back with the directory.
