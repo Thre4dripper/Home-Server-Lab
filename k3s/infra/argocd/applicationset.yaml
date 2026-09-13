@@ -54,10 +54,13 @@ spec:
             path: k3s/apps/immich
 
           # ── File Management ────────────────────────────────
-          - name: filebrowser
-            namespace: file-management
-            category: file-management
-            path: k3s/apps/filebrowser
+          # Decommissioned — superseded by `filebrowser-quantum` below, which has
+          # taken over its port (8300) and hostname (files.home.ijlalahmad.dev).
+          # The data survives — both PVs are `Retain`
+          # - name: filebrowser
+          #   namespace: file-management
+          #   category: file-management
+          #   path: k3s/apps/filebrowser
           - name: filebrowser-quantum
             namespace: file-management
             category: file-management
