@@ -21,7 +21,7 @@ spec:
       serviceAccountName: portainer
       containers:
         - name: portainer
-          image: portainer/portainer-ce:latest
+          image: portainer/portainer-ce:2.45.0
           ports:
             - containerPort: 9000
               name: web

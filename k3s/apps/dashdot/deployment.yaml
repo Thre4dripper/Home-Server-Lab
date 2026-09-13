@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: dashdot
-          image: mauricenino/dashdot:latest
+          image: mauricenino/dashdot:6.3.4
           ports:
             - containerPort: 3001
               name: web
