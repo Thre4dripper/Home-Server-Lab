@@ -29,8 +29,11 @@ resource_usage: "~100MB RAM"
 > `k3s/infra/argocd/applicationset.yaml` is commented out and this Deployment is
 > pinned to `replicas: 0`; the manifests stay here for reference. Its PVs are
 > `Retain`, so `/home/pi/k3s-volumes/apps/filebrowser/` still holds the v1 bolt
-> database with the old users and share links. Everything below describes the
-> app as it ran.
+> database with the old users and share links.
+>
+> Port `8300` and `files.home.ijlalahmad.dev` were handed to the successor, so
+> they are no longer declared in this frontmatter. Everything below describes
+> the app as it ran.
 
 A single-binary, batteries-included file manager backed by a `PersistentVolumeClaim`. Used as the **primary GUI for the cluster's shared storage** — easier than `kubectl exec` for casual uploads, edits and shares.
 

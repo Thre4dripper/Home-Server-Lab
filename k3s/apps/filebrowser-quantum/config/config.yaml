@@ -202,9 +202,10 @@ auth:
     passkey:
       enabled: true
       rpDisplayName: "Homelab Files"
-      rpId: "explorer.home.ijlalahmad.dev"     # bare hostname, no scheme or port
+      # Passkeys are bound to this hostname. Changing it invalidates every
+      rpId: "files.home.ijlalahmad.dev"        # bare hostname, no scheme or port
       rpOrigins:
-        - "https://explorer.home.ijlalahmad.dev"
+        - "https://files.home.ijlalahmad.dev"
       loginButtonText: "Use a passkey"
 
     # ---- shapes are correct; flip `enabled` when a provider exists ----
@@ -409,12 +410,12 @@ http:
   port: 80
   listen: ""
   baseURL: "/"
-  externalUrl: "https://explorer.home.ijlalahmad.dev"   # used to build share links
+  externalUrl: "https://files.home.ijlalahmad.dev"      # used to build share links
   # How OnlyOffice calls back to fetch a document. Must carry the Service port
-  # (8310), NOT the containerPort — service.yaml maps 8310 -> 80, and omitting
+  # (8300), NOT the containerPort — service.yaml maps 8300 -> 80, and omitting
   # it here would send the callback to port 80 on the Service, where nothing
   # is listening.
-  internalUrl: "http://filebrowser-quantum:8310"
+  internalUrl: "http://filebrowser-quantum:8300"
   socket: ""
   tlsCert: ""                          # TLS terminates at Traefik
   tlsKey: ""

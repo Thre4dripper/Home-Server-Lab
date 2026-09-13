@@ -6,12 +6,11 @@ metadata:
 spec:
   # LoadBalancer (klipper-lb) matches the rest of the apps in this cluster and
   # gives a direct LAN port for debugging when Traefik is the thing that broke.
-  # 8300 belongs to the old filebrowser; this app uses 8310.
   type: LoadBalancer
   selector:
     app: filebrowser-quantum
   ports:
     - name: web
-      port: 8310
+      port: 8300
       targetPort: web
       protocol: TCP

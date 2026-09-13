@@ -238,8 +238,8 @@ graph LR
 
 | Service | Namespace | Port | Domain | Components |
 |---------|-----------|------|--------|------------|
-| [**📂 FileBrowser**](./apps/filebrowser/) | `file-management` | `8300` | `files.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc` |
-| [**🗂️ FileBrowser Quantum**](./apps/filebrowser-quantum/) | `file-management` | `8310` | `explorer.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc`, `configmap`, `sealedsecret` |
+| [**📂 FileBrowser**](./apps/filebrowser/) | `file-management` | `—` | `—` | `deployment`, `service`, `ingress`, `pvc` |
+| [**🗂️ FileBrowser Quantum**](./apps/filebrowser-quantum/) | `file-management` | `8300` | `files.home.ijlalahmad.dev` | `deployment`, `service`, `ingress`, `pvc`, `configmap`, `sealedsecret` |
 | [**🗂️ Samba**](./apps/samba/) | `file-management` | `445` | `—` | `deployment`, `service`, `configmap`, `sealedsecret`, `pvc` |
 
 ### 🧲 Downloads

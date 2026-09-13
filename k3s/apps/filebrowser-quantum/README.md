@@ -5,8 +5,8 @@ purpose: "Indexed File Manager"
 description: "Rewrite of FileBrowser with a real search index, multi-source mounts and media previews. Read-write access to the Pi home directory and the external USB drive as two independently scoped sources, each with its own permissions and disk usage readout. SQLite index, WebDAV, and optional OnlyOffice document editing."
 icon: "🗂️"
 namespace: "file-management"
-external_port: "8310"
-domain: "explorer.home.ijlalahmad.dev"
+external_port: "8300"
+domain: "files.home.ijlalahmad.dev"
 components:
   - deployment
   - service
@@ -102,16 +102,19 @@ absent land on the SD card.
 |---|---|---|
 | `filebrowser-quantum` | Deployment | Single replica, runs as root to read host files |
 | `filebrowser-quantum-onlyoffice` | Deployment | Document server, **parked at `replicas: 0`** |
-| `filebrowser-quantum` | Service | LoadBalancer on `8310` → container `80` |
+| `filebrowser-quantum` | Service | LoadBalancer on `8300` → container `80` |
 | `filebrowser-quantum-onlyoffice` | Service | ClusterIP on `80` |
-| `filebrowser-quantum` | IngressRoute | `explorer.home.ijlalahmad.dev` |
+| `filebrowser-quantum` | IngressRoute | `files.home.ijlalahmad.dev` |
 | `filebrowser-quantum-onlyoffice` | IngressRoute | `office.home.ijlalahmad.dev` |
 | `filebrowser-quantum-data` | PV + PVC | 5Gi, `Retain` — index, activity log, thumbnails |
 | `filebrowser-quantum-config` | ConfigMap | Generated from `config/config.yaml` by kustomize |
 | `filebrowser-quantum-secret` | SealedSecret | Admin password, JWT, TOTP and OnlyOffice keys |
 
-Note the Service port is **8310**, not 8300 — 8300 belonged to the old
-`filebrowser`, and is free again now that it is decommissioned.
+Port `8300` and `files.home.ijlalahmad.dev` are both inherited from the
+decommissioned v1 `filebrowser`. This app ran on `8310` /
+`explorer.home.ijlalahmad.dev` while the two coexisted; see
+[Taking over the old port and hostname](#taking-over-the-old-port-and-hostname)
+for the ordering that move requires.
 
 ### Why this app has a `kustomization.yaml`
 
@@ -146,7 +149,7 @@ cp secret.yaml.example secret.yaml
 ./setup.sh deploy
 ```
 
-Then log in at `https://explorer.home.ijlalahmad.dev` as `admin` with
+Then log in at `https://files.home.ijlalahmad.dev` as `admin` with
 `FILEBROWSER_ADMIN_PASSWORD`.
 
 **Do not change the admin password in the UI** — it will not stick. While
@@ -188,7 +191,7 @@ wins — which is what keeps the committed config file safe.
 Served on the same hostname at `/dav/<source>/<path>`:
 
 ```
-https://explorer.home.ijlalahmad.dev/dav/Home/
+https://files.home.ijlalahmad.dev/dav/Home/
 ```
 
 Basic auth, but **the password is an API token, not your login password**.
@@ -386,7 +389,7 @@ HTTP error status is shown as the response body.
 
 So it means the browser lost the connection, not that the app fell over. Usual
 causes here, in order: the LAN dropped or Twingate reconnected mid-request
-(`explorer.home.ijlalahmad.dev` resolves to a LAN address); a burst of requests
+(`files.home.ijlalahmad.dev` resolves to a LAN address); a burst of requests
 was still in flight when the tab navigated away; or the server was wedged
 behind the single-ffmpeg-worker problem above long enough for the browser to
 give up on the connection. Traefik is not the culprit —
@@ -440,9 +443,6 @@ sudo cp /home/pi/k3s-volumes/apps/filebrowser/database/filebrowser.db \
 Clear `migrateFrom` afterwards. The two use completely different source
 layouts, so per-user scopes need revisiting by hand regardless.
 
-`explorer.home.ijlalahmad.dev` stays as the hostname. Moving to
-`files.home.ijlalahmad.dev` now that it is free would invalidate every enrolled
-passkey — `auth.methods.passkey.rpId` is bound to the hostname.
 
 ## Management
 

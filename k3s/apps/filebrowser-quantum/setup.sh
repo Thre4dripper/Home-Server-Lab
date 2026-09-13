@@ -5,8 +5,8 @@ set -euo pipefail
 APP="filebrowser-quantum"
 NAMESPACE="file-management"
 CONTAINER_PORT="80"
-EXTERNAL_PORT="8310"
-DOMAIN="explorer.home.ijlalahmad.dev"
+EXTERNAL_PORT="8300"
+DOMAIN="files.home.ijlalahmad.dev"
 DEFAULT_SHELL="sh"
 
 # Components this app uses
@@ -48,7 +48,7 @@ main "$@"
 #    Seal BEFORE the first deploy or push, or the pod sits in
 #    CreateContainerConfigError.
 #
-# 2. Deploy, then log in at https://explorer.home.ijlalahmad.dev as `admin`
+# 2. Deploy, then log in at https://files.home.ijlalahmad.dev as `admin`
 #    with FILEBROWSER_ADMIN_PASSWORD. Do NOT change that password in the UI: the
 #    backend re-applies it to the admin account on every start while
 #    auth.adminPassword is set. Rotate it by resealing the secret instead.
@@ -85,7 +85,7 @@ main "$@"
 # WebDAV
 # -----------------------------------------------------------------------------
 # Served on the same host at /dav/<source>/<path>, e.g.
-#   https://explorer.home.ijlalahmad.dev/dav/Home/
+#   https://files.home.ijlalahmad.dev/dav/Home/
 #
 # Basic auth, where the PASSWORD IS AN API TOKEN, not your login password.
 # Generate one in the UI: Settings -> Profile -> API tokens. Mount it in Finder

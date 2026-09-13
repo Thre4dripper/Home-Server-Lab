@@ -18,10 +18,10 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`explorer.home.ijlalahmad.dev`)
+    - match: Host(`files.home.ijlalahmad.dev`)
       kind: Rule
       services:
         - name: filebrowser-quantum
-          port: 8310
+          port: 8300
   tls:
     secretName: wildcard-home-ijlalahmad-dev-tls
