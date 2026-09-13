@@ -6,7 +6,8 @@ metadata:
   labels:
     app: filebrowser
 spec:
-  replicas: 1
+  # Decommissioned — superseded by k3s/apps/filebrowser-quantum.
+  replicas: 0
   revisionHistoryLimit: 2
   strategy:
     type: Recreate

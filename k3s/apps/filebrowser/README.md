@@ -1,8 +1,8 @@
 ---
 name: "FileBrowser"
 category: "📁 Files & Storage"
-purpose: "Web-based File Manager"
-description: "Lightweight web UI for browsing, uploading, editing and sharing files on a shared PVC. Multi-user accounts, per-folder permissions, in-browser editor and shareable public links."
+purpose: "Web-based File Manager (retired)"
+description: "DECOMMISSIONED — replaced by FileBrowser Quantum. Lightweight web UI for browsing, uploading, editing and sharing files on a shared PVC. Manifests are kept for reference but the ApplicationSet entry is commented out and the Deployment is pinned to replicas: 0."
 icon: "📂"
 namespace: "file-management"
 external_port: "8300"
@@ -21,7 +21,16 @@ features:
 resource_usage: "~100MB RAM"
 ---
 
-# FileBrowser — Web File Manager
+# FileBrowser — Web File Manager (decommissioned)
+
+> **Not deployed.** Superseded by
+> [`filebrowser-quantum`](../filebrowser-quantum/) at
+> `explorer.home.ijlalahmad.dev`. The ApplicationSet entry in
+> `k3s/infra/argocd/applicationset.yaml` is commented out and this Deployment is
+> pinned to `replicas: 0`; the manifests stay here for reference. Its PVs are
+> `Retain`, so `/home/pi/k3s-volumes/apps/filebrowser/` still holds the v1 bolt
+> database with the old users and share links. Everything below describes the
+> app as it ran.
 
 A single-binary, batteries-included file manager backed by a `PersistentVolumeClaim`. Used as the **primary GUI for the cluster's shared storage** — easier than `kubectl exec` for casual uploads, edits and shares.
 

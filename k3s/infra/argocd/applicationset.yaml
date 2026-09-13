@@ -58,9 +58,6 @@ spec:
             namespace: file-management
             category: file-management
             path: k3s/apps/filebrowser
-          # Successor to `filebrowser` above, running side by side during the
-          # migration. Remove the older entry once its users and shares have
-          # been carried over — see k3s/apps/filebrowser-quantum/README.md.
           - name: filebrowser-quantum
             namespace: file-management
             category: file-management

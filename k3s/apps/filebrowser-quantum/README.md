@@ -32,8 +32,10 @@ almost none of the code. The features that matter here are **multiple mounted
 sources** with independent permissions, and a **real search index** rather than
 a filesystem walk on every query.
 
-Deployed as the successor to [`filebrowser`](../filebrowser/), which it will
-replace. Both run side by side during the migration on separate hostnames.
+Deployed as the successor to [`filebrowser`](../filebrowser/), which is now
+decommissioned — its ApplicationSet entry is commented out and its Deployment
+pinned to `replicas: 0`. See [Decommissioning the old
+FileBrowser](#decommissioning-the-old-filebrowser).
 
 ## What is mounted
 
@@ -108,8 +110,8 @@ absent land on the SD card.
 | `filebrowser-quantum-config` | ConfigMap | Generated from `config/config.yaml` by kustomize |
 | `filebrowser-quantum-secret` | SealedSecret | Admin password, JWT, TOTP and OnlyOffice keys |
 
-Note the Service port is **8310**, not 8300 — that belongs to the old
-`filebrowser` and the two must coexist.
+Note the Service port is **8310**, not 8300 — 8300 belonged to the old
+`filebrowser`, and is free again now that it is decommissioned.
 
 ### Why this app has a `kustomization.yaml`
 
@@ -408,11 +410,23 @@ persisted. A tab that was streaming across a pod roll gets `403` on
 `/api/resources/view-token` until it re-requests one. Both are cosmetic and
 both are expected after any roll.
 
-## Migrating from the old FileBrowser
+## Decommissioning the old FileBrowser
 
-The v1 database lives at
-`/home/pi/k3s-volumes/apps/filebrowser/database/filebrowser.db` — 76KB holding
-the v1 users and share links. To carry them over, point
+Done — `k3s/apps/filebrowser/` is still in the repo for reference, but its
+ApplicationSet entry is commented out and its Deployment pinned to
+`replicas: 0`.
+
+Removing the entry deletes the ArgoCD Application, and the
+`resources-finalizer` on the ApplicationSet template cascades that into
+deleting the Deployment, Service, IngressRoute and both PVCs. **The data
+survives**: both PVs are `Retain`, so
+`/home/pi/k3s-volumes/apps/filebrowser/` stays on disk with
+`config/settings.json` and `database/filebrowser.db` — 76KB holding the v1
+users and share links. The PVs are left `Released`; delete them by hand if you
+want them out of `kubectl get pv`.
+
+That directory is worth keeping until you are sure nothing was missed, because
+it is the only copy of the v1 accounts. If you ever want them in Quantum, point
 `server.database.migrateFrom` at a **copy** on this app's data volume and
 restart once:
 
@@ -423,18 +437,11 @@ sudo cp /home/pi/k3s-volumes/apps/filebrowser/database/filebrowser.db \
 ./setup.sh deploy
 ```
 
-Clear `migrateFrom` afterwards, and verify the users landed before removing
-anything from the old app. The two use completely different source layouts, so
-per-user scopes need revisiting by hand regardless.
+Clear `migrateFrom` afterwards. The two use completely different source
+layouts, so per-user scopes need revisiting by hand regardless.
 
-When the old app is retired, comment its entry out of
-`k3s/infra/argocd/applicationset.yaml`. That deletes the ArgoCD Application,
-and the `resources-finalizer` on the ApplicationSet template cascades into
-deleting its Deployment, Service, IngressRoute and both PVCs — but **the data
-survives**, because both PVs are `Retain`.
-
-`explorer.home.ijlalahmad.dev` stays as the hostname either way. Moving to
-`files.home.ijlalahmad.dev` once it frees up would invalidate every enrolled
+`explorer.home.ijlalahmad.dev` stays as the hostname. Moving to
+`files.home.ijlalahmad.dev` now that it is free would invalidate every enrolled
 passkey — `auth.methods.passkey.rpId` is bound to the hostname.
 
 ## Management
