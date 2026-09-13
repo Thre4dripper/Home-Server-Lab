@@ -159,13 +159,18 @@ jobs:
             -t "${IMAGE}:latest" \
             $(printf "${IMAGE}@sha256:%s " *)
 
+      # Parse the JSON rather than grepping it: `imagetools inspect --raw`
+      # pretty-prints, so a compact "architecture":"amd64" pattern never matches
+      # and this reported a false failure on an image that was in fact correct.
       - name: Verify both architectures are present
         run: |
           set -euo pipefail
           V='${{ needs.version.outputs.n8n }}'
-          docker buildx imagetools inspect "${IMAGE}:${V}" --raw > /tmp/m.json
-          for a in amd64 arm64; do
-            grep -q "\"architecture\":\"$a\"" /tmp/m.json \
+          docker buildx imagetools inspect "${IMAGE}:${V}" --raw \
+            | jq -r '.manifests[]?.platform | select(.os != "unknown") | "\(.os)/\(.architecture)"' \
+            | sort -u > /tmp/arches
+          echo "manifest contains:"; sed 's/^/  /' /tmp/arches
+          for a in linux/amd64 linux/arm64; do
+            grep -qx "$a" /tmp/arches \
               || { echo "::error::$a missing from the manifest list"; exit 1; }
           done
-          echo "manifest carries amd64 + arm64"
