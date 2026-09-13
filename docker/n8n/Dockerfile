@@ -1,5 +1,10 @@
-# Start from official Node.js image (already has Debian base)
-FROM node:26-bookworm-slim
+# Node major MUST match the runtime the pinned n8n release actually ships on —
+# these two move together. n8n pulls isolated-vm, whose native code tracks the
+# V8 API closely, so a mismatch fails as a wall of C++ errors deep in node-gyp.
+# Check before bumping either:
+#   docker run --rm n8nio/n8n:<version> node --version
+# Known-good pairings:  n8n 2.20.x -> node 24   |   n8n 2.38.x -> node 26
+FROM node:24-bookworm-slim
 
 # Pinned so the image is reproducible and Renovate can track it. Must be
 # declared after FROM to be visible in this stage. The published image is
@@ -60,6 +65,10 @@ RUN apt-get update && \
 # Install n8n globally (after python3 + build-essential are available for node-gyp).
 # Pinned: an unpinned `npm install -g n8n` once resolved to a 2.20.7-exp.0
 # prerelease, which then ran in production unnoticed.
+#
+# No engines guard here on purpose: n8n declares `>=22.16`, a minimum, which a
+# too-NEW Node still satisfies — so it would not have caught node 26 breaking
+# isolated-vm. The FROM comment above is the real control.
 RUN npm install -g "n8n@${N8N_VERSION}"
 
 # Install Docker CLI (needed to communicate with Docker socket)

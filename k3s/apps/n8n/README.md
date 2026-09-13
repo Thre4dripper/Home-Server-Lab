@@ -106,6 +106,28 @@ Renovate follows n8n's `stable` dist-tag specifically. n8n publishes
 unstable filter cannot catch them — which is how this instance previously ended
 up running `2.20.7-exp.0` in production.
 
+### The Node pairing is load-bearing
+
+`FROM node:<major>` in the Dockerfile must match the Node that the pinned n8n
+release actually ships on. n8n pulls `isolated-vm`, whose native code tracks the
+V8 C++ API closely, so a mismatch fails deep inside node-gyp with hundreds of
+compile errors rather than anything readable.
+
+| n8n | Node in the official image |
+|-----|----------------------------|
+| 2.20.x | 24 |
+| 2.38.x | 26 |
+
+Check before bumping either: `docker run --rm n8nio/n8n:<version> node --version`.
+
+Renovate bumps `ARG N8N_VERSION` on its own and **cannot know about this
+coupling** — so an n8n major/minor bump may need the `FROM` line moved in the
+same PR. The CI build failing is the safety net: it fails before anything is
+published or deployed.
+
+Note n8n's `engines.node` is a *minimum* (`>=22.16`), so it does not catch a
+too-new Node. Only the table above does.
+
 `workflow_dispatch` rebuilds the same version on demand, which is how you pick
 up new terraform/kubectl/helm/rclone releases (those are still unpinned and
 resolve at build time — the `:<version>-<sha>` tag exists to tell such builds
