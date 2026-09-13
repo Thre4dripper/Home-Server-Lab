@@ -57,6 +57,13 @@ main "$@"
 #    Excludes:
 #      /k3s-volumes/databases/mongodb   (raw WiredTiger — dump used instead)
 #      /k3s-volumes/databases/postgres  (raw WAL — dump used instead)
+#      /k3s-volumes/apps/filebrowser-quantum/data/cache
+#                                       (search index + thumbnails, ~140MB and
+#                                        rewritten constantly; regenerated on
+#                                        first scan, so backing it up would add
+#                                        a new pack of churn to every snapshot
+#                                        for nothing. The 190KB database beside
+#                                        it is what matters — see hook below.)
 #    Schedule:  0 21 * * *  (21:00 UTC = 02:30 IST)
 #    Repos: local-pendrive (+ S3/B2 if configured)
 #
@@ -92,6 +99,18 @@ main "$@"
 # kubectl -n security exec "$VW_POD" -- \
 #   sh -c 'find /data -name "db_*.sqlite3" -mtime +7 -delete'
 #
+# echo "[hook] Snapshotting FileBrowser Quantum SQLite..."
+# Unlike Vaultwarden this app has no `backup` subcommand, and neither image
+# ships sqlite3 — but Backrest's is Alpine, so the hook can pull it in (~1MB,
+# needs the same egress the S3 repo already uses). VACUUM INTO takes a read
+# snapshot of a live WAL database, so the copy is never torn; a plain cp of
+# filebrowser.sqlite would miss whatever is still sitting in the -wal file.
+# The db is reachable read-write at the /k3s-volumes mount.
+# command -v sqlite3 >/dev/null || apk add --no-cache sqlite
+# rm -f "$DUMP_DIR/filebrowser-quantum.sqlite"
+# sqlite3 /k3s-volumes/apps/filebrowser-quantum/data/filebrowser.sqlite \
+#   "VACUUM INTO '$DUMP_DIR/filebrowser-quantum.sqlite'"
+#
 # NOTE: n8n no longer needs a SQLite stanza here — it moved to Postgres and is
 # covered by the pg_dumpall above.
 #
@@ -120,6 +139,17 @@ main "$@"
 #   restic -r /home/pi/pendrive/backups/restic-repo \
 #     dump latest /data/db-dumps/postgres.sql.gz \
 #     | gunzip | psql -U postgres
+#
+# Restore FileBrowser Quantum (users, shares, settings, activity log):
+#   restic -r /home/pi/pendrive/backups/restic-repo \
+#     dump latest /data/db-dumps/filebrowser-quantum.sqlite \
+#     > /home/pi/k3s-volumes/apps/filebrowser-quantum/data/filebrowser.sqlite
+#   # ./setup.sh disable first (ArgoCD-safe), restore, then enable.
+#   # rm -f filebrowser.sqlite-wal filebrowser.sqlite-shm in that directory —
+#   # a leftover WAL from the old database would be replayed over the restored
+#   # one. The cache/ directory is deliberately NOT in the backup; the app
+#   # rebuilds the search index and thumbnails on first start.
+#   # config.yaml is not in here either — it is a ConfigMap built from git.
 #
 # Restore Vaultwarden (the vault is the whole data dir, not just the db):
 #   restic -r /home/pi/pendrive/backups/restic-repo \
