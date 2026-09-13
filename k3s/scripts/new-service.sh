@@ -369,7 +369,10 @@ EXTERNAL_PORT=""
 DOMAIN=""
 
 if ask_yn "Expose via LoadBalancer (direct IP:port access)?" "y"; then
-  ask EXTERNAL_PORT "External port (e.g. 8600)"
+  # Don't suggest a port that's already taken — 8600 is argocd-server-lb, which
+  # lives in k3s/infra/argocd/service.yaml and so isn't visible when you grep
+  # app setup.sh files for EXTERNAL_PORT. Check with: kubectl get svc -A
+  ask EXTERNAL_PORT "External port (next free in the x00 series, e.g. 9300)"
 
   if ask_yn "Route via Traefik domain (e.g. myapp.home.ijlalahmad.dev)?" "y"; then
     ask DOMAIN "Domain name"
