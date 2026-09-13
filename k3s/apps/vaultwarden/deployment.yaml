@@ -84,7 +84,7 @@ spec:
             # Flip to "false" and commit once the account exists — until then
             # anyone on the LAN can register.
             - name: SIGNUPS_ALLOWED
-              value: "true"
+              value: "false"
             - name: INVITATIONS_ALLOWED
               value: "false"
             # Hints are served unauthenticated.
@@ -101,7 +101,7 @@ spec:
 
             # ─── Features ───────────────────────────────────────────────────
             - name: WEB_VAULT_ENABLED
-              value: "true"
+              value: "false"
             # Live sync, main port since 1.30 (no separate 3012).
             - name: ENABLE_WEBSOCKET
               value: "true"
