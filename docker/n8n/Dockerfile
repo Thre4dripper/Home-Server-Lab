@@ -12,6 +12,32 @@ FROM node:24-bookworm-slim
 # renovate: datasource=npm depName=n8n
 ARG N8N_VERSION=2.20.7
 
+# Tool versions. These were previously resolved as "latest" at build time, which
+# made the image unreproducible and silently installed kubectl v1.37 against a
+# v1.34 cluster — three minors past the supported +/-1 skew. Renovate tracks each
+# of these now, so an upgrade is a reviewable PR rather than a surprise.
+#
+# KUBECTL must stay within one minor of the cluster: see k3s_version in
+# ansible/inventory.yml. Renovate will offer newer ones — do not take them ahead
+# of the cluster.
+# renovate: datasource=github-releases depName=kubernetes/kubernetes
+ARG KUBECTL_VERSION=v1.34.6
+# renovate: datasource=github-releases depName=helm/helm
+ARG HELM_VERSION=v3.22.0
+# renovate: datasource=github-releases depName=hashicorp/terraform
+ARG TERRAFORM_VERSION=1.16.2
+# renovate: datasource=github-releases depName=mikefarah/yq
+ARG YQ_VERSION=v4.53.6
+# NOT named RCLONE_VERSION: rclone reads every RCLONE_* env var as one of its
+# own flags, and docker exposes build ARGs to RUN as env vars — so that name
+# became `--version=v1.75.1` and rclone died parsing it as a boolean. Do not
+# "tidy" this back into the naming pattern the other tools use.
+# renovate: datasource=github-releases depName=rclone/rclone
+ARG VERSION_RCLONE=v1.75.1
+# aws/aws-cli publishes tags but no GitHub releases, hence github-tags.
+# renovate: datasource=github-tags depName=aws/aws-cli
+ARG AWSCLI_VERSION=2.36.44
+
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -84,39 +110,44 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
 # Install yq (YAML processor) — wget is used here intentionally (smaller than curl for single file)
 # hadolint ignore=DL4001
 RUN ARCH=$(dpkg --print-architecture) && \
-    wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${ARCH}" && \
+    wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCH}" && \
     chmod +x /usr/local/bin/yq
 
 # Install AWS CLI
 # uname -m gives aarch64/x86_64 which matches AWS CLI download naming exactly
 RUN ARCH=$(uname -m) && \
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH}.zip" -o "awscliv2.zip" && \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH}-${AWSCLI_VERSION}.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install && \
     rm -rf aws awscliv2.zip
 
 # Install kubectl
 RUN ARCH=$(dpkg --print-architecture) && \
-    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl" && \
+    curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl" && \
     chmod +x kubectl && \
     mv kubectl /usr/local/bin/
 
 # Install Terraform
 RUN ARCH=$(dpkg --print-architecture) && \
-    TERRAFORM_VERSION=$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r .current_version) && \
     curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
     unzip "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
     mv terraform /usr/local/bin/ && \
     rm "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip"
 
-# Install Helm
-RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+# Install Helm — the get-helm-3 script always fetches latest, so pull the
+# pinned tarball directly instead.
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" \
+      | tar -xz -C /tmp && \
+    mv "/tmp/linux-${ARCH}/helm" /usr/local/bin/helm && \
+    chmod +x /usr/local/bin/helm && \
+    rm -rf "/tmp/linux-${ARCH}"
 
 # Install rclone
 RUN ARCH=$(dpkg --print-architecture) && \
-    curl -O "https://downloads.rclone.org/rclone-current-linux-${ARCH}.zip" && \
-    unzip "rclone-current-linux-${ARCH}.zip" && \
-    cp rclone-*-linux-${ARCH}/rclone /usr/local/bin/ && \
+    curl -O "https://downloads.rclone.org/${VERSION_RCLONE}/rclone-${VERSION_RCLONE}-linux-${ARCH}.zip" && \
+    unzip "rclone-${VERSION_RCLONE}-linux-${ARCH}.zip" && \
+    cp "rclone-${VERSION_RCLONE}-linux-${ARCH}/rclone" /usr/local/bin/ && \
     chmod +x /usr/local/bin/rclone && \
     rm -rf rclone-*
 

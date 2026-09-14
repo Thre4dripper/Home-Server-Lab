@@ -130,6 +130,28 @@
         "forgejo.home.ijlalahmad.dev/**"
       ],
       "enabled": false
+    },
+    {
+      "description": "Digest-pin the custom n8n image. Its tag is the n8n version, but the image also carries kubectl/helm/terraform/etc, so a rebuild can change content without changing the tag \u2014 and imagePullPolicy IfNotPresent would then never re-pull it. The digest makes each rebuild a visible PR.",
+      "matchPackageNames": [
+        "ghcr.io/thre4dripper/n8n-custom"
+      ],
+      "pinDigests": true
+    },
+    {
+      "description": "Batch the CLI tools baked into the n8n image into one PR",
+      "matchFileNames": [
+        "docker/n8n/Dockerfile"
+      ],
+      "matchPackageNames": [
+        "kubernetes/kubernetes",
+        "helm/helm",
+        "hashicorp/terraform",
+        "mikefarah/yq",
+        "rclone/rclone",
+        "aws/aws-cli"
+      ],
+      "groupName": "n8n image tooling"
     }
   ],
   "customManagers": [
@@ -185,6 +207,80 @@
       ],
       "datasourceTemplate": "npm",
       "depNameTemplate": "n8n"
+    },
+    {
+      "customType": "regex",
+      "description": "kubernetes/kubernetes pinned in the n8n image Dockerfile",
+      "managerFilePatterns": [
+        "/^docker/n8n/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG KUBECTL_VERSION=(?<currentValue>v?[\\d.]+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "kubernetes/kubernetes"
+    },
+    {
+      "customType": "regex",
+      "description": "helm/helm pinned in the n8n image Dockerfile",
+      "managerFilePatterns": [
+        "/^docker/n8n/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG HELM_VERSION=(?<currentValue>v?[\\d.]+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "helm/helm"
+    },
+    {
+      "customType": "regex",
+      "description": "hashicorp/terraform pinned in the n8n image Dockerfile",
+      "managerFilePatterns": [
+        "/^docker/n8n/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG TERRAFORM_VERSION=(?<currentValue>v?[\\d.]+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "hashicorp/terraform",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "mikefarah/yq pinned in the n8n image Dockerfile",
+      "managerFilePatterns": [
+        "/^docker/n8n/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG YQ_VERSION=(?<currentValue>v?[\\d.]+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "mikefarah/yq"
+    },
+    {
+      "customType": "regex",
+      "description": "rclone/rclone pinned in the n8n image Dockerfile",
+      "managerFilePatterns": [
+        "/^docker/n8n/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG VERSION_RCLONE=(?<currentValue>v?[\\d.]+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "rclone/rclone"
+    },
+    {
+      "customType": "regex",
+      "description": "aws/aws-cli pinned in the n8n image Dockerfile",
+      "managerFilePatterns": [
+        "/^docker/n8n/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG AWSCLI_VERSION=(?<currentValue>v?[\\d.]+)"
+      ],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "aws/aws-cli",
+      "extractVersionTemplate": "^v?(?<version>.+)$"
     }
   ]
 }
