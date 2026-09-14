@@ -10,7 +10,7 @@ FROM node:24-bookworm-slim
 # declared after FROM to be visible in this stage. The published image is
 # tagged with this exact value — see .github/workflows/build-n8n-image.yml.
 # renovate: datasource=npm depName=n8n
-ARG N8N_VERSION=2.20.7
+ARG N8N_VERSION=2.38.7
 
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
