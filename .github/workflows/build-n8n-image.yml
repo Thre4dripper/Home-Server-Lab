@@ -34,7 +34,7 @@ jobs:
     outputs:
       n8n: ${{ steps.read.outputs.n8n }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - id: read
         # Read the tag from the Dockerfile rather than accepting it as input,
         # so the published tag can never disagree with what was installed.
@@ -83,7 +83,7 @@ jobs:
             runner: ubuntu-24.04-arm
             slug: arm64
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: docker/setup-buildx-action@v3
 
