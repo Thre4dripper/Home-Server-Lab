@@ -41,7 +41,7 @@ services:
       start_period: 60s
 
   forgejo-runner:
-    image: code.forgejo.org/forgejo/runner:12
+    image: code.forgejo.org/forgejo/runner:13
     container_name: forgejo-runner
     restart: unless-stopped
     user: root

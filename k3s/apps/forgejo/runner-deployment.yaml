@@ -24,7 +24,7 @@ spec:
         supplementalGroups: [988]
       containers:
         - name: runner
-          image: code.forgejo.org/forgejo/runner:12
+          image: code.forgejo.org/forgejo/runner:13
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
