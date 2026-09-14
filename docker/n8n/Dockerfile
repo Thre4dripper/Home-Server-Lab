@@ -4,7 +4,7 @@
 # Check before bumping either:
 #   docker run --rm n8nio/n8n:<version> node --version
 # Known-good pairings:  n8n 2.20.x -> node 24   |   n8n 2.38.x -> node 26
-FROM node:24-bookworm-slim
+FROM node:26-bookworm-slim
 
 # Pinned so the image is reproducible and Renovate can track it. Must be
 # declared after FROM to be visible in this stage. The published image is
