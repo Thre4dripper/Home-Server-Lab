@@ -96,7 +96,7 @@ jobs:
       # Push by digest only; the `merge` job assembles the tags. This is what
       # lets two independent runners contribute to one manifest list.
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: docker/n8n
           file: docker/n8n/Dockerfile
