@@ -139,6 +139,19 @@
       "pinDigests": true
     },
     {
+      "description": "n8n's Dockerfile must stay on node 24: n8n-nodes-base pulls @confluentinc/kafka-javascript, which has prebuilds up to ABI 137 (node 24) only. On node 26 it compiles librdkafka for ~12min/arch and then fails. Raise this when that package ships an ABI 147 binary.",
+      "matchFileNames": [
+        "docker/n8n/Dockerfile"
+      ],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "node"
+      ],
+      "allowedVersions": "<25"
+    },
+    {
       "description": "Batch the CLI tools baked into the n8n image into one PR",
       "matchFileNames": [
         "docker/n8n/Dockerfile"
@@ -197,90 +210,14 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Every pinned ARG in the n8n Dockerfile, driven by the `# renovate: datasource=... depName=...` comment above it. One manager for all of them - add a new tool by adding a comment, not a manager.",
       "customType": "regex",
-      "description": "n8n version pinned in the custom image Dockerfile",
       "managerFilePatterns": [
         "/^docker/n8n/Dockerfile$/"
       ],
       "matchStrings": [
-        "ARG N8N_VERSION=(?<currentValue>[\\d.]+)"
-      ],
-      "datasourceTemplate": "npm",
-      "depNameTemplate": "n8n"
-    },
-    {
-      "customType": "regex",
-      "description": "kubernetes/kubernetes pinned in the n8n image Dockerfile",
-      "managerFilePatterns": [
-        "/^docker/n8n/Dockerfile$/"
-      ],
-      "matchStrings": [
-        "ARG KUBECTL_VERSION=(?<currentValue>v?[\\d.]+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "kubernetes/kubernetes"
-    },
-    {
-      "customType": "regex",
-      "description": "helm/helm pinned in the n8n image Dockerfile",
-      "managerFilePatterns": [
-        "/^docker/n8n/Dockerfile$/"
-      ],
-      "matchStrings": [
-        "ARG HELM_VERSION=(?<currentValue>v?[\\d.]+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "helm/helm"
-    },
-    {
-      "customType": "regex",
-      "description": "hashicorp/terraform pinned in the n8n image Dockerfile",
-      "managerFilePatterns": [
-        "/^docker/n8n/Dockerfile$/"
-      ],
-      "matchStrings": [
-        "ARG TERRAFORM_VERSION=(?<currentValue>v?[\\d.]+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "hashicorp/terraform",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
-    },
-    {
-      "customType": "regex",
-      "description": "mikefarah/yq pinned in the n8n image Dockerfile",
-      "managerFilePatterns": [
-        "/^docker/n8n/Dockerfile$/"
-      ],
-      "matchStrings": [
-        "ARG YQ_VERSION=(?<currentValue>v?[\\d.]+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "mikefarah/yq"
-    },
-    {
-      "customType": "regex",
-      "description": "rclone/rclone pinned in the n8n image Dockerfile",
-      "managerFilePatterns": [
-        "/^docker/n8n/Dockerfile$/"
-      ],
-      "matchStrings": [
-        "ARG VERSION_RCLONE=(?<currentValue>v?[\\d.]+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "rclone/rclone"
-    },
-    {
-      "customType": "regex",
-      "description": "aws/aws-cli pinned in the n8n image Dockerfile",
-      "managerFilePatterns": [
-        "/^docker/n8n/Dockerfile$/"
-      ],
-      "matchStrings": [
-        "ARG AWSCLI_VERSION=(?<currentValue>v?[\\d.]+)"
-      ],
-      "datasourceTemplate": "github-tags",
-      "depNameTemplate": "aws/aws-cli",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\nARG \\w+=(?<currentValue>\\S+)"
+      ]
     }
   ]
 }

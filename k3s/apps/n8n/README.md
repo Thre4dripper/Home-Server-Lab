@@ -106,32 +106,28 @@ Renovate follows n8n's `stable` dist-tag specifically. n8n publishes
 unstable filter cannot catch them — which is how this instance previously ended
 up running `2.20.7-exp.0` in production.
 
-### The Node pairing is load-bearing
+### The base image stays on node 24
 
-`FROM node:<major>` in the Dockerfile must match the Node that the pinned n8n
-release actually ships on. n8n pulls `isolated-vm`, whose native code tracks the
-V8 C++ API closely, so a mismatch fails deep inside node-gyp with hundreds of
-compile errors rather than anything readable.
+`FROM node:24` is deliberate, not stale. n8n 2.38.x pulls
+`@confluentinc/kafka-javascript`, which publishes prebuilt binaries only up to
+node 24 (ABI 137). On node 26 npm silently compiles librdkafka from source —
+~12 minutes per arch — and then fails anyway. n8n itself only requires
+`node >=24`, so 24 is fully supported.
 
-| n8n | Node in the official image |
-|-----|----------------------------|
-| 2.20.x | 24 |
-| 2.38.x | 26 |
+Nothing will bump it by itself: Renovate is capped at `<25` for that file and
+Dependabot no longer watches the directory (two bots on one `FROM` line is how
+it got bumped to 26 and cost five red builds). When you do raise it, check that
+package's GitHub release assets for a `node-v147` tarball first.
 
-Check before bumping either: `docker run --rm n8nio/n8n:<version> node --version`.
+The six CLI tools are pinned as `ARG`s with `# renovate:` comments, so a new
+terraform/kubectl/helm release is a normal Renovate PR — grouped into one, so
+six trackers do not mean six rebuilds. Merging it rebuilds the same n8n tag with
+new content; the deployment pins the image **digest**, so that rebuild still
+shows up as a reviewable PR rather than a silent change under a fixed tag.
 
-Renovate bumps `ARG N8N_VERSION` on its own and **cannot know about this
-coupling** — so an n8n major/minor bump may need the `FROM` line moved in the
-same PR. The CI build failing is the safety net: it fails before anything is
-published or deployed.
-
-Note n8n's `engines.node` is a *minimum* (`>=22.16`), so it does not catch a
-too-new Node. Only the table above does.
-
-`workflow_dispatch` rebuilds the same version on demand, which is how you pick
-up new terraform/kubectl/helm/rclone releases (those are still unpinned and
-resolve at build time — the `:<version>-<sha>` tag exists to tell such builds
-apart).
+`kubectl` is the one to be careful with: keep it within one minor of the
+cluster (`k3s_version` in `ansible/inventory.yml`), even if Renovate offers
+newer.
 
 n8n runs schema migrations on version change. **Dump the database before any
 version bump:**

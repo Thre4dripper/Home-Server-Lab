@@ -37,13 +37,7 @@ updates:
       - "dependencies"
       - "python"
 
-  # ─── Dockerfiles (only services that ship a Dockerfile) ───────
-  - package-ecosystem: "docker"
-    directory: "/docker/n8n"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps(n8n)"
-    labels:
-      - "dependencies"
-      - "docker"
+  # ─── Dockerfiles ──────────────────────────────────────────────
+  # None. Renovate manages docker/n8n/Dockerfile (every ARG, and the base
+  # image capped at node 24 - see renovate.json). Having both bots on that
+  # file is what bumped it to node 26 and broke the build. Do not re-add.

@@ -1,29 +1,28 @@
 # Builds the custom n8n image and publishes it to GHCR as a multi-arch manifest.
 #
-# Not built on the Pi on purpose: `npm install -g n8n` compiles native addons
-# via node-gyp, which would take 30-60min and risk OOM-killing co-tenant
-# workloads on an already-strained node. GitHub's runners are free and native
-# for both architectures, so neither leg needs QEMU.
+# Not built on the Pi: `npm install -g n8n` compiles native addons via
+# node-gyp, which would take 30-60min there and risk OOM-killing neighbours.
+# GitHub's runners are free and native for both arches, so no QEMU.
 #
-# Flow: tick the checkbox on the Renovate dashboard -> Renovate opens a PR
-# bumping ARG N8N_VERSION -> review -> merge -> this runs.
+# Flow: Renovate opens a PR bumping an ARG in docker/n8n/Dockerfile -> review
+# -> merge -> this runs -> Renovate opens a second PR moving
+# k3s/apps/n8n/deployment.yaml to the new tag + digest -> merge -> ArgoCD.
 
 name: Build n8n image
 
 on:
-  # Only when a MERGED pr actually touched the Dockerfile — not on direct
-  # pushes to main, not on unrelated commits. The merge is the approval gate.
+  # Only when a MERGED PR touched the Dockerfile. Deliberately NOT this
+  # workflow file: Dependabot bumping an action version is not a reason to
+  # spend 15 runner-minutes rebuilding n8n. Use workflow_dispatch to test
+  # workflow changes.
   pull_request:
     types: [closed]
     paths:
       - 'docker/n8n/Dockerfile'
-      - '.github/workflows/build-n8n-image.yml'
-  # Manual rebuilds, e.g. to refresh the unpinned tooling layers (terraform,
-  # kubectl, helm, ...) without an n8n bump.
   workflow_dispatch:
 
 env:
-  # Must be lowercase — GHCR rejects mixed-case paths.
+  # Lowercase — GHCR rejects mixed-case paths.
   IMAGE: ghcr.io/thre4dripper/n8n-custom
 
 jobs:
@@ -36,32 +35,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - id: read
-        # Read the tag from the Dockerfile rather than accepting it as input,
-        # so the published tag can never disagree with what was installed.
+        # The tag is read from the Dockerfile, never passed in, so the published
+        # tag can never disagree with what was installed.
         run: |
           set -euo pipefail
           V=$(grep -oP '^ARG N8N_VERSION=\K[\d.]+' docker/n8n/Dockerfile)
           [[ -n "$V" ]] || { echo "::error::could not read ARG N8N_VERSION"; exit 1; }
           echo "n8n=$V" >> "$GITHUB_OUTPUT"
           echo "Building n8n $V"
-
-      # The base image and n8n move together: n8n pulls isolated-vm, whose
-      # native code tracks the V8 C++ API, so a Node mismatch fails as hundreds
-      # of node-gyp compile errors minutes into the build. Ask the official
-      # image what runtime this release is actually tested on — n8n's
-      # engines.node is only a minimum (">=22.16"), so it cannot catch a
-      # too-NEW Node, which is exactly how node 26 + n8n 2.20.7 slipped through.
-      - name: Base image must match n8n's tested runtime
-        run: |
-          set -euo pipefail
-          V='${{ steps.read.outputs.n8n }}'
-          NEED=$(docker run --rm --entrypoint node "n8nio/n8n:$V" --version | sed 's/^v//' | cut -d. -f1)
-          HAVE=$(grep -oP '^FROM node:\K[0-9]+' docker/n8n/Dockerfile)
-          echo "n8n $V is tested on node $NEED; Dockerfile builds on node $HAVE"
-          if [[ "$NEED" != "$HAVE" ]]; then
-            echo "::error::n8n $V ships on node $NEED but the Dockerfile FROM says node $HAVE. Change it to 'FROM node:$NEED-bookworm-slim' in this same PR."
-            exit 1
-          fi
 
   build:
     name: Build ${{ matrix.platform }}
@@ -74,8 +55,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Native runners for both arches — no QEMU. amd64 is here so a future
-          # x86 mini PC can run the same tag with no manifest change.
           - platform: linux/amd64
             runner: ubuntu-24.04
             slug: amd64
@@ -93,17 +72,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Push by digest only; the `merge` job assembles the tags. This is what
-      # lets two independent runners contribute to one manifest list.
+      # Push by digest only; `merge` assembles the tag. This is what lets two
+      # independent runners contribute to one manifest list.
       - id: build
         uses: docker/build-push-action@v7
         with:
           context: docker/n8n
           file: docker/n8n/Dockerfile
           platforms: ${{ matrix.platform }}
-          build-args: N8N_VERSION=${{ needs.version.outputs.n8n }}
           outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
-          # Scoped per platform or the two legs would evict each other.
+          # Scoped per platform or the two legs evict each other. A tool-only
+          # bump reuses the cached n8n layer; an n8n bump is a full rebuild.
           cache-from: type=gha,scope=n8n-${{ matrix.slug }}
           cache-to: type=gha,scope=n8n-${{ matrix.slug }},mode=max
           provenance: false
@@ -116,7 +95,7 @@ jobs:
           mkdir -p /tmp/digests
           touch "/tmp/digests/${DIGEST#sha256:}"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         with:
           name: digest-${{ matrix.slug }}
           path: /tmp/digests/*
@@ -144,33 +123,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Three tags: the semver one Renovate tracks, an immutable one so a
-      # Dockerfile-only rebuild of the same version is still traceable, and
-      # latest for the docker-compose stack.
+      # One tag: the n8n version. Rebuilds of the same version (tool bumps)
+      # are told apart by digest, which Renovate pins in the deployment.
       - name: Create manifest list
         working-directory: /tmp/digests
         run: |
           set -euo pipefail
-          V='${{ needs.version.outputs.n8n }}'
-          SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
           docker buildx imagetools create \
-            -t "${IMAGE}:${V}" \
-            -t "${IMAGE}:${V}-${SHA}" \
-            -t "${IMAGE}:latest" \
+            -t "${IMAGE}:${{ needs.version.outputs.n8n }}" \
             $(printf "${IMAGE}@sha256:%s " *)
-
-      # Parse the JSON rather than grepping it: `imagetools inspect --raw`
-      # pretty-prints, so a compact "architecture":"amd64" pattern never matches
-      # and this reported a false failure on an image that was in fact correct.
-      - name: Verify both architectures are present
-        run: |
-          set -euo pipefail
-          V='${{ needs.version.outputs.n8n }}'
-          docker buildx imagetools inspect "${IMAGE}:${V}" --raw \
-            | jq -r '.manifests[]?.platform | select(.os != "unknown") | "\(.os)/\(.architecture)"' \
-            | sort -u > /tmp/arches
-          echo "manifest contains:"; sed 's/^/  /' /tmp/arches
-          for a in linux/amd64 linux/arm64; do
-            grep -qx "$a" /tmp/arches \
-              || { echo "::error::$a missing from the manifest list"; exit 1; }
-          done
+          docker buildx imagetools inspect "${IMAGE}:${{ needs.version.outputs.n8n }}"

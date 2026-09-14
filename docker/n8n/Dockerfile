@@ -1,10 +1,10 @@
-# Node major MUST match the runtime the pinned n8n release actually ships on —
-# these two move together. n8n pulls isolated-vm, whose native code tracks the
-# V8 API closely, so a mismatch fails as a wall of C++ errors deep in node-gyp.
-# Check before bumping either:
-#   docker run --rm n8nio/n8n:<version> node --version
-# Known-good pairings:  n8n 2.20.x -> node 24   |   n8n 2.38.x -> node 26
-FROM node:26.8.2-bookworm-slim
+# Stay on node 24. n8n 2.38.x pulls @confluentinc/kafka-javascript, which has
+# prebuilt binaries only up to ABI 137 (node 24); on node 26 npm compiles
+# librdkafka from source for ~12min per arch and then fails anyway. n8n itself
+# only requires node >=24. Renovate is capped at <25 for this file, so nothing
+# will bump this by itself - when you do, check that package's release assets
+# for a node-v147 tarball first.
+FROM node:24.21.0-bookworm-slim
 
 # Pinned so the image is reproducible and Renovate can track it. Must be
 # declared after FROM to be visible in this stage. The published image is
@@ -24,7 +24,7 @@ ARG N8N_VERSION=2.38.7
 ARG KUBECTL_VERSION=v1.34.6
 # renovate: datasource=github-releases depName=helm/helm
 ARG HELM_VERSION=v3.22.0
-# renovate: datasource=github-releases depName=hashicorp/terraform
+# renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v?(?<version>.+)$
 ARG TERRAFORM_VERSION=1.16.2
 # renovate: datasource=github-releases depName=mikefarah/yq
 ARG YQ_VERSION=v4.53.6
@@ -35,7 +35,7 @@ ARG YQ_VERSION=v4.53.6
 # renovate: datasource=github-releases depName=rclone/rclone
 ARG VERSION_RCLONE=v1.75.1
 # aws/aws-cli publishes tags but no GitHub releases, hence github-tags.
-# renovate: datasource=github-tags depName=aws/aws-cli
+# renovate: datasource=github-tags depName=aws/aws-cli extractVersion=^v?(?<version>.+)$
 ARG AWSCLI_VERSION=2.36.44
 
 # Use bash with pipefail for all RUN commands
