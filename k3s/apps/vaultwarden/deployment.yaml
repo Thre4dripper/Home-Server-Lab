@@ -36,7 +36,7 @@ spec:
         # Done here, not chowned on the host like the older apps: that isn't in
         # git and cluster-restore.sh won't replay it. 0700, not their 0777.
         - name: fix-perms
-          image: busybox:1.37
+          image: busybox:1.38
           command: ["sh", "-c", "chown -R 1000:1000 /data && chmod 700 /data"]
           securityContext:
             runAsUser: 0
@@ -54,7 +54,7 @@ spec:
         - name: vaultwarden
           # Read release notes before bumping: 1.37.0 fixed SSRF, cross-org
           # cipher access, policy bypass, websocket flooding.
-          image: vaultwarden/server:1.37.2
+          image: vaultwarden/server:1.37.3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

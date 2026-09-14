@@ -37,7 +37,7 @@ spec:
         #   It also repairs a 0-byte session file (truncated on unclean
         #   shutdown), which causes aria2c to fail starting its RPC listener.
         - name: init-config
-          image: busybox:1.36
+          image: busybox:1.38
           env:
             - name: RPC_SECRET
               valueFrom:

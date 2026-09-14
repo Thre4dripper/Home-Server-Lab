@@ -22,7 +22,7 @@ spec:
 
       initContainers:
         - name: keyfile-init
-          image: busybox:1.37
+          image: busybox:1.38
           command:
             - sh
             - -c
@@ -47,7 +47,7 @@ spec:
 
       containers:
         - name: mongodb
-          image: mongo:8.2
+          image: mongo:8.3
 
           command:
             - mongod
