@@ -57,7 +57,7 @@ extra_packages:
 kubectl_version: "{{ k3s_version | regex_replace('\\+k3s.*', '') }}"
 
 # kubeseal (sealed-secrets CLI)
-kubeseal_version: "0.27.2"
+kubeseal_version: "0.40.0"
 
 # Helm
 helm_version: "3.22.0"
