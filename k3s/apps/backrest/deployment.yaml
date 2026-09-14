@@ -26,7 +26,7 @@ spec:
         runAsUser: 0
       containers:
         - name: backrest
-          image: ghcr.io/garethgeorge/backrest:v1.13.0
+          image: ghcr.io/garethgeorge/backrest:v1.14.1
           ports:
             - containerPort: 9898
               name: web

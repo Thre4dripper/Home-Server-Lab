@@ -26,7 +26,7 @@ services:
       retries: 10
 
   memcached:
-    image: ${SEAFILE_MEMCACHED_IMAGE:-memcached:1.6.29}
+    image: ${SEAFILE_MEMCACHED_IMAGE:-memcached:1.6.45}
     container_name: seafile-memcached
     restart: unless-stopped
     entrypoint: memcached -m 256
@@ -34,7 +34,7 @@ services:
       - seafile-net
 
   elasticsearch:
-    image: ${SEAFILE_ELASTICSEARCH_IMAGE:-elasticsearch:8.15.0}
+    image: ${SEAFILE_ELASTICSEARCH_IMAGE:-elasticsearch:8.19.21}
     container_name: seafile-elasticsearch
     restart: unless-stopped
     environment:
