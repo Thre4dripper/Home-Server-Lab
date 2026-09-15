@@ -23,7 +23,7 @@ ARG N8N_VERSION=2.38.7
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 ARG KUBECTL_VERSION=v1.37.0
 # renovate: datasource=github-releases depName=helm/helm
-ARG HELM_VERSION=v3.22.0
+ARG HELM_VERSION=v4.3.0
 # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v?(?<version>.+)$
 ARG TERRAFORM_VERSION=1.16.2
 # renovate: datasource=github-releases depName=mikefarah/yq
