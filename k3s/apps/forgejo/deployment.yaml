@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: forgejo
-          image: codeberg.org/forgejo/forgejo:10
+          image: codeberg.org/forgejo/forgejo:16
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
