@@ -25,7 +25,7 @@ all:
         homelab_repo_dest: "/home/{{ homelab_user }}/Home-Server-Lab"
 
         # k3s config
-        k3s_version: "v1.36.4+k3s1"
+        k3s_version: "v1.37.0+k3s1"
         k3s_install_script_url: "https://get.k3s.io"
 
         # Docker config
