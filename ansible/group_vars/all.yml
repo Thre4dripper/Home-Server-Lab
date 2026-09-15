@@ -60,7 +60,7 @@ kubectl_version: "{{ k3s_version | regex_replace('\\+k3s.*', '') }}"
 kubeseal_version: "0.40.0"
 
 # Helm
-helm_version: "3.22.0"
+helm_version: "4.3.0"
 
 # Python packages (for GitHub Actions scripts, etc.)
 python_packages:
