@@ -21,7 +21,7 @@ ARG N8N_VERSION=2.38.7
 # ansible/inventory.yml. Renovate will offer newer ones — do not take them ahead
 # of the cluster.
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-ARG KUBECTL_VERSION=v1.34.6
+ARG KUBECTL_VERSION=v1.37.0
 # renovate: datasource=github-releases depName=helm/helm
 ARG HELM_VERSION=v3.22.0
 # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v?(?<version>.+)$
@@ -36,7 +36,7 @@ ARG YQ_VERSION=v4.53.6
 ARG VERSION_RCLONE=v1.75.1
 # aws/aws-cli publishes tags but no GitHub releases, hence github-tags.
 # renovate: datasource=github-tags depName=aws/aws-cli extractVersion=^v?(?<version>.+)$
-ARG AWSCLI_VERSION=2.36.44
+ARG AWSCLI_VERSION=2.36.45
 
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
