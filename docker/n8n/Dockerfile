@@ -10,7 +10,7 @@ FROM node:24.21.0-bookworm-slim
 # declared after FROM to be visible in this stage. The published image is
 # tagged with this exact value — see .github/workflows/build-n8n-image.yml.
 # renovate: datasource=npm depName=n8n
-ARG N8N_VERSION=2.39.5
+ARG N8N_VERSION=2.39.6
 
 # Tool versions. These were previously resolved as "latest" at build time, which
 # made the image unreproducible and silently installed kubectl v1.37 against a
@@ -25,7 +25,7 @@ ARG KUBECTL_VERSION=v1.37.0
 # renovate: datasource=github-releases depName=helm/helm
 ARG HELM_VERSION=v4.3.0
 # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v?(?<version>.+)$
-ARG TERRAFORM_VERSION=1.16.2
+ARG TERRAFORM_VERSION=1.16.3
 # renovate: datasource=github-releases depName=mikefarah/yq
 ARG YQ_VERSION=v4.53.6
 # NOT named RCLONE_VERSION: rclone reads every RCLONE_* env var as one of its
