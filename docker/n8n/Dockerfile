@@ -10,7 +10,7 @@ FROM node:24.21.0-bookworm-slim
 # declared after FROM to be visible in this stage. The published image is
 # tagged with this exact value — see .github/workflows/build-n8n-image.yml.
 # renovate: datasource=npm depName=n8n
-ARG N8N_VERSION=2.38.7
+ARG N8N_VERSION=2.39.5
 
 # Tool versions. These were previously resolved as "latest" at build time, which
 # made the image unreproducible and silently installed kubectl v1.37 against a
@@ -21,9 +21,9 @@ ARG N8N_VERSION=2.38.7
 # ansible/inventory.yml. Renovate will offer newer ones — do not take them ahead
 # of the cluster.
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-ARG KUBECTL_VERSION=v1.34.6
+ARG KUBECTL_VERSION=v1.37.0
 # renovate: datasource=github-releases depName=helm/helm
-ARG HELM_VERSION=v3.22.0
+ARG HELM_VERSION=v4.3.0
 # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v?(?<version>.+)$
 ARG TERRAFORM_VERSION=1.16.2
 # renovate: datasource=github-releases depName=mikefarah/yq
@@ -36,7 +36,7 @@ ARG YQ_VERSION=v4.53.6
 ARG VERSION_RCLONE=v1.75.1
 # aws/aws-cli publishes tags but no GitHub releases, hence github-tags.
 # renovate: datasource=github-tags depName=aws/aws-cli extractVersion=^v?(?<version>.+)$
-ARG AWSCLI_VERSION=2.36.44
+ARG AWSCLI_VERSION=2.36.46
 
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

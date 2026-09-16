@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: bitcomet
-          image: wxhere/bitcomet-webui:v2.21.2
+          image: wxhere/bitcomet-webui:v2.22.0
           ports:
             - containerPort: 8080
               name: web
