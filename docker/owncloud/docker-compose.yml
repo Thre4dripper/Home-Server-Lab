@@ -53,7 +53,7 @@ services:
       - owncloud-net
 
   redis:
-    image: redis:6
+    image: redis:8
     container_name: owncloud-redis
     restart: unless-stopped
     command: ["--databases", "1"]
