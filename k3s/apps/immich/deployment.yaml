@@ -25,7 +25,7 @@ spec:
       containers:
         - name: immich
           # Pin: bump together with ml-deployment.yaml (majors = read release notes)
-          image: ghcr.io/immich-app/immich-server:v3.2.1
+          image: ghcr.io/immich-app/immich-server:v3.2.2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 2283

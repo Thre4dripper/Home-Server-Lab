@@ -28,7 +28,7 @@ spec:
       containers:
         - name: immich-machine-learning
           # Keep on the SAME version as deployment.yaml
-          image: ghcr.io/immich-app/immich-machine-learning:v3.2.1
+          image: ghcr.io/immich-app/immich-machine-learning:v3.2.2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3003
