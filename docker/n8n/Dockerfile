@@ -25,7 +25,7 @@ ARG KUBECTL_VERSION=v1.37.0
 # renovate: datasource=github-releases depName=helm/helm
 ARG HELM_VERSION=v4.3.0
 # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v?(?<version>.+)$
-ARG TERRAFORM_VERSION=1.16.2
+ARG TERRAFORM_VERSION=1.16.3
 # renovate: datasource=github-releases depName=mikefarah/yq
 ARG YQ_VERSION=v4.53.6
 # NOT named RCLONE_VERSION: rclone reads every RCLONE_* env var as one of its
