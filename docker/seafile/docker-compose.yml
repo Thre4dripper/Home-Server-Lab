@@ -1,6 +1,6 @@
 services:
   db:
-    image: ${SEAFILE_DB_IMAGE:-mariadb:10.11}
+    image: ${SEAFILE_DB_IMAGE:-mariadb:13.0}
     container_name: seafile-mysql
     restart: unless-stopped
     environment:
