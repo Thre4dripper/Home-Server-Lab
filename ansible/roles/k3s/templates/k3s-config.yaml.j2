@@ -16,6 +16,22 @@ kubelet-arg:
   - "kube-reserved=cpu=100m,memory=256Mi"
   - "system-reserved=cpu=100m,memory=256Mi"
   - "eviction-hard=memory.available<200Mi"
+  # Image GC, moved well below the defaults (high=85, low=80). Those defaults
+  # only start reclaiming at 85% of the disk, which on this node is the same
+  # neighbourhood as the 90% nodefs eviction threshold — so the first sign of
+  # a full disk would be evicted pods, not a tidied image cache.
+  #
+  # The disk here is shared with /home/pi/k3s-volumes (Immich previews,
+  # Jellyfin, ~60GB), so image growth eats into headroom that pods need. And
+  # the images are large: every n8n rebuild leaves a ~1.4GB layer stack behind
+  # that nothing references once the deployment moves to the new digest.
+  #
+  # At 70/60 the kubelet reclaims unreferenced images while there is still
+  # 20 points of slack before eviction. Only images no running container
+  # references are eligible, so this cannot pull an image out from under a
+  # workload; the cost of over-collecting is a re-pull on next start.
+  - "image-gc-high-threshold=70"
+  - "image-gc-low-threshold=60"
 
 # etcd tuning for SD card — slow fsync tolerance.
 # Default heartbeat=100ms, election=1000ms are tuned for NVMe.

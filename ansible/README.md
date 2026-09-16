@@ -198,6 +198,67 @@ EOF
 
 ---
 
+## 🧹 Node tuning (k3s config)
+
+`roles/k3s/templates/k3s-config.yaml.j2` carries three sets of non-default
+tuning. Each exists for a reason specific to this hardware — read the comments
+there before changing any of them.
+
+### Image garbage collection — `image-gc-high-threshold=70` / `low=60`
+
+The kubelet deletes **unreferenced** container images once the disk crosses the
+high threshold, and keeps deleting until it reaches the low one. The defaults
+(85 / 80) sit uncomfortably close to the 90% `nodefs` eviction threshold, so on
+a nearly-full disk the first symptom would be *evicted pods* rather than a
+tidied image cache.
+
+Two things make that likely here:
+
+- The disk is shared with `/home/pi/k3s-volumes` — Immich previews, Jellyfin
+  media and friends, tens of GB that no GC will ever reclaim. Image growth eats
+  into the same space pods need.
+- The images are big. The custom n8n image is ~1.4 GB, and every rebuild leaves
+  the previous one behind the moment the deployment moves to a new digest.
+
+At 70 / 60 the kubelet reclaims while there is still 20 points of slack. Only
+images that no container references are eligible, so this can never pull an
+image out from under a running workload — the worst case is a re-pull on next
+start.
+
+```bash
+# What the node is holding right now
+kubectl get --raw /api/v1/nodes/<node>/proxy/stats/summary \
+  | jq '.node.runtime.imageFs, .node.fs | {usedBytes, capacityBytes}'
+
+# Reclaim immediately, without waiting for the threshold (run on the host)
+sudo k3s crictl rmi --prune
+```
+
+### Reserved resources and memory eviction
+
+`kube-reserved` / `system-reserved` fence off 256 MB each so the kubelet and the
+OS cannot be starved by pods, and `eviction-hard=memory.available<200Mi` gives
+the node a chance to shed a pod before the OOM killer picks a victim at random.
+On an 8 GB box that leaves roughly 7.3 GB schedulable.
+
+### etcd timings for SD-card latency
+
+`heartbeat-interval` / `election-timeout` are raised ~5x over the NVMe-oriented
+defaults because SD-card `fdatasync` can take 200-800 ms, which otherwise causes
+spurious leader elections and brief API-server stalls. If this host moves to an
+SSD these can go back to defaults.
+
+### Applying a change
+
+```bash
+ansible-playbook site.yml --tags k3s        # rewrites the config, restarts k3s
+```
+
+k3s restarts on config change — the control plane is briefly unavailable, but
+running pods are not restarted.
+
+---
+
 ## 🔒 Security Notes
 
 ### SSH Hardening
