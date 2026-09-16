@@ -25,9 +25,11 @@ spec:
         fsGroup: 999
       containers:
         - name: postgres
-          # VectorChord's official build: postgres:15 base + vchord/pgvector
+          # VectorChord's official build: postgres:18 base + vchord/pgvector
           # compiled in (needed by Immich; no official image has vector exts).
-          # Drop-in PGDATA-compatible; extensions activate per-DB only.
+          # Extensions activate per-DB only. PGDATA below is versioned
+          # (pgdata-<major>): a major bump gets a fresh directory and a
+          # dump/restore, never an in-place open. See README, "Major upgrades".
           image: tensorchord/vchord-postgres:pg18-v1.1.1
           ports:
             - containerPort: 5432

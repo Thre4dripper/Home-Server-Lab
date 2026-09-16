@@ -18,7 +18,7 @@ features:
   - "Smart search + face recognition — separately pausable ML deployment"
   - "Multi-user with fully isolated libraries and per-user quotas"
   - "Originals on pendrive (fail-closed PV), previews on SD card"
-  - "Shared Postgres 15 + VectorChord; dedicated Valkey for job queues"
+  - "Shared Postgres 18 + VectorChord; dedicated Valkey for job queues"
   - "Public photos.ijlalahmad.dev via Cloudflare tunnel"
 resource_usage: "~1GB RAM idle, up to ~3GB during ML indexing"
 ---

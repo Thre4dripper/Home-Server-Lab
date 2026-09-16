@@ -2,7 +2,7 @@
 name: "PostgreSQL"
 category: "🗄️ Databases"
 purpose: "Relational Database"
-description: "Shared Postgres 15 instance for cluster apps, tuned for the Pi's memory budget. Runs VectorChord's build of postgres:15 (vchord + pgvector available). Exposed on the LAN via LoadBalancer and provisioned per-app with isolated roles and databases."
+description: "Shared Postgres 18 instance for cluster apps, tuned for the Pi's memory budget. Runs VectorChord's build of postgres:18 (vchord + pgvector available). Exposed on the LAN via LoadBalancer and provisioned per-app with isolated roles and databases."
 icon: "🐘"
 namespace: "databases"
 external_port: "5432"
@@ -13,7 +13,7 @@ components:
   - sealedsecret
   - configmap
 features:
-  - "Postgres 15 with Pi-tuned postgresql.conf"
+  - "Postgres 18 with Pi-tuned postgresql.conf"
   - "Vector search: VectorChord + pgvector extensions available"
   - "Per-app isolated roles + databases via db-user.sh"
   - "PUBLIC connect revoked on template1 by default"
@@ -31,7 +31,7 @@ Currently backs **Forgejo**, **n8n** and **Immich**; new apps get their own role
 
 ## Features
 
-- **Postgres 15** (`tensorchord/vchord-postgres` — VectorChord's build of the official postgres:15 base), config file mounted from a ConfigMap and passed via `-c config_file=`
+- **Postgres 18** (`tensorchord/vchord-postgres` — VectorChord's build of the official postgres:18 base), config file mounted from a ConfigMap and passed via `-c config_file=`
 - **Vector search**: `vchord` + `pgvector` available; preloaded via `shared_preload_libraries = 'vchord.so'`. After a vchord image bump, run `ALTER EXTENSION vchord UPDATE;` as superuser in each DB using it (immich)
 - **Pi-tuned memory**: `shared_buffers 64MB`, `effective_cache_size 256MB`, `work_mem 4MB`, `max_connections 50`
 - **Slow-query logging** at `log_min_duration_statement = 1000` (1s)
@@ -92,7 +92,7 @@ cd k3s/databases/postgres
 
 | File | What's inside |
 |------|---------------|
-| `deployment.yaml` | tensorchord/vchord-postgres (postgres:15 + vchord), uid 999, custom config file, `pg_isready` probes |
+| `deployment.yaml` | tensorchord/vchord-postgres (postgres:18 + vchord), uid 999, custom config file, `pg_isready` probes |
 | `service.yaml` | LoadBalancer on TCP `5432` |
 | `pvc.yaml` | `Retain` hostPath PV + 20Gi PVC |
 | `configmap.yaml` | `postgresql.conf` (Pi tuning) and `01-init.sql` |
@@ -110,6 +110,49 @@ cd k3s/databases/postgres
 ```
 
 Physical backups of the hostPath directory are handled by **Backrest**; take a logical dump before any Postgres major-version bump, since `PGDATA` is not forward-compatible.
+
+### Major upgrades (how 15 → 18 was done, 2026-09-16)
+
+A Postgres major is **never an image bump**: the on-disk format changes and the
+new binary refuses to open the old directory. It is a dump into a fresh cluster,
+with the old cluster kept on disk as the rollback. `PGDATA` is a *subdirectory*
+of the volume (`pgdata-<major>`), which is what makes this cheap — the old and
+new directories sit side by side on the same PV.
+
+Before starting, read every consumer's own version gate (not the docs page —
+the code): n8n `postgres-version-policy.ts`, Immich `server/src/constants.ts`
+(`POSTGRES_VERSION_RANGE`, `VECTORCHORD_VERSION_RANGE`), Forgejo docs. The
+pickiest one sets the ceiling. Pick an image tag carrying the **same** VectorChord
+version currently installed, so the extension is not a second variable.
+
+1. Pause ArgoCD auto-sync on `postgres` and every consumer (`kubectl -n argocd
+   patch application <app> --type=json -p='[{"op":"remove","path":"/spec/syncPolicy/automated"}]'`
+   — the ApplicationSet ignores this field on purpose). Scale consumers to 0.
+   Confirm `pg_stat_activity` shows no client backends.
+2. Baseline: exact `count(*)` of every table in every database, saved to a file.
+3. `pg_dumpall --clean --if-exists` **from the running pod** (`kubectl exec`,
+   not `kubectl run -i`: an attached throwaway pod silently lost an entire
+   database from its stream once). Verify the dump against the baseline —
+   `COPY` blocks = table count, data lines = row total — and keep two copies on
+   two devices.
+4. In git: `image:` → new major, `PGDATA` → `…/pgdata-<major>`. Commit, push,
+   `kubectl apply`. The entrypoint runs `initdb` into the empty directory.
+5. `gzip -dc dump | kubectl exec -i … psql -U postgres -v ON_ERROR_STOP=0 -f -`.
+   Expected errors, and only these: `current user cannot be dropped`,
+   `role "postgres" already exists`. Health probes may log two FATAL
+   `database "postgres" does not exist` in the second `--clean` recreates it.
+6. Verify: re-run the row counts and `diff` against the baseline (must be
+   empty); extensions per DB at the expected versions; VectorChord indexes
+   present (`pg_indexes … vchordrq`) and used (`set vchordrq.probes = 1;
+   explain …` shows `Index Scan using clip_index`); roles have password hashes.
+   Then `vacuumdb --all --analyze-in-stages` — a restore carries no statistics.
+7. Consumers back one at a time, Immich last (its startup refuses out-of-range
+   Postgres/VectorChord). Check each log, then re-enable auto-sync.
+8. Leave the old `pgdata-<old>/` and the dumps in place until the new major has
+   run for a while. Prune deliberately, later, by hand.
+
+Rollback at any point before step 8: revert the two lines from step 4 and
+re-apply — the old directory was never opened by the new binary.
 
 ## Management Commands
 
@@ -136,6 +179,6 @@ Physical backups of the hostPath directory are handled by **Backrest**; take a l
 
 ## Links
 
-- [PostgreSQL 15 Docs](https://www.postgresql.org/docs/15/index.html)
+- [PostgreSQL 18 Docs](https://www.postgresql.org/docs/18/index.html)
 - [Server configuration reference](https://www.postgresql.org/docs/15/runtime-config.html)
 - [Official Docker image](https://hub.docker.com/_/postgres)
