@@ -81,10 +81,15 @@ jobs:
           file: docker/n8n/Dockerfile
           platforms: ${{ matrix.platform }}
           outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
-          # Scoped per platform or the two legs evict each other. A tool-only
-          # bump reuses the cached n8n layer; an n8n bump is a full rebuild.
-          cache-from: type=gha,scope=n8n-${{ matrix.slug }}
-          cache-to: type=gha,scope=n8n-${{ matrix.slug }},mode=max
+          # No cache-from/cache-to on purpose. type=gha shares one 10GB quota
+          # per repo, and mode=max on a 1.4GB image wrote 5.5GB of blobs for
+          # the two arches - most of the quota. GitHub then evicted those blobs
+          # LRU while keeping the index, so every later build imported a cache
+          # manifest, restored 0 layers, rebuilt from scratch, and then failed
+          # outright on `failed to reserve cache` because the export could not
+          # fit. Four consecutive red builds, all at the export step. A cache
+          # with a 0% hit rate that breaks the build is worse than none: this
+          # image is ~8min cold either way.
           provenance: false
 
       - name: Export digest
