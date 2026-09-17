@@ -36,7 +36,7 @@ spec:
           # Renovate tracks this line natively and an upgrade is a reviewable
           # PR here. Never point this at a tag that has not been published —
           # doing so once cost an ImagePullBackOff outage.
-          image: ghcr.io/thre4dripper/n8n-custom:2.39.6@sha256:5601b8d027293386d71c934677e779b24d407b8d9d03a4eccbfc638d902a7319
+          image: ghcr.io/thre4dripper/n8n-custom:2.39.6@sha256:7c7d110cbd55840ddc735b7e948b475425bd984e62bc981e389b4aa83110de30
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5678
