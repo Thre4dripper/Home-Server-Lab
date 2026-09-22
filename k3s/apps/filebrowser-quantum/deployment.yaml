@@ -31,7 +31,7 @@ spec:
         - name: filebrowser-quantum
           # Quantum v2 is beta-only for now; `stable`/`latest` still track the
           # 1.5.x line. arm64 is published for this tag.
-          image: gtstef/filebrowser:2.0.7-beta
+          image: gtstef/filebrowser:2.0.8-beta
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
