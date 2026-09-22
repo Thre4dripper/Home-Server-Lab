@@ -10,7 +10,7 @@ FROM node:24.21.0-bookworm-slim
 # declared after FROM to be visible in this stage. The published image is
 # tagged with this exact value — see .github/workflows/build-n8n-image.yml.
 # renovate: datasource=npm depName=n8n
-ARG N8N_VERSION=2.39.8
+ARG N8N_VERSION=2.40.5
 
 # Tool versions. These were previously resolved as "latest" at build time, which
 # made the image unreproducible and silently installed kubectl v1.37 against a
