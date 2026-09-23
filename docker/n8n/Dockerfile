@@ -36,7 +36,7 @@ ARG YQ_VERSION=v4.53.6
 ARG VERSION_RCLONE=v1.75.1
 # aws/aws-cli publishes tags but no GitHub releases, hence github-tags.
 # renovate: datasource=github-tags depName=aws/aws-cli extractVersion=^v?(?<version>.+)$
-ARG AWSCLI_VERSION=2.36.50
+ARG AWSCLI_VERSION=2.37.0
 
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
