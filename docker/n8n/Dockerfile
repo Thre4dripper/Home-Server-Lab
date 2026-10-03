@@ -25,7 +25,7 @@ ARG KUBECTL_VERSION=v1.37.1
 # renovate: datasource=github-releases depName=helm/helm
 ARG HELM_VERSION=v4.3.0
 # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v?(?<version>.+)$
-ARG TERRAFORM_VERSION=1.16.4
+ARG TERRAFORM_VERSION=1.16.5
 # renovate: datasource=github-releases depName=mikefarah/yq
 ARG YQ_VERSION=v4.54.1
 # NOT named RCLONE_VERSION: rclone reads every RCLONE_* env var as one of its
@@ -36,7 +36,7 @@ ARG YQ_VERSION=v4.54.1
 ARG VERSION_RCLONE=v1.75.1
 # aws/aws-cli publishes tags but no GitHub releases, hence github-tags.
 # renovate: datasource=github-tags depName=aws/aws-cli extractVersion=^v?(?<version>.+)$
-ARG AWSCLI_VERSION=2.37.8
+ARG AWSCLI_VERSION=2.37.9
 
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
