@@ -33,10 +33,10 @@ ARG YQ_VERSION=v4.54.1
 # became `--version=v1.75.1` and rclone died parsing it as a boolean. Do not
 # "tidy" this back into the naming pattern the other tools use.
 # renovate: datasource=github-releases depName=rclone/rclone
-ARG VERSION_RCLONE=v1.75.1
+ARG VERSION_RCLONE=v1.75.2
 # aws/aws-cli publishes tags but no GitHub releases, hence github-tags.
 # renovate: datasource=github-tags depName=aws/aws-cli extractVersion=^v?(?<version>.+)$
-ARG AWSCLI_VERSION=2.37.9
+ARG AWSCLI_VERSION=2.37.11
 
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
