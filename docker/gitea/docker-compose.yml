@@ -1,6 +1,6 @@
 services:
   gitea:
-    image: docker.gitea.com/gitea:28.0.0
+    image: docker.gitea.com/gitea:28.1.0
     container_name: gitea-server
     restart: unless-stopped
     env_file: .env
