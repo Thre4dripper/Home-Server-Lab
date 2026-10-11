@@ -47,7 +47,7 @@ spec:
 
       containers:
         - name: mongodb
-          image: mongo:8.3
+          image: mongo:9.0
 
           command:
             - mongod
