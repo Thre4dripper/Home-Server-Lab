@@ -2,7 +2,7 @@
 name: "MongoDB"
 category: "🗄️ Databases"
 purpose: "Document Database"
-description: "MongoDB 8 as a single-member replica set (rs0) so drivers get transactions and change streams. Public Let's Encrypt TLS via cert-manager, exposed to the LAN through Traefik SNI passthrough — no custom CA for clients to trust."
+description: "MongoDB 9 as a single-member replica set (rs0) so drivers get transactions and change streams. Public Let's Encrypt TLS via cert-manager, exposed to the LAN through Traefik SNI passthrough — no custom CA for clients to trust."
 icon: "🍃"
 namespace: "databases"
 external_port: "27017"
@@ -25,7 +25,7 @@ resource_usage: "~400MB RAM"
 
 # MongoDB — Document Database
 
-MongoDB 8 running as a **StatefulSet with one replica**, initialised as a **single-member replica set** named `rs0`. One member on one physical host adds no availability, but it does unlock the features drivers expect from a replica set: multi-document transactions, change streams and retryable writes. Durability comes from logical backups (`mongodump`) plus the retained hostPath PV, not from replication.
+MongoDB 9 running as a **StatefulSet with one replica**, initialised as a **single-member replica set** named `rs0`. One member on one physical host adds no availability, but it does unlock the features drivers expect from a replica set: multi-document transactions, change streams and retryable writes. Durability comes from logical backups (`mongodump`) plus the retained hostPath PV, not from replication.
 
 ## Features
 
@@ -107,7 +107,7 @@ kubectl apply -f pv.yaml          # PV is cluster-scoped, applied once
 
 | File | What's inside |
 |------|---------------|
-| `statefulset.yaml` | mongod 8.2, keyfile/TLS init container, `rs.initiate` postStart hook |
+| `statefulset.yaml` | mongod 9.0, keyfile/TLS init container, `rs.initiate` postStart hook |
 | `service.yaml` | ClusterIP for in-cluster clients |
 | `service-headless.yaml` | Headless service backing stable pod DNS |
 | `service-per-pod.yaml` | Per-pod ClusterIP targeted by the Traefik route |
@@ -131,6 +131,8 @@ kubectl apply -f pv.yaml          # PV is cluster-scoped, applied once
 ```
 
 Logical dumps are the real durability story here — take one before any major-version bump.
+
+**Major-version bumps need FCV first.** mongod only starts on data whose `featureCompatibilityVersion` it supports — 9.0 accepts FCV `8.3` or `8.0`, not the `8.2` left behind by a minor bump. Before merging a major Renovate PR: dump, then in `mongosh` run `db.adminCommand({getParameter: 1, featureCompatibilityVersion: 1})` and raise it to the current binary's version with `setFeatureCompatibilityVersion` (`confirm: true`). After the new image is healthy, raise FCV to the new version. To roll back (single adjacent version only, e.g. 9.0 → 8.3), lower FCV first, then revert the image; the dump covers anything that goes wrong in between.
 
 ## Management Commands
 
@@ -158,6 +160,7 @@ Logical dumps are the real durability story here — take one before any major-v
 - **`NotYetInitialized` / `no replset config`** → the `postStart` bootstrap didn't complete. Check `./setup.sh logs`, then run `rs.initiate(...)` manually in `mongosh`.
 - **TLS handshake failure from a LAN client** → the cert only covers `mongo-0.home.ijlalahmad.dev`. Connecting by IP or cluster DNS with `tls=true` will always fail — use the hostname, or drop to `tls=false` internally.
 - **Cert renewal didn't reach mongod** → mongod loads `tls-combined.pem` at startup; restart the pod after cert-manager renews.
+- **CrashLoopBackOff right after an image bump, log mentions `featureCompatibilityVersion`** → FCV wasn't raised before the major upgrade. Roll the image back in git, set FCV on the old binary, then re-apply (see Backup & Restore).
 - **Pod `Pending`** → `pv.yaml` isn't applied, or the PV's `claimRef` is stale. `kubectl get pv mongodb-pv-0`.
 - **Driver can't find the primary** → the URI must include `replicaSet=rs0`; without it the driver treats the node as standalone and rejects transactions.
 
