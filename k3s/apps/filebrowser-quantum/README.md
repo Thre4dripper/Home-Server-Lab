@@ -2,7 +2,7 @@
 name: "FileBrowser Quantum"
 category: "📁 Files & Storage"
 purpose: "Indexed File Manager"
-description: "Rewrite of FileBrowser with a real search index, multi-source mounts and media previews. Read-write access to the Pi home directory and the external USB drive as two independently scoped sources, each with its own permissions and disk usage readout. SQLite index, WebDAV, and optional OnlyOffice document editing."
+description: "Rewrite of FileBrowser with a real search index, multi-source mounts and media previews. Read-write access to the Pi home directory, the USB pendrive and the 10TB NAS disk as three independently scoped sources, each with its own permissions and disk usage readout. SQLite index, WebDAV, and optional OnlyOffice document editing."
 icon: "🗂️"
 namespace: "file-management"
 external_port: "8300"
@@ -15,7 +15,7 @@ components:
   - configmap
   - sealedsecret
 features:
-  - "Home directory and USB storage as separate read-write sources"
+  - "Home directory, USB pendrive and NAS disk as separate read-write sources"
   - "Indexed search across every mounted source"
   - "Video, image, audio and 3D model thumbnails via bundled ffmpeg"
   - "WebDAV at /dav — mountable in Finder, rclone or davfs2"
@@ -43,6 +43,25 @@ FileBrowser](#decommissioning-the-old-filebrowser).
 |---|---|---|---|
 | **Home** | `/mnt/pi/home` | `/home/pi` | read-write |
 | **Storage** | `/mnt/pi/storage` | `/home/pi/pendrive` | read-write |
+| **NAS** | `/mnt/pi/nas` | `/home/pi/nas` | read-write |
+
+### Host-side mounts
+
+Both external drives are mounted by the host, not by Kubernetes. `/etc/fstab`
+on the Pi carries one line per disk, keyed by filesystem UUID so the `/dev/sdX`
+letter the kernel hands out at boot does not matter:
+
+```
+UUID=FAF5-667F /home/pi/pendrive exfat defaults,nofail,uid=1000,gid=1004,umask=000 0 0
+UUID=6AD0-717D /home/pi/nas      exfat defaults,nofail,uid=1000,gid=1004,umask=000 0 0
+```
+
+`nofail` keeps the Pi booting when a drive is absent, and systemd mounts the
+entry on its own as soon as the device appears, so a slow spin-up or a re-plug
+needs no hand-holding. exFAT has no ownership of its own, so `uid`/`gid`/`umask`
+make every file appear as `pi:external-storage-access` and world-writable —
+that is what lets containers running as root, `1000` or anything else write to
+both drives without a `chown`. `sudo blkid` prints the UUIDs.
 
 There is deliberately **no source for the host root**. An earlier revision
 mounted `/` read-only as a "System" source; it was dropped. Upstream advises
@@ -53,19 +72,19 @@ most of the config file. Reading `/etc` or `/var/log` from a browser is not
 worth an index that large or a pod that can see every secret on the box; use
 `kubectl` or ssh for that.
 
-### Why Storage is a separate source
+### Why Storage and NAS are separate sources
 
-It is a subtree of Home on disk, so this looks redundant — `/mnt/pi/home` alone
-would already reach the pendrive. It is kept separate because a source, not a
-folder, is Quantum's unit of everything that matters:
+Both are subtrees of Home on disk, so this looks redundant — `/mnt/pi/home`
+alone would already reach the pendrive and the NAS. They are kept separate
+because a source, not a folder, is Quantum's unit of everything that matters:
 
-- **Its own used-percentage readout.** One source spanning both disks would
-  report the SD card's free space for pendrive files.
-- **Its own search scope**, so "search Storage" doesn't walk `~/.cache`.
+- **Its own used-percentage readout.** One source spanning three disks would
+  report the SD card's free space for files that live on the drives.
+- **Its own search scope**, so "search NAS" doesn't walk `~/.cache`.
 - **Its own permission surface** (`defaultPermissions`, `readOnly`, `private`),
-  which is what makes a future family user scoped to the drive and nothing else
-  a config change rather than a redesign.
-- **Its own index**, so unplugging the drive doesn't invalidate the home index.
+  which is what makes a future family user scoped to one drive and nothing
+  else a config change rather than a redesign.
+- **Its own index**, so unplugging one drive doesn't invalidate the others.
 
 Sources can only be declared in `config.yaml` — there is no way to add one from
 the UI. What the UI *does* offer is **pinned items**: any folder inside a source
@@ -80,21 +99,22 @@ exclusion rule in Quantum hides the folder from listings as well as from the
 index — so `~/pendrive` was present on disk, mounted, and readable by the pod,
 yet absent from the Home view.
 
-The fix is `viewable: true` on that rule: browsable, still not indexed. Same
-treatment as `~/k3s-volumes` and `/var/log`.
+The fix is `viewable: true` on that rule: browsable, still not indexed. `~/nas`
+carries the identical rule, and `~/k3s-volumes` gets the same treatment.
 
 ### Mount propagation
 
-Both hostPath mounts use `mountPropagation: HostToContainer`. The pendrive is a
-separate filesystem the host mounts at `/home/pi/pendrive`; without propagation
-a pod that outlives an unplug/replug keeps reading the empty directory
-*underneath* the mountpoint rather than the drive. This was previously set only
-on the root mount, which is the mount that got removed.
+All three hostPath mounts use `mountPropagation: HostToContainer`. The pendrive
+and the NAS are separate filesystems the host mounts at `/home/pi/pendrive` and
+`/home/pi/nas`; without propagation a pod that outlives an unplug/replug keeps
+reading the empty directory *underneath* the mountpoint rather than the drive.
+This was previously set only on the root mount, which is the mount that got
+removed.
 
-`host-storage` stays `type: DirectoryOrCreate` rather than Immich's fail-closed
-`Directory`: if the drive is unplugged the file manager should still start so
-Home is reachable. The trade-off is that writes to Storage while the drive is
-absent land on the SD card.
+`host-storage` and `host-nas` stay `type: DirectoryOrCreate` rather than
+Immich's fail-closed `Directory`: if a drive is unplugged the file manager
+should still start so Home is reachable. The trade-off is that writes to
+Storage or NAS while that drive is absent land on the SD card.
 
 ## Kubernetes Architecture
 
@@ -162,10 +182,12 @@ you would rather manage it in the UI. Other users are unaffected.
 
 ### The first start is slow
 
-The initial index walks `/home/pi` and the pendrive. A few minutes is normal on
-a Pi 5 — it was ten before the root filesystem source was dropped. The UI works
-throughout, it is just missing search results for paths not yet reached. Watch
-progress with `./setup.sh logs`.
+The initial index walks `/home/pi`, the pendrive and the NAS. A few minutes is
+normal on a Pi 5 — it was ten before the root filesystem source was dropped.
+The UI works throughout, it is just missing search results for paths not yet
+reached. Watch progress with `./setup.sh logs`. The NAS is nearly empty today
+and adds seconds; as it fills, a cold re-index of a multi-terabyte disk is
+where the 1Gi memory limit earns its keep.
 
 Restarts after that reuse the on-disk index and come up in seconds.
 
@@ -225,11 +247,13 @@ Exclusion rules earn their keep in two ways, and the difference matters:
 | `- folderPath: "/x"` + `viewable: true` | no | yes |
 
 Everything kept out of the index but still browsable uses the second form:
-`~/pendrive` (indexed by the Storage source instead), `~/k3s-volumes` (large,
-constantly churning, and a search hit inside another app's PV is never what you
-wanted), and `~/.ssh`, `~/.aws`, `~/.kube`, `~/.config/rclone` — reachable for
-an admin who needs them, but never surfacing in an autocomplete or a shared
-search result. `.Trash-1000`, `lost+found` and the restic repo under
+`~/pendrive` and `~/nas` (indexed by the Storage and NAS sources instead),
+`~/k3s-volumes` (large, constantly churning, and a search hit inside another
+app's PV is never what you wanted), and `~/.ssh`, `~/.aws`, `~/.kube`,
+`~/.config/rclone` — reachable for an admin who needs them, but never surfacing
+in an autocomplete or a shared search result. `.Trash-1000`, `lost+found`, the
+macOS metadata the NAS picked up from being initialised on a Mac
+(`.Spotlight-V100`, `.fseventsd`, `.Trashes`) and the restic repo under
 `Storage/backups` (≈100k opaque content-addressed blobs) use the first form.
 
 Each rule field takes a **single string**, so excluding five folders means five
@@ -267,10 +291,11 @@ path *inside the container*, so the same pendrive file reached through the
 Storage source (`/mnt/pi/storage/…`) and through `Home/pendrive/…`
 (`/mnt/pi/home/pendrive/…`) hashes differently and is thumbnailed twice.
 
-Nothing breaks, but browsing the drive through Home means regenerating every
-thumbnail the Storage source already has. Use the Storage source — or a pinned
-shortcut to it — as the entry point for the drive; `Home/pendrive` is there so
-the directory isn't invisible, not as the fast path.
+Nothing breaks, but browsing a drive through Home means regenerating every
+thumbnail the Storage or NAS source already has. Use those sources — or a
+pinned shortcut to them — as the entry point for the drives; `Home/pendrive`
+and `Home/nas` are there so the directories aren't invisible, not as the fast
+path.
 
 ## State, backup and restore
 
@@ -458,10 +483,10 @@ layouts, so per-user scopes need revisiting by hand regardless.
 
 ## Notes
 
-- **Runs as root** (`runAsUser: 0`). `/home/pi` and the exFAT pendrive hold
+- **Runs as root** (`runAsUser: 0`). `/home/pi` and the two exFAT drives hold
   files owned by several UIDs, and the app has to write all of them. What
   constrains it is the mount list, not the UID — since the root mount was
-  removed there is nothing outside those two trees to reach.
+  removed there is nothing outside those three trees to reach.
 - **`strategy: Recreate`** — the SQLite database and index sit on a
   single-writer hostPath volume, and a rolling update would briefly run two
   writers against the same WAL.

@@ -40,7 +40,7 @@ Dashdot reads `/proc` and `/sys` from the Pi host and renders a clean live dashb
 | `dashdot` | Service (LoadBalancer) | Web UI on port `8120` |
 | `dashdot` | Ingress | Hosts `dashdot.home.ijlalahmad.dev` |
 
-The Deployment mounts `/etc/os-release`, `/proc` and `/sys` from the host as read-only volumes.
+The Deployment mounts the host root filesystem read-only at `/mnt/host`, with `mountPropagation: HostToContainer` so USB drives mounted after the pod started (the pendrive and the NAS disk under `/home/pi`) still show up in the storage widget. It runs privileged so CPU temperatures are readable.
 
 ## Prerequisites
 
@@ -89,7 +89,8 @@ Configurable via env in `deployment.yaml`:
 
 ## Troubleshooting
 
-- **Storage widget shows 0** → hostPath mount of `/mnt/host_root` missing in `deployment.yaml`
+- **Storage widget shows 0** → hostPath mount of `/mnt/host` missing in `deployment.yaml`
+- **A newly attached disk is missing** → the drive list is read once at startup; `./setup.sh restart`. A drive that was unplugged and re-plugged needs no restart thanks to `mountPropagation: HostToContainer`
 - **CPU temp missing** → `/sys/class/thermal/thermal_zone0/temp` not readable; the Pod needs `securityContext.privileged: true` on some kernels
 - **GPU widget missing** → not supported on Pi; remove from `DASHDOT_WIDGET_LIST`
 
