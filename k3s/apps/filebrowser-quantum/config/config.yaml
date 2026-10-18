@@ -364,7 +364,6 @@ userDefaults:
     highQuality: false                 # cheaper thumbnails; the Pi is CPU-bound
     disablePreviewExt: ""
   fileViewer:
-    editorQuickSave: true
     autoplayMedia: true
     disableViewingExt: ""
     disableOnlyOfficeExt: ".md .txt .pdf .html .xml .yaml .yml .json .conf"
