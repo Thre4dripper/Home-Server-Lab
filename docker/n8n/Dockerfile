@@ -4,7 +4,7 @@
 # only requires node >=24. Renovate is capped at <25 for this file, so nothing
 # will bump this by itself - when you do, check that package's release assets
 # for a node-v147 tarball first.
-FROM node:24.21.0-bookworm-slim
+FROM node:24.22.0-bookworm-slim
 
 # Pinned so the image is reproducible and Renovate can track it. Must be
 # declared after FROM to be visible in this stage. The published image is
