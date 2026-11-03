@@ -28,7 +28,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: cloudflared
-          image: cloudflare/cloudflared:2026.10.5
+          image: cloudflare/cloudflared:2026.10.7
           imagePullPolicy: IfNotPresent
           args:
             - tunnel
