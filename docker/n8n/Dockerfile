@@ -23,11 +23,11 @@ ARG N8N_VERSION=2.47.4
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 ARG KUBECTL_VERSION=v1.37.2
 # renovate: datasource=github-releases depName=helm/helm
-ARG HELM_VERSION=v4.3.1
+ARG HELM_VERSION=v4.3.2
 # renovate: datasource=github-releases depName=hashicorp/terraform extractVersion=^v?(?<version>.+)$
-ARG TERRAFORM_VERSION=1.17.1
+ARG TERRAFORM_VERSION=1.17.2
 # renovate: datasource=github-releases depName=mikefarah/yq
-ARG YQ_VERSION=v4.54.2
+ARG YQ_VERSION=v4.54.3
 # NOT named RCLONE_VERSION: rclone reads every RCLONE_* env var as one of its
 # own flags, and docker exposes build ARGs to RUN as env vars — so that name
 # became `--version=v1.75.1` and rclone died parsing it as a boolean. Do not
@@ -36,7 +36,7 @@ ARG YQ_VERSION=v4.54.2
 ARG VERSION_RCLONE=v1.76.0
 # aws/aws-cli publishes tags but no GitHub releases, hence github-tags.
 # renovate: datasource=github-tags depName=aws/aws-cli extractVersion=^v?(?<version>.+)$
-ARG AWSCLI_VERSION=2.39.6
+ARG AWSCLI_VERSION=2.40.2
 
 # Use bash with pipefail for all RUN commands
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
