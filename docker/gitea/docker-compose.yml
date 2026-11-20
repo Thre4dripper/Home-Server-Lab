@@ -35,7 +35,7 @@ services:
       start_period: 40s
 
   db:
-    image: docker.io/library/postgres:18
+    image: docker.io/library/postgres:19
     restart: unless-stopped
     container_name: gitea-db
     environment:
