@@ -34,7 +34,7 @@ services:
       - seafile-net
 
   elasticsearch:
-    image: ${SEAFILE_ELASTICSEARCH_IMAGE:-elasticsearch:9.5.5}
+    image: ${SEAFILE_ELASTICSEARCH_IMAGE:-elasticsearch:9.5.7}
     container_name: seafile-elasticsearch
     restart: unless-stopped
     environment:
